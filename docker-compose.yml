@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: coachflow_postgres
+    environment:
+      POSTGRES_DB: coachflow
+      POSTGRES_USER: coachflow_user
+      POSTGRES_PASSWORD: coachflow_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - coachflow_data:/var/lib/postgresql/data
+
+volumes:
+  coachflow_data:
