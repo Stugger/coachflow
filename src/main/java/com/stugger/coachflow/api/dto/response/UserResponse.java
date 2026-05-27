@@ -1,5 +1,6 @@
 package com.stugger.coachflow.api.dto.response;
 
+import com.stugger.coachflow.entity.User;
 import com.stugger.coachflow.entity.UserRole;
 
 /**
@@ -11,4 +12,10 @@ public record UserResponse(
         String email,
         UserRole role
 ) {
+    public UserResponse(User user) {
+        this(user.getId(),
+            user.getEmail(),
+            user.getRole()
+        );
+    }
 }

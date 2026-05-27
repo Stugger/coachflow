@@ -2,15 +2,12 @@ package com.stugger.coachflow.api.controller;
 
 import com.stugger.coachflow.api.dto.request.CreateTrainerRequest;
 import com.stugger.coachflow.api.dto.response.TrainerResponse;
-import com.stugger.coachflow.api.dto.response.UserResponse;
 import com.stugger.coachflow.entity.Trainer;
-import com.stugger.coachflow.entity.User;
 import com.stugger.coachflow.service.TrainerService;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author Jake
@@ -29,15 +26,16 @@ public class TrainerController {
     @PostMapping
     public TrainerResponse createTrainer(@Valid @RequestBody CreateTrainerRequest request) {
         Trainer trainer = trainerService.createTrainer(request);
-        User user = trainer.getUser();
-        return new TrainerResponse(
-                trainer.getId(),
-                new UserResponse(user.getId(), user.getEmail(), user.getRole()),
-                trainer.getFirstName(),
-                trainer.getLastName(),
-                trainer.getBirthDate(),
-                trainer.getCreatedAt(),
-                trainer.getUpdatedAt()
-        );
+        return new TrainerResponse(trainer);
+    }
+
+    @GetMapping("/{trainerId}")
+    public TrainerResponse getTrainerById(@PathVariable Long trainerId) {
+        return trainerService.getTrainerById(trainerId);
+    }
+
+    @GetMapping
+    public List<TrainerResponse> getAllTrainers() {
+        return trainerService.getAllTrainers();
     }
 }

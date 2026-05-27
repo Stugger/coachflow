@@ -1,5 +1,7 @@
 package com.stugger.coachflow.api.dto.response;
 
+import com.stugger.coachflow.entity.Trainer;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -16,4 +18,14 @@ public record TrainerResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
+    public TrainerResponse(Trainer trainer) {
+        this(trainer.getId(),
+            new UserResponse(trainer.getUser()),
+            trainer.getFirstName(),
+            trainer.getLastName(),
+            trainer.getBirthDate(),
+            trainer.getCreatedAt(),
+            trainer.getUpdatedAt()
+        );
+    }
 }
