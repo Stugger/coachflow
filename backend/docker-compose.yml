@@ -1,7 +1,9 @@
+name: coachflow
+
 services:
   postgres:
     image: postgres:16
-    container_name: coachflow_postgres
+    container_name: coachflow-postgres
     environment:
       POSTGRES_DB: coachflow
       POSTGRES_USER: coachflow_user
@@ -13,3 +15,4 @@ services:
 
 volumes:
   coachflow_data:
+    name: coachflow_postgres_data
