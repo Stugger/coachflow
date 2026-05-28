@@ -61,7 +61,7 @@ public class Client {
     private String generalNotes;
 
     @Column(nullable = false)
-    private Boolean active;
+    private Boolean active = true;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
