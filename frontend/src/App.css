@@ -21,3 +21,12 @@
     flex: 1;
     padding: 20px;
 }
+
+.input-error {
+    border: 1px solid #ff5555;
+}
+
+.field-error {
+    color: #ff7777;
+    font-size: 13px;
+}

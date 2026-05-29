@@ -4,6 +4,8 @@ function ClientsPage() {
 
     const [clients, setClients] = useState([]);
 
+    const [selectedClient, setSelectedClient] = useState(null);
+
     const [form, setForm] = useState({
         trainerId: 1,
         firstName: '',
@@ -16,6 +18,8 @@ function ClientsPage() {
         limitations: '',
         generalNotes: ''
     });
+
+    const [errors, setErrors] = useState({});
 
     function loadClients() {
         fetch('http://localhost:8080/api/clients')
@@ -35,6 +39,11 @@ function ClientsPage() {
             ...form,
             [name]: value
         });
+        if (errors[name]) {
+            const updatedErrors = {...errors};
+            delete updatedErrors[name];
+            setErrors(updatedErrors);
+        }
     }
 
     function createClient(event) {
@@ -47,13 +56,20 @@ function ClientsPage() {
             },
             body: JSON.stringify(form)
         })
-            .then(response => {
+            .then(async response => {
                 if (!response.ok) {
-                    throw new Error('Failed to create client');
+                    const errorBody = await response.json();
+
+                    if (errorBody.fieldErrors) {
+                        setErrors(errorBody.fieldErrors);
+                    }
+
+                    throw new Error(errorBody.message || 'Failed to create client');
                 }
                 return response.json();
             })
             .then(() => {
+                setErrors({});
                 setForm({
                     trainerId: 1,
                     firstName: '',
@@ -77,17 +93,19 @@ function ClientsPage() {
             <h2>Create Client</h2>
 
             <form onSubmit={createClient}>
-                <input name="firstName" placeholder="First name" value={form.firstName} onChange={updateForm}/>
-                <input name="lastName" placeholder="Last name" value={form.lastName} onChange={updateForm}/>
-                <input name="preferredName" placeholder="Preferred name" value={form.preferredName}
-                       onChange={updateForm}/>
-                <input name="email" placeholder="Email" value={form.email} onChange={updateForm}/>
+                {errors.trainerId && <div className="field-error">{errors.trainerId}</div>}
+                <input name="firstName" className={errors.firstName ? 'input-error' : ''} placeholder="First name" value={form.firstName} onChange={updateForm}/>
+                {errors.firstName && <div className="field-error">{errors.firstName}</div>}
+                <input name="lastName" className={errors.lastName ? 'input-error' : ''} placeholder="Last name" value={form.lastName} onChange={updateForm}/>
+                {errors.lastName && <div className="field-error">{errors.lastName}</div>}
+                <input name="preferredName" placeholder="Preferred name" value={form.preferredName} onChange={updateForm}/>
+                <input name="email" className={errors.email ? 'input-error' : ''} placeholder="Email" value={form.email} onChange={updateForm}/>
+                {errors.email && <div className="field-error">{errors.email}</div>}
                 <input name="phone" placeholder="Phone" value={form.phone} onChange={updateForm}/>
                 <input name="birthDate" type="date" value={form.birthDate} onChange={updateForm}/>
                 <input name="goals" placeholder="Goals" value={form.goals} onChange={updateForm}/>
                 <input name="limitations" placeholder="Limitations" value={form.limitations} onChange={updateForm}/>
-                <input name="generalNotes" placeholder="General notes" value={form.generalNotes}
-                       onChange={updateForm}/>
+                <input name="generalNotes" placeholder="General notes" value={form.generalNotes} onChange={updateForm}/>
 
                 <button type="submit">Create Client</button>
             </form>
@@ -96,9 +114,23 @@ function ClientsPage() {
 
             {clients.map(client => (
                 <div key={client.id}>
-                    {client.preferredName || client.firstName} {client.lastName}
+                    <button onClick={() => setSelectedClient(client)}>
+                        {client.preferredName || client.firstName} {client.lastName}
+                    </button>
                 </div>
             ))}
+
+            {selectedClient && (
+                <div>
+                    <h2>Client Details</h2>
+                    <p>Name: {selectedClient.firstName} {selectedClient.lastName}</p>
+                    <p>Email: {selectedClient.email}</p>
+                    <p>Phone: {selectedClient.phone}</p>
+                    <p>Goals: {selectedClient.goals}</p>
+                    <p>Limitations: {selectedClient.limitations}</p>
+                    <p>Notes: {selectedClient.generalNotes}</p>
+                </div>
+            )}
         </div>
     );
 }
