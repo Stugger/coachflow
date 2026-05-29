@@ -1,6 +1,7 @@
 package com.stugger.coachflow.api.controller;
 
 import com.stugger.coachflow.api.dto.request.CreateClientRequest;
+import com.stugger.coachflow.api.dto.request.UpdateClientRequest;
 import com.stugger.coachflow.api.dto.response.ClientResponse;
 import com.stugger.coachflow.entity.Client;
 import com.stugger.coachflow.service.ClientService;
@@ -26,6 +27,12 @@ public class ClientController {
     @PostMapping
     public ClientResponse createClient(@Valid @RequestBody CreateClientRequest request) {
         Client client = clientService.createClient(request);
+        return new ClientResponse(client);
+    }
+
+    @PutMapping("/{clientId}")
+    public ClientResponse updateClient(@PathVariable Long clientId, @Valid @RequestBody UpdateClientRequest request) {
+        Client client = clientService.updateClient(clientId, request);
         return new ClientResponse(client);
     }
 

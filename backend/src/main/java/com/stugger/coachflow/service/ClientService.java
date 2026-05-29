@@ -1,11 +1,14 @@
 package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.CreateClientRequest;
+import com.stugger.coachflow.api.dto.request.UpdateClientRequest;
 import com.stugger.coachflow.api.dto.response.ClientResponse;
 import com.stugger.coachflow.entity.Client;
 import com.stugger.coachflow.entity.Trainer;
 import com.stugger.coachflow.repository.ClientRepository;
 import com.stugger.coachflow.repository.TrainerRepository;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,7 +32,8 @@ public class ClientService {
     }
 
     public Client createClient(CreateClientRequest request) {
-        Trainer trainer = trainerRepository.findById(request.trainerId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + request.trainerId() + " not found"));
+        Trainer trainer = trainerRepository.findById(request.trainerId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + request.trainerId() + " not found"));
         LocalDateTime now = LocalDateTime.now();
         Client client = new Client();
         client.setTrainer(trainer);
@@ -50,6 +54,26 @@ public class ClientService {
         return clientRepository.save(client);
     }
 
+    public Client updateClient(Long clientId, @Valid UpdateClientRequest request) {
+        Client client = clientRepository.findById(clientId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client with id " + clientId + " not found"));
+        client.setFirstName(request.firstName());
+        client.setLastName(request.lastName());
+        client.setPreferredName(request.preferredName());
+        if (request.email() != null && !request.email().isBlank()) {
+            client.setEmail(request.email().trim().toLowerCase());
+        } else {
+            client.setEmail(null);
+        }
+        client.setPhone(request.phone());
+        client.setBirthDate(request.birthDate());
+        client.setGoals(request.goals());
+        client.setLimitations(request.limitations());
+        client.setGeneralNotes(request.generalNotes());
+        client.setUpdatedAt(LocalDateTime.now());
+        return clientRepository.save(client);
+    }
+
     public ClientResponse getClientById(Long clientId) {
         Client client = clientRepository.findById(clientId).orElse(null);
         if (client == null) {
@@ -59,7 +83,9 @@ public class ClientService {
     }
 
     public List<ClientResponse> getAllClients() {
-        return clientRepository.findAll().stream()
+        return clientRepository.findAll(Sort.by("lastName").ascending()
+                        .and(Sort.by("firstName").ascending()))
+                .stream()
                 .map(ClientResponse::new)
                 .toList();
     }

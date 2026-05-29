@@ -6,6 +6,7 @@ import com.stugger.coachflow.entity.Trainer;
 import com.stugger.coachflow.entity.User;
 import com.stugger.coachflow.entity.UserRole;
 import com.stugger.coachflow.repository.TrainerRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -52,7 +53,9 @@ public class TrainerService {
     }
 
     public List<TrainerResponse> getAllTrainers() {
-        return trainerRepository.findAll().stream()
+        return trainerRepository.findAll(Sort.by("lastName").ascending()
+                        .and(Sort.by("firstName").ascending()))
+                .stream()
                 .map(TrainerResponse::new)
                 .toList();
     }

@@ -22,6 +22,53 @@
     padding: 20px;
 }
 
+.clients-page {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 20px;
+}
+
+.client-form-panel,
+.client-main-panel,
+.client-details {
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.client-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.client-form input {
+    padding: 10px;
+}
+
+.client-form button {
+    display: block;
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+.client-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.client-list-item {
+    text-align: left;
+    padding: 10px;
+}
+
+.client-details {
+    margin-top: 20px;
+}
+
 .input-error {
     border: 1px solid #ff5555;
 }
