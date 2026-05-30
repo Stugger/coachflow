@@ -1,23 +1,10 @@
 import {useEffect, useState} from 'react';
 
-const emptyClientForm = {
-    trainerId: 1,
-    firstName: '',
-    lastName: '',
-    preferredName: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    goals: '',
-    limitations: '',
-    generalNotes: ''
-};
-
-function ClientsPage() {
+function ClientsPage({trainerId}) {
 
     const [clients, setClients] = useState([]);
 
-    const [createForm, setCreateForm] = useState(emptyClientForm);
+    const [createForm, setCreateForm] = useState(createEmptyClientForm(trainerId));
     const [createErrors, setErrors] = useState({});
 
     const [selectedClient, setSelectedClient] = useState(null);
@@ -34,6 +21,21 @@ function ClientsPage() {
     useEffect(() => {
         loadClients();
     }, []);
+
+    function createEmptyClientForm(trainerId) {
+        return {
+            trainerId: trainerId,
+            firstName: '',
+            lastName: '',
+            preferredName: '',
+            email: '',
+            phone: '',
+            birthDate: '',
+            goals: '',
+            limitations: '',
+            generalNotes: ''
+        };
+    }
 
     function toClientForm(client) {
         return {
@@ -109,7 +111,7 @@ function ClientsPage() {
             })
             .then(() => {
                 setErrors({});
-                setCreateForm(emptyClientForm);
+                setCreateForm(createEmptyClientForm(trainerId));
 
                 loadClients();
             })
