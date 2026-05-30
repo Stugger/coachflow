@@ -1,4 +1,7 @@
-import './App.css';
+import './styles/global.css';
+import './styles/app-shell.css';
+import './styles/auth.css';
+import './styles/clients.css';
 import {useState} from 'react';
 import ClientsPage from './pages/ClientsPage';
 import AuthPage from './pages/AuthPage';

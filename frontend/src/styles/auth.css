@@ -1,0 +1,33 @@
+.auth-page {
+    display: flex;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-card {
+    width: 360px;
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 24px;
+}
+
+.auth-card h1 {
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.auth-switch {
+    margin-top: 18px;
+    text-align: center;
+}
+
+.auth-switch p {
+    margin: 0 0 6px;
+    color: #aaa;
+}
+
+.back-link {
+    margin-bottom: 16px;
+}
