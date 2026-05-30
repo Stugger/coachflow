@@ -10,7 +10,9 @@ function App() {
         return savedAuth ? JSON.parse(savedAuth) : null;
     });
 
-    const [page, setPage] = useState('clients');
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const [page, setPage] = useState('dashboard');
 
     function handleAuthSuccess(authResponse) {
         setAuth(authResponse);
@@ -26,23 +28,61 @@ function App() {
         return <AuthPage onAuthSuccess={handleAuthSuccess}/>;
     }
 
+    function navigate(page) {
+        setPage(page);
+
+        if (window.innerWidth <= 768) {
+            setSidebarOpen(false);
+        }
+    }
+
+    function getPageTitle() {
+        let pageTitle = '';
+        if (page === 'dashboard') {
+            pageTitle = 'Dashboard';
+        } else if (page === 'clients') {
+            pageTitle = 'Clients';
+        }
+        return window.innerWidth > 768
+            ? `CoachFlow · ${pageTitle}`
+            : pageTitle;
+    }
+
     return (
-        <div className="app">
-            <aside className="sidebar">
-                <h2>CoachFlow</h2>
-
-                <p>{auth.trainer.firstName} {auth.trainer.lastName}</p>
-
-                <button className="sidebar-button" onClick={() => setPage('dashboard')}>
-                    Dashboard
+        <div className={`app ${sidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
+            <header className="app-header">
+                <button className="hamburger-button" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                    ☰
                 </button>
 
-                <button className="sidebar-button" onClick={() => setPage('clients')}>
-                    Clients
+                <h1>{getPageTitle()}</h1>
+            </header>
+
+            <aside className="sidebar">
+                <div className="sidebar-user">
+                    <div className="user-avatar">
+                        {auth.trainer.firstName.charAt(0).toUpperCase()}
+                        {auth.trainer.lastName.charAt(0).toUpperCase()}
+                    </div>
+
+                    <span className="nav-label">
+                        {auth.trainer.firstName} {auth.trainer.lastName}
+                    </span>
+                </div>
+
+                <button className={`sidebar-button ${page === 'dashboard' ? 'active' : ''}`} onClick={() => navigate('dashboard')}>
+                    <span className="nav-icon">🏠</span>
+                    <span className="nav-label">Dashboard</span>
+                </button>
+
+                <button className={`sidebar-button ${page === 'clients' ? 'active' : ''}`} onClick={() => navigate('clients')}>
+                    <span className="nav-icon">👥</span>
+                    <span className="nav-label">Clients</span>
                 </button>
 
                 <button className="sidebar-button" onClick={logout}>
-                    Logout
+                    <span className="nav-icon">🚪</span>
+                    <span className="nav-label">Logout</span>
                 </button>
             </aside>
 
