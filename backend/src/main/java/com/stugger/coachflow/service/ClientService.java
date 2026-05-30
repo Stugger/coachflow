@@ -82,10 +82,14 @@ public class ClientService {
         return new ClientResponse(client);
     }
 
-    public List<ClientResponse> getAllClients() {
-        return clientRepository.findAll(Sort.by("lastName").ascending()
-                        .and(Sort.by("firstName").ascending()))
-                .stream()
+    public List<ClientResponse> getClientsByTrainerId(Long trainerId) {
+        Trainer trainer = trainerRepository.findById(trainerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + trainerId + " not found"));
+
+        Sort sort = Sort.by("lastName").ascending()
+                .and(Sort.by("firstName").ascending());
+
+        return clientRepository.findByTrainerId(trainer.getId(), sort).stream()
                 .map(ClientResponse::new)
                 .toList();
     }

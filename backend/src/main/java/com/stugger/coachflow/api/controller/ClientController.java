@@ -41,8 +41,8 @@ public class ClientController {
         return clientService.getClientById(clientId);
     }
 
-    @GetMapping
-    public List<ClientResponse> getAllClients() {
-        return clientService.getAllClients();
+    @GetMapping("/trainer/{trainerId}")
+    public List<ClientResponse> getClientsByTrainerId(@PathVariable Long trainerId) {
+        return clientService.getClientsByTrainerId(trainerId);
     }
 }

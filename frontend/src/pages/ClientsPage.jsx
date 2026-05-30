@@ -12,7 +12,7 @@ function ClientsPage({trainerId}) {
     const [editErrors, setEditErrors] = useState({});
 
     function loadClients() {
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients`)
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
             .then(response => response.json())
             .then(data => setClients(data))
             .catch(error => console.error('Error loading clients:', error));
