@@ -4,6 +4,7 @@ import com.stugger.coachflow.entity.User;
 import com.stugger.coachflow.entity.UserRole;
 import com.stugger.coachflow.repository.UserRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -18,8 +19,11 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User createUser(String email, String password, UserRole role, LocalDateTime now) {
@@ -29,7 +33,7 @@ public class UserService {
         }
         User user = new User();
         user.setEmail(normalizedEmail);
-        user.setPasswordHash(password); // TODO hash later
+        user.setPasswordHash(passwordEncoder.encode(password));
         user.setRole(role);
         user.setCreatedAt(now);
         user.setUpdatedAt(now);

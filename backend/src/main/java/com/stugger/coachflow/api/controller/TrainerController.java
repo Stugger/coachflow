@@ -1,10 +1,7 @@
 package com.stugger.coachflow.api.controller;
 
-import com.stugger.coachflow.api.dto.request.CreateTrainerRequest;
 import com.stugger.coachflow.api.dto.response.TrainerResponse;
-import com.stugger.coachflow.entity.Trainer;
 import com.stugger.coachflow.service.TrainerService;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,12 +18,6 @@ public class TrainerController {
 
     public TrainerController(TrainerService trainerService) {
         this.trainerService = trainerService;
-    }
-
-    @PostMapping
-    public TrainerResponse createTrainer(@Valid @RequestBody CreateTrainerRequest request) {
-        Trainer trainer = trainerService.createTrainer(request);
-        return new TrainerResponse(trainer);
     }
 
     @GetMapping("/{trainerId}")

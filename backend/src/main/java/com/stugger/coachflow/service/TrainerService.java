@@ -1,6 +1,6 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.api.dto.request.CreateTrainerRequest;
+import com.stugger.coachflow.api.dto.request.RegisterTrainerRequest;
 import com.stugger.coachflow.api.dto.response.TrainerResponse;
 import com.stugger.coachflow.entity.Trainer;
 import com.stugger.coachflow.entity.User;
@@ -29,7 +29,7 @@ public class TrainerService {
         this.userService = userService;
     }
 
-    public Trainer createTrainer(CreateTrainerRequest request) {
+    public Trainer createTrainer(RegisterTrainerRequest request) {
         LocalDateTime now = LocalDateTime.now();
         //create user
         User user = userService.createUser(request.email(), request.password(), UserRole.TRAINER, now);
