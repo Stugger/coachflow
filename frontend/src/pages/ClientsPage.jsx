@@ -12,7 +12,7 @@ function ClientsPage({trainerId}) {
     const [editErrors, setEditErrors] = useState({});
 
     function loadClients() {
-        fetch('http://localhost:8080/api/clients')
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients`)
             .then(response => response.json())
             .then(data => setClients(data))
             .catch(error => console.error('Error loading clients:', error));
@@ -90,7 +90,7 @@ function ClientsPage({trainerId}) {
     function createClient(event) {
         event.preventDefault();
 
-        fetch('http://localhost:8080/api/clients', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -121,7 +121,7 @@ function ClientsPage({trainerId}) {
     function updateClient(event) {
         event.preventDefault();
 
-        fetch(`http://localhost:8080/api/clients/${selectedClient.id}`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${selectedClient.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

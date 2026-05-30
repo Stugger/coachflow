@@ -175,6 +175,10 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(106, 169, 255, 0.15);
 }
 
+input[type="date"] {
+    color-scheme: dark;
+}
+
 button:not(.link-button) {
     padding: 12px 16px;
     border-radius: 8px;
@@ -227,4 +231,10 @@ button:active {
     background: rgba(255, 80, 80, 0.15);
     color: #ff7777;
     border: 1px solid rgba(255, 80, 80, 0.3);
+}
+
+.form-label {
+    color: #aaa;
+    font-size: 13px;
+    margin-bottom: -6px;
 }

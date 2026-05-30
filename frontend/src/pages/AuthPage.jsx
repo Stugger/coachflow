@@ -77,7 +77,7 @@ function AuthPage({onAuthSuccess}) {
         setErrors({});
         setMessage('');
 
-        fetch('http://localhost:8080/api/auth/login', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(loginForm)
@@ -101,7 +101,7 @@ function AuthPage({onAuthSuccess}) {
         setErrors({});
         setMessage('');
 
-        fetch('http://localhost:8080/api/auth/register-trainer', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register-trainer`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(registerForm)
@@ -140,7 +140,7 @@ function AuthPage({onAuthSuccess}) {
                             <input name="password" className={errors.password ? 'input-error' : ''} type="password" placeholder="Password" value={loginForm.password} onChange={updateLoginForm}/>
                             {errors.password && <div className="field-error">* {errors.password}</div>}
 
-                            <button type="submit">Login</button>
+                            <button type="submit" className="primary-button">Login</button>
                         </form>
 
                         <div className="auth-switch">
@@ -166,13 +166,15 @@ function AuthPage({onAuthSuccess}) {
                         <h2>Create trainer account</h2>
 
                         <form onSubmit={register} className="client-form">
+                            <label className="form-label">Identity</label>
+
                             <input name="firstName" className={errors.firstName ? 'input-error' : ''} placeholder="First name" value={registerForm.firstName} onChange={updateRegisterForm}/>
                             {errors.firstName && <div className="field-error">* {errors.firstName}</div>}
 
                             <input name="lastName" className={errors.lastName ? 'input-error' : ''} placeholder="Last name" value={registerForm.lastName} onChange={updateRegisterForm}/>
                             {errors.lastName && <div className="field-error">* {errors.lastName}</div>}
 
-                            <input name="birthDate" type="date" value={registerForm.birthDate} onChange={updateRegisterForm}/>
+                            <label className="form-label">Credentials</label>
 
                             <input name="email" className={errors.email ? 'input-error' : ''} placeholder="Email" value={registerForm.email} onChange={updateRegisterForm}/>
                             {errors.email && <div className="field-error">* {errors.email}</div>}
