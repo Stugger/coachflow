@@ -27,35 +27,6 @@ function ClientsPage({trainerId}) {
         loadClients();
     }, []);
 
-    function createEmptyClientForm(trainerId) {
-        return {
-            trainerId: trainerId,
-            firstName: '',
-            lastName: '',
-            preferredName: '',
-            email: '',
-            phone: '',
-            birthDate: '',
-            goals: '',
-            limitations: '',
-            generalNotes: ''
-        };
-    }
-
-    function toClientForm(client) {
-        return {
-            firstName: client.firstName || '',
-            lastName: client.lastName || '',
-            preferredName: client.preferredName || '',
-            email: client.email || '',
-            phone: client.phone || '',
-            birthDate: client.birthDate || '',
-            goals: client.goals || '',
-            limitations: client.limitations || '',
-            generalNotes: client.generalNotes || ''
-        };
-    }
-
     function updateCreateForm(event) {
         const {name, value} = event.target;
 
@@ -90,18 +61,33 @@ function ClientsPage({trainerId}) {
         setEditErrors({});
         setEditingDetails(false);
         setEditForm(toClientForm(client));
+        setTimeout(() => {
+            clientProfileRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 200);
     }
-
 
     function createClient(event) {
         event.preventDefault();
+
+        const createPhone = splitPhone(createForm.phone);
+
+        if (isPartialPhone(createPhone.area, createPhone.prefix, createPhone.line)) {
+            setErrors({
+                ...createErrors,
+                phone: 'Phone number must be complete'
+            });
+            return;
+        }
 
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(createForm)
+            body: JSON.stringify(normalizeForm(createForm))
         })
             .then(async response => {
                 if (!response.ok) {
@@ -128,7 +114,7 @@ function ClientsPage({trainerId}) {
                         top: 0,
                         behavior: 'smooth'
                     });
-                }, 150);
+                }, 200);
             })
             .catch(error => console.error('Error creating client:', error));
     }
@@ -136,12 +122,22 @@ function ClientsPage({trainerId}) {
     function updateClient(event) {
         event.preventDefault();
 
+        const editPhone = splitPhone(editForm.phone);
+
+        if (isPartialPhone(editPhone.area, editPhone.prefix, editPhone.line)) {
+            setEditErrors({
+                ...editErrors,
+                phone: 'Phone number must be complete'
+            });
+            return;
+        }
+
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${selectedClient.id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(editForm)
+            body: JSON.stringify(normalizeForm(editForm))
         })
             .then(async response => {
                 if (!response.ok) {
@@ -174,6 +170,28 @@ function ClientsPage({trainerId}) {
             .catch(error => console.error('Error updating client:', error));
     }
 
+    function updatePhone(form, setForm, errors, setErrors, part, value) {
+        const numericValue = digitsOnly(value);
+
+        const phone = splitPhone(form.phone);
+
+        const updatedPhone = {
+            ...phone,
+            [part]: numericValue
+        };
+
+        setForm({
+            ...form,
+            phone: formatPhone(updatedPhone.area, updatedPhone.prefix, updatedPhone.line)
+        });
+
+        if (errors.phone) {
+            const updatedErrors = {...errors};
+            delete updatedErrors.phone;
+            setErrors(updatedErrors);
+        }
+    }
+
     return (
         <div className="clients-page">
             <section className="client-list-panel">
@@ -196,58 +214,96 @@ function ClientsPage({trainerId}) {
 
                         <form onSubmit={createClient} className="client-form">
                             {createErrors.trainerId && <div className="field-error"> * {createErrors.trainerId}</div>}
-                            <input name="firstName"
-                                   className={createErrors.firstName ? 'input-error' : ''}
-                                   placeholder="First name"
-                                   value={createForm.firstName}
-                                   onChange={updateCreateForm}
-                            />
+                            <div className="form-field">
+                                <label>First Name</label>
+                                <input name="firstName"
+                                       className={createErrors.firstName ? 'input-error' : ''}
+                                       value={createForm.firstName}
+                                       onChange={updateCreateForm}
+                                />
+                            </div>
                             {createErrors.firstName && <div className="field-error"> * {createErrors.firstName}</div>}
-                            <input name="lastName"
-                                   className={createErrors.lastName ? 'input-error' : ''}
-                                   placeholder="Last name"
-                                   value={createForm.lastName}
-                                   onChange={updateCreateForm}
-                            />
-                            {createErrors.lastName && <div className="field-error"> * {createErrors.lastName}</div>}
-                            <input name="preferredName"
-                                   placeholder="Preferred name"
-                                   value={createForm.preferredName}
-                                   onChange={updateCreateForm}
-                            />
-                            <input name="email"
-                                   className={createErrors.email ? 'input-error' : ''}
-                                   placeholder="Email"
-                                   value={createForm.email}
-                                   onChange={updateCreateForm}
-                            />
-                            {createErrors.email && <div className="field-error"> * {createErrors.email}</div>}
-                            <input name="phone"
-                                   placeholder="Phone"
-                                   value={createForm.phone}
-                                   onChange={updateCreateForm}
-                            />
-                            <input name="birthDate"
-                                   type="date"
-                                   value={createForm.birthDate}
-                                   onChange={updateCreateForm}
-                            />
-                            <input name="goals"
-                                   placeholder="Goals"
-                                   value={createForm.goals}
-                                   onChange={updateCreateForm}
-                            />
-                            <input name="limitations"
-                                   placeholder="Limitations"
-                                   value={createForm.limitations}
-                                   onChange={updateCreateForm}
-                            />
-                            <input name="generalNotes"
-                                   placeholder="General notes"
-                                   value={createForm.generalNotes}
-                                   onChange={updateCreateForm}
-                            />
-
+                            <div className="form-field">
+                                <label>Last Name</label>
+                                <input name="lastName"
+                                       className={createErrors.lastName ? 'input-error' : ''}
+                                       value={createForm.lastName}
+                                       onChange={updateCreateForm}
+                                />
+                                {createErrors.lastName && <div className="field-error"> * {createErrors.lastName}</div>}
+                            </div>
+                            <div className="form-field">
+                                <label>Preferred Name</label>
+                                <input name="preferredName"
+                                       value={createForm.preferredName}
+                                       onChange={updateCreateForm}
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Phone</label>
+                                <div className="phone-input-group">
+                                    <span>(</span>
+                                    <input
+                                        inputMode="numeric"
+                                        maxLength={3}
+                                        value={splitPhone(createForm.phone).area}
+                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'area', event.target.value)}
+                                    />
+                                    <span>)</span>
+                                    <input
+                                        inputMode="numeric"
+                                        maxLength={3}
+                                        value={splitPhone(createForm.phone).prefix}
+                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'prefix', event.target.value)}
+                                    />
+                                    <span>-</span>
+                                    <input
+                                        inputMode="numeric"
+                                        maxLength={4}
+                                        value={splitPhone(createForm.phone).line}
+                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'line', event.target.value)}
+                                    />
+                                </div>
+                                {createErrors.phone && <div className="field-error">* {createErrors.phone}</div>}
+                            </div>
+                            <div className="form-field">
+                                <label>Email</label>
+                                <input name="email"
+                                       className={createErrors.email ? 'input-error' : ''}
+                                       value={createForm.email}
+                                       onChange={updateCreateForm}
+                                />
+                                {createErrors.email && <div className="field-error"> * {createErrors.email}</div>}
+                            </div>
+                            <div className="form-field">
+                                <label>Birth Date</label>
+                                <input name="birthDate"
+                                       type="date"
+                                       value={createForm.birthDate}
+                                       onChange={updateCreateForm}
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Goals</label>
+                                <textarea name="goals"
+                                       value={createForm.goals}
+                                       onChange={updateCreateForm}
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>Limitations</label>
+                                <textarea name="limitations"
+                                       value={createForm.limitations}
+                                       onChange={updateCreateForm}
+                                />
+                            </div>
+                            <div className="form-field">
+                                <label>General Notes</label>
+                                <textarea name="generalNotes"
+                                       value={createForm.generalNotes}
+                                       onChange={updateCreateForm}
+                                />
+                            </div>
                             <button type="submit">Create Client</button>
                         </form>
                     </section>
@@ -284,8 +340,8 @@ function ClientsPage({trainerId}) {
                                     {selectedClient.preferredName ? ` (${selectedClient.preferredName})` : ''}
                                 </h2>
                                 <p className="client-contact-info">
-                                    <span>{selectedClient.email || 'No email'}</span>
                                     <span>{selectedClient.phone || 'No phone'}</span>
+                                    <span>{selectedClient.email || 'No email'}</span>
                                 </p>
                             </div>
 
@@ -301,58 +357,96 @@ function ClientsPage({trainerId}) {
                                 <div className="profile-card">
                                     <h3>Edit Details</h3>
                                     <form onSubmit={updateClient} className="client-form">
-                                        <input name="firstName"
-                                               className={editErrors.firstName ? 'input-error' : ''}
-                                               placeholder="First name"
-                                               value={editForm.firstName}
-                                               onChange={updateEditForm}
-                                        />
+                                        <div className="form-field">
+                                            <label>First Name</label>
+                                            <input name="firstName"
+                                                   className={editErrors.firstName ? 'input-error' : ''}
+                                                   value={editForm.firstName}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
                                         {editErrors.firstName && <div className="field-error"> * {editErrors.firstName}</div>}
-                                        <input name="lastName"
-                                               className={editErrors.lastName ? 'input-error' : ''}
-                                               placeholder="Last name"
-                                               value={editForm.lastName}
-                                               onChange={updateEditForm}
-                                        />
+                                        <div className="form-field">
+                                            <label>Last Name</label>
+                                            <input name="lastName"
+                                                   className={editErrors.lastName ? 'input-error' : ''}
+                                                   value={editForm.lastName}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
                                         {editErrors.lastName && <div className="field-error"> * {editErrors.lastName}</div>}
-                                        <input name="preferredName"
-                                               placeholder="Preferred name"
-                                               value={editForm.preferredName}
-                                               onChange={updateEditForm}
-                                        />
-                                        <input name="email"
-                                               className={editErrors.email ? 'input-error' : ''}
-                                               placeholder="Email"
-                                               value={editForm.email}
-                                               onChange={updateEditForm}
-                                        />
-                                        {editErrors.email && <div className="field-error"> * {editErrors.email}</div>}
-                                        <input name="phone"
-                                               placeholder="Phone"
-                                               value={editForm.phone}
-                                               onChange={updateEditForm}
-                                        />
-                                        <input name="birthDate"
-                                               type="date"
-                                               value={editForm.birthDate}
-                                               onChange={updateEditForm}
-                                        />
-                                        <textarea name="goals"
-                                               placeholder="Goals"
-                                               value={editForm.goals}
-                                               onChange={updateEditForm}
-                                        />
-                                        <textarea name="limitations"
-                                               placeholder="Limitations"
-                                               value={editForm.limitations}
-                                               onChange={updateEditForm}
-                                        />
-                                        <textarea name="generalNotes"
-                                               placeholder="General notes"
-                                               value={editForm.generalNotes}
-                                               onChange={updateEditForm}
-                                        />
-
+                                        <div className="form-field">
+                                            <label>Preferred Name</label>
+                                            <input name="preferredName"
+                                                   value={editForm.preferredName}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
+                                        <div className="form-field">
+                                            <label>Phone</label>
+                                            <div className="phone-input-group">
+                                                <span>(</span>
+                                                <input
+                                                    inputMode="numeric"
+                                                    maxLength={3}
+                                                    value={splitPhone(editForm.phone).area}
+                                                    onChange={(event) => updatePhone(editForm, setEditForm, editErrors, setEditErrors, 'area', event.target.value)}
+                                                />
+                                                <span>)</span>
+                                                <input
+                                                    inputMode="numeric"
+                                                    maxLength={3}
+                                                    value={splitPhone(editForm.phone).prefix}
+                                                    onChange={(event) => updatePhone(editForm, setEditForm, editErrors, setEditErrors, 'prefix', event.target.value)}
+                                                />
+                                                <span>-</span>
+                                                <input
+                                                    inputMode="numeric"
+                                                    maxLength={4}
+                                                    value={splitPhone(editForm.phone).line}
+                                                    onChange={(event) => updatePhone(editForm, setEditForm, editErrors, setEditErrors, 'line', event.target.value)}
+                                                />
+                                            </div>
+                                            {editErrors.phone && <div className="field-error">* {editErrors.phone}</div>}
+                                        </div>
+                                        <div className="form-field">
+                                            <label>Email</label>
+                                            <input name="email"
+                                                   className={editErrors.email ? 'input-error' : ''}
+                                                   value={editForm.email}
+                                                   onChange={updateEditForm}
+                                            />
+                                            {editErrors.email && <div className="field-error"> * {editErrors.email}</div>}
+                                        </div>
+                                        <div className="form-field">
+                                            <label>Birth Date</label>
+                                            <input name="birthDate"
+                                                   type="date"
+                                                   value={editForm.birthDate}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
+                                        <div className="form-field">
+                                            <label>Goals</label>
+                                            <textarea name="goals"
+                                                   value={editForm.goals}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
+                                        <div className="form-field">
+                                            <label>Limitations</label>
+                                            <textarea name="limitations"
+                                                   value={editForm.limitations}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
+                                        <div className="form-field">
+                                            <label>General Notes</label>
+                                            <textarea name="generalNotes"
+                                                   value={editForm.generalNotes}
+                                                   onChange={updateEditForm}
+                                            />
+                                        </div>
                                         <button type="submit">Save Changes</button>
                                     </form>
                                 </div>
@@ -381,9 +475,18 @@ function ClientsPage({trainerId}) {
                             {!editingDetails && (
                                 <div className="profile-card">
                                     <h3>Details</h3>
-                                    <p><strong>Goals:</strong> {selectedClient.goals || 'None'}</p>
-                                    <p><strong>Limitations:</strong> {selectedClient.limitations || 'None'}</p>
-                                    <p><strong>General Notes:</strong> {selectedClient.generalNotes || 'None'}</p>
+                                    <p>
+                                        <strong>Goals</strong>
+                                        <small className="multiline-text">{selectedClient.goals || 'None'}</small>
+                                    </p>
+                                    <p>
+                                        <strong>Limitations</strong>
+                                        <small className="multiline-text">{selectedClient.limitations || 'None'}</small>
+                                    </p>
+                                    <p>
+                                        <strong>General Notes</strong>
+                                        <small className="multiline-text">{selectedClient.generalNotes || 'None'}</small>
+                                    </p>
                                 </div>
                             )}
                         </div>
@@ -392,6 +495,93 @@ function ClientsPage({trainerId}) {
             </section>
         </div>
     );
+
+    function createEmptyClientForm(trainerId) {
+        return {
+            trainerId: trainerId,
+            firstName: '',
+            lastName: '',
+            preferredName: '',
+            email: '',
+            phone: '',
+            birthDate: '',
+            goals: '',
+            limitations: '',
+            generalNotes: ''
+        };
+    }
+
+    function toClientForm(client) {
+        return {
+            firstName: client.firstName || '',
+            lastName: client.lastName || '',
+            preferredName: client.preferredName || '',
+            email: client.email || '',
+            phone: client.phone || '',
+            birthDate: client.birthDate || '',
+            goals: client.goals || '',
+            limitations: client.limitations || '',
+            generalNotes: client.generalNotes || ''
+        };
+    }
+
+    function normalizeForm(form) {
+        return {
+            ...form,
+            firstName: formatName(form.firstName),
+            lastName: formatName(form.lastName),
+            preferredName: formatName(form.preferredName),
+            email: form.email.trim().toLowerCase(),
+            phone: form.phone.trim(),
+            goals: form.goals.trim(),
+            limitations: form.limitations.trim(),
+            generalNotes: form.generalNotes.trim()
+        };
+    }
+
+    function formatName(name) {
+        if (!name) {
+            return '';
+        }
+        return name
+            .trim()
+            .toLowerCase()
+            .split(' ')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    }
+
+    function digitsOnly(value) {
+        return value.replace(/\D/g, '');
+    }
+
+    function splitPhone(phone) {
+        const digits = digitsOnly(phone || '');
+
+        return {
+            area: digits.substring(0, 3),
+            prefix: digits.substring(3, 6),
+            line: digits.substring(6, 10)
+        };
+    }
+
+    function formatPhone(area, prefix, line) {
+        if (!area && !prefix && !line) {
+            return '';
+        }
+
+        return `(${area}) ${prefix}-${line}`;
+    }
+
+    function isPartialPhone(area, prefix, line) {
+        const totalLength = area.length + prefix.length + line.length;
+
+        if (totalLength === 0) {
+            return false;
+        }
+
+        return area.length !== 3 || prefix.length !== 3 || line.length !== 4;
+    }
 
 }
 

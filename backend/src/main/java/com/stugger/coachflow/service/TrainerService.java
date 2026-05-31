@@ -6,6 +6,7 @@ import com.stugger.coachflow.entity.Trainer;
 import com.stugger.coachflow.entity.User;
 import com.stugger.coachflow.entity.UserRole;
 import com.stugger.coachflow.repository.TrainerRepository;
+import com.stugger.coachflow.util.TextUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -36,8 +37,8 @@ public class TrainerService {
         //create trainer
         Trainer trainer = new Trainer();
         trainer.setUser(user);
-        trainer.setFirstName(request.firstName());
-        trainer.setLastName(request.lastName());
+        trainer.setFirstName(TextUtils.normalizeName(request.firstName()));
+        trainer.setLastName(TextUtils.normalizeName(request.lastName()));
         trainer.setBirthDate(request.birthDate());
         trainer.setCreatedAt(now);
         trainer.setUpdatedAt(now);

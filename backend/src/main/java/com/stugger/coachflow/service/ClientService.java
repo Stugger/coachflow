@@ -7,6 +7,7 @@ import com.stugger.coachflow.entity.Client;
 import com.stugger.coachflow.entity.Trainer;
 import com.stugger.coachflow.repository.ClientRepository;
 import com.stugger.coachflow.repository.TrainerRepository;
+import com.stugger.coachflow.util.TextUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -37,17 +38,17 @@ public class ClientService {
         LocalDateTime now = LocalDateTime.now();
         Client client = new Client();
         client.setTrainer(trainer);
-        client.setFirstName(request.firstName());
-        client.setLastName(request.lastName());
-        client.setPreferredName(request.preferredName());
+        client.setFirstName(TextUtils.normalizeName(request.firstName()));
+        client.setLastName(TextUtils.normalizeName(request.lastName()));
+        client.setPreferredName(TextUtils.normalizeName(request.preferredName()));
         if (request.email() != null && !request.email().isBlank()) {
-            client.setEmail(request.email().trim().toLowerCase());
+            client.setEmail(TextUtils.normalizeEmail(request.email()));
         }
         client.setPhone(request.phone());
         client.setBirthDate(request.birthDate());
-        client.setGoals(request.goals());
-        client.setLimitations(request.limitations());
-        client.setGeneralNotes(request.generalNotes());
+        client.setGoals(TextUtils.trimToNull(request.goals()));
+        client.setLimitations(TextUtils.trimToNull(request.limitations()));
+        client.setGeneralNotes(TextUtils.trimToNull(request.generalNotes()));
         client.setActive(true);
         client.setCreatedAt(now);
         client.setUpdatedAt(now);
@@ -57,19 +58,19 @@ public class ClientService {
     public Client updateClient(Long clientId, @Valid UpdateClientRequest request) {
         Client client = clientRepository.findById(clientId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client with id " + clientId + " not found"));
-        client.setFirstName(request.firstName());
-        client.setLastName(request.lastName());
-        client.setPreferredName(request.preferredName());
+        client.setFirstName(TextUtils.normalizeName(request.firstName()));
+        client.setLastName(TextUtils.normalizeName(request.lastName()));
+        client.setPreferredName(TextUtils.normalizeName(request.preferredName()));
         if (request.email() != null && !request.email().isBlank()) {
-            client.setEmail(request.email().trim().toLowerCase());
+            client.setEmail(TextUtils.normalizeEmail(request.email()));
         } else {
             client.setEmail(null);
         }
         client.setPhone(request.phone());
         client.setBirthDate(request.birthDate());
-        client.setGoals(request.goals());
-        client.setLimitations(request.limitations());
-        client.setGeneralNotes(request.generalNotes());
+        client.setGoals(TextUtils.trimToNull(request.goals()));
+        client.setLimitations(TextUtils.trimToNull(request.limitations()));
+        client.setGeneralNotes(TextUtils.trimToNull(request.generalNotes()));
         client.setUpdatedAt(LocalDateTime.now());
         return clientRepository.save(client);
     }

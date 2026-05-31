@@ -104,7 +104,7 @@ function AuthPage({onAuthSuccess}) {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register-trainer`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(registerForm)
+            body: JSON.stringify(normalizeForm(registerForm))
         })
             .then(async response => {
                 if (!response.ok) {
@@ -134,13 +134,26 @@ function AuthPage({onAuthSuccess}) {
                         )}
 
                         <form onSubmit={login} className="client-form">
-                            <input name="email" className={errors.email ? 'input-error' : ''} placeholder="Email" value={loginForm.email} onChange={updateLoginForm}/>
+                            <input name="email"
+                                   className={errors.email ? 'input-error' : ''}
+                                   placeholder="Email"
+                                   value={loginForm.email}
+                                   onChange={updateLoginForm}
+                            />
                             {errors.email && <div className="field-error">* {errors.email}</div>}
 
-                            <input name="password" className={errors.password ? 'input-error' : ''} type="password" placeholder="Password" value={loginForm.password} onChange={updateLoginForm}/>
+                            <input name="password"
+                                   className={errors.password ? 'input-error' : ''}
+                                   type="password"
+                                   placeholder="Password"
+                                   value={loginForm.password}
+                                   onChange={updateLoginForm}
+                            />
                             {errors.password && <div className="field-error">* {errors.password}</div>}
 
-                            <button type="submit" className="primary-button">Login</button>
+                            <button type="submit" className="primary-button">
+                                Login
+                            </button>
                         </form>
 
                         <div className="auth-switch">
@@ -168,18 +181,39 @@ function AuthPage({onAuthSuccess}) {
                         <form onSubmit={register} className="client-form">
                             <label className="form-label">Identity</label>
 
-                            <input name="firstName" className={errors.firstName ? 'input-error' : ''} placeholder="First name" value={registerForm.firstName} onChange={updateRegisterForm}/>
+                            <input name="firstName"
+                                   className={errors.firstName ? 'input-error' : ''}
+                                   placeholder="First name"
+                                   value={registerForm.firstName}
+                                   onChange={updateRegisterForm}
+                            />
                             {errors.firstName && <div className="field-error">* {errors.firstName}</div>}
 
-                            <input name="lastName" className={errors.lastName ? 'input-error' : ''} placeholder="Last name" value={registerForm.lastName} onChange={updateRegisterForm}/>
+                            <input name="lastName"
+                                   className={errors.lastName ? 'input-error' : ''}
+                                   placeholder="Last name"
+                                   value={registerForm.lastName}
+                                   onChange={updateRegisterForm}
+                            />
                             {errors.lastName && <div className="field-error">* {errors.lastName}</div>}
 
                             <label className="form-label">Credentials</label>
 
-                            <input name="email" className={errors.email ? 'input-error' : ''} placeholder="Email" value={registerForm.email} onChange={updateRegisterForm}/>
+                            <input name="email"
+                                   className={errors.email ? 'input-error' : ''}
+                                   placeholder="Email"
+                                   value={registerForm.email}
+                                   onChange={updateRegisterForm}
+                            />
                             {errors.email && <div className="field-error">* {errors.email}</div>}
 
-                            <input name="password" className={errors.password ? 'input-error' : ''} type="password" placeholder="Password" value={registerForm.password} onChange={updateRegisterForm}/>
+                            <input name="password"
+                                   className={errors.password ? 'input-error' : ''}
+                                   type="password"
+                                   placeholder="Password"
+                                   value={registerForm.password}
+                                   onChange={updateRegisterForm}
+                            />
                             {errors.password && <div className="field-error">* {errors.password}</div>}
 
                             <button type="submit">Create Account</button>
@@ -189,6 +223,27 @@ function AuthPage({onAuthSuccess}) {
             </div>
         </div>
     );
+
+    function normalizeForm(form) {
+        return {
+            ...form,
+            firstName: formatName(form.firstName),
+            lastName: formatName(form.lastName),
+            email: form.email.trim().toLowerCase(),
+        };
+    }
+
+    function formatName(name) {
+        if (!name) {
+            return '';
+        }
+        return name
+            .trim()
+            .toLowerCase()
+            .split(' ')
+            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+    }
 }
 
 export default AuthPage;

@@ -3,6 +3,7 @@ package com.stugger.coachflow.service;
 import com.stugger.coachflow.entity.User;
 import com.stugger.coachflow.entity.UserRole;
 import com.stugger.coachflow.repository.UserRepository;
+import com.stugger.coachflow.util.TextUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class UserService {
     }
 
     public User createUser(String email, String password, UserRole role, LocalDateTime now) {
-        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedEmail = TextUtils.normalizeEmail(email);
         if (userRepository.existsByEmail(normalizedEmail)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email is already in use.");
         }
