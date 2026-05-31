@@ -15,7 +15,9 @@ function App() {
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
-    const [page, setPage] = useState('dashboard');
+    const [page, setPage] = useState(() => {
+        return localStorage.getItem('coachflow_page') || 'dashboard';
+    });
 
     function handleAuthSuccess(authResponse) {
         setAuth(authResponse);
@@ -33,7 +35,7 @@ function App() {
 
     function navigate(page) {
         setPage(page);
-
+        localStorage.setItem('coachflow_page', page);
         if (window.innerWidth <= 768) {
             setSidebarOpen(false);
         }

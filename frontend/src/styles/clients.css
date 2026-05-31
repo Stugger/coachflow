@@ -12,6 +12,7 @@
     border: 1px solid #333;
     border-radius: 8px;
     padding: 16px;
+    scroll-margin-top: 72px;
 }
 
 .client-form-panel {

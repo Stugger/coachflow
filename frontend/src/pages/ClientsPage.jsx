@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 function ClientsPage({trainerId}) {
 
@@ -13,6 +13,8 @@ function ClientsPage({trainerId}) {
 
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [editingDetails, setEditingDetails] = useState(false);
+
+    const clientProfileRef = useRef(null);
 
     function loadClients() {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
@@ -114,11 +116,19 @@ function ClientsPage({trainerId}) {
                 return response.json();
             })
             .then(() => {
+                document.activeElement?.blur(); //close mobile keyboard
                 setErrors({});
                 setShowCreateForm(false);
                 setCreateForm(createEmptyClientForm(trainerId));
 
                 loadClients();
+
+                setTimeout(() => {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }, 150);
             })
             .catch(error => console.error('Error creating client:', error));
     }
@@ -147,9 +157,19 @@ function ClientsPage({trainerId}) {
                 return response.json();
             })
             .then(updatedClient => {
+                document.activeElement?.blur(); //close mobile keyboard
                 setSelectedClient(updatedClient);
                 setEditErrors({});
+                setEditingDetails(false);
+
                 loadClients();
+
+                setTimeout(() => {
+                    clientProfileRef.current?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 200);
             })
             .catch(error => console.error('Error updating client:', error));
     }
@@ -247,7 +267,7 @@ function ClientsPage({trainerId}) {
                 </div>
             </section>
 
-            <section className="client-profile-panel">
+            <section className="client-profile-panel" ref={clientProfileRef}>
                 {!selectedClient && (
                     <div className="empty-state">
                         <h2>Select a client</h2>

@@ -10,6 +10,7 @@ textarea {
     box-sizing: border-box;
     padding: 12px 14px;
 
+    font-size: 16px;
     background: #252525;   /* slightly darker */
     color: #f0f0f0;
 
@@ -39,6 +40,13 @@ textarea:focus {
 }
 
 input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+
+    min-height: 44px;
+    width: 100%;
+
+    box-sizing: border-box;
     color-scheme: dark;
 }
 
