@@ -1,18 +1,20 @@
 input,
+textarea,
 button {
     font-family: inherit;
 }
 
-input {
+input,
+textarea {
     width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
 
-    background: #2b2b2b;
+    background: #252525;   /* slightly darker */
     color: #f0f0f0;
 
-    border: 1px solid #444;
-    border-radius: 8px;
+    border: 1px solid #3a3a3a;
+    border-radius: 3px;    /* slightly sharper than buttons */
 
     outline: none;
     transition: border-color 0.2s ease,
@@ -20,11 +22,18 @@ input {
     background-color 0.2s ease;
 }
 
-input::placeholder {
+textarea {
+    min-height: 76px;
+    resize: vertical;
+}
+
+input::placeholder,
+textarea::placeholder {
     color: #999;
 }
 
-input:focus {
+input:focus,
+textarea:focus {
     border-color: #6aa9ff;
     box-shadow: 0 0 0 3px rgba(106, 169, 255, 0.15);
 }
@@ -39,7 +48,8 @@ input[type="date"] {
     gap: 10px;
 }
 
-.client-form input {
+.client-form input,
+.client-form textarea {
     padding: 10px;
 }
 

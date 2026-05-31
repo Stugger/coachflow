@@ -4,13 +4,25 @@
     gap: 20px;
 }
 
+.client-list-panel,
+.client-profile-panel,
 .client-form-panel,
-.client-main-panel,
-.client-details {
+.profile-card {
     background: #202020;
     border: 1px solid #333;
     border-radius: 8px;
     padding: 16px;
+}
+
+.client-form-panel {
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.client-profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .client-list {
@@ -46,6 +58,73 @@
     transform: scale(0.99);
 }
 
-.client-details {
-    margin-top: 20px;
+.client-contact-info {
+    display: flex;
+    gap: 6px;
+    color: #aaa;
+}
+
+.client-contact-info span:not(:last-child)::after {
+    content: '·';
+    margin-left: 6px;
+}
+
+.page-header,
+.client-profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.page-header {
+    margin-bottom: 16px;
+}
+
+.client-profile-header {
+    margin-bottom: 8px;
+}
+
+.page-header p,
+.client-profile-header p,
+.empty-state p,
+.profile-card p {
+    color: #aaa;
+}
+
+.profile-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+
+@media (max-width: 768px) {
+    .clients-page {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .client-contact-info {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .client-profile-header {
+        margin-bottom: 0px;
+    }
+
+    .client-contact-info span::after {
+        content: none !important;
+    }
+
+    .add-client-button,
+    .edit-details-button {
+        min-width: 96px;
+        max-width: 96px;
+        flex-shrink: 0;
+    }
 }

@@ -11,6 +11,9 @@ function ClientsPage({trainerId}) {
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
 
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [editingDetails, setEditingDetails] = useState(false);
+
     function loadClients() {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
             .then(response => response.json())
@@ -83,6 +86,7 @@ function ClientsPage({trainerId}) {
     function selectClient(client) {
         setSelectedClient(client);
         setEditErrors({});
+        setEditingDetails(false);
         setEditForm(toClientForm(client));
     }
 
@@ -111,6 +115,7 @@ function ClientsPage({trainerId}) {
             })
             .then(() => {
                 setErrors({});
+                setShowCreateForm(false);
                 setCreateForm(createEmptyClientForm(trainerId));
 
                 loadClients();
@@ -151,70 +156,82 @@ function ClientsPage({trainerId}) {
 
     return (
         <div className="clients-page">
-            <section className="client-form-panel">
-                <h2>Create Client</h2>
+            <section className="client-list-panel">
+                <div className="page-header">
+                    <div>
+                        <p>Manage your clients.</p>
+                    </div>
 
-                <form onSubmit={createClient} className="client-form">
-                    <input name="firstName"
-                           className={createErrors.firstName ? 'input-error' : ''}
-                           placeholder="First name"
-                           value={createForm.firstName}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="lastName"
-                           className={createErrors.lastName ? 'input-error' : ''}
-                           placeholder="Last name"
-                           value={createForm.lastName}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="preferredName"
-                           placeholder="Preferred name"
-                           value={createForm.preferredName}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="email"
-                           className={createErrors.email ? 'input-error' : ''}
-                           placeholder="Email"
-                           value={createForm.email}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="phone"
-                           placeholder="Phone"
-                           value={createForm.phone}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="birthDate"
-                           type="date"
-                           value={createForm.birthDate}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="goals"
-                           placeholder="Goals"
-                           value={createForm.goals}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="limitations"
-                           placeholder="Limitations"
-                           value={createForm.limitations}
-                           onChange={updateCreateForm}
-                    />
-                    <input name="generalNotes"
-                           placeholder="General notes"
-                           value={createForm.generalNotes}
-                           onChange={updateCreateForm}
-                    />
+                    <button
+                        className="add-client-button"
+                        onClick={() => setShowCreateForm(!showCreateForm)}
+                    >
+                        {showCreateForm ? 'Cancel' : '+ Add Client'}
+                    </button>
+                </div>
 
-                    <button type="submit">Create Client</button>
+                {showCreateForm && (
+                    <section className="client-form-panel">
+                        <h3>Add Client</h3>
 
-                    {createErrors.trainerId && <div className="field-error"> * {createErrors.trainerId}</div>}
-                    {createErrors.firstName && <div className="field-error"> * {createErrors.firstName}</div>}
-                    {createErrors.lastName && <div className="field-error"> * {createErrors.lastName}</div>}
-                    {createErrors.email && <div className="field-error"> * {createErrors.email}</div>}
-                </form>
-            </section>
+                        <form onSubmit={createClient} className="client-form">
+                            {createErrors.trainerId && <div className="field-error"> * {createErrors.trainerId}</div>}
+                            <input name="firstName"
+                                   className={createErrors.firstName ? 'input-error' : ''}
+                                   placeholder="First name"
+                                   value={createForm.firstName}
+                                   onChange={updateCreateForm}
+                            />
+                            {createErrors.firstName && <div className="field-error"> * {createErrors.firstName}</div>}
+                            <input name="lastName"
+                                   className={createErrors.lastName ? 'input-error' : ''}
+                                   placeholder="Last name"
+                                   value={createForm.lastName}
+                                   onChange={updateCreateForm}
+                            />
+                            {createErrors.lastName && <div className="field-error"> * {createErrors.lastName}</div>}
+                            <input name="preferredName"
+                                   placeholder="Preferred name"
+                                   value={createForm.preferredName}
+                                   onChange={updateCreateForm}
+                            />
+                            <input name="email"
+                                   className={createErrors.email ? 'input-error' : ''}
+                                   placeholder="Email"
+                                   value={createForm.email}
+                                   onChange={updateCreateForm}
+                            />
+                            {createErrors.email && <div className="field-error"> * {createErrors.email}</div>}
+                            <input name="phone"
+                                   placeholder="Phone"
+                                   value={createForm.phone}
+                                   onChange={updateCreateForm}
+                            />
+                            <input name="birthDate"
+                                   type="date"
+                                   value={createForm.birthDate}
+                                   onChange={updateCreateForm}
+                            />
+                            <input name="goals"
+                                   placeholder="Goals"
+                                   value={createForm.goals}
+                                   onChange={updateCreateForm}
+                            />
+                            <input name="limitations"
+                                   placeholder="Limitations"
+                                   value={createForm.limitations}
+                                   onChange={updateCreateForm}
+                            />
+                            <input name="generalNotes"
+                                   placeholder="General notes"
+                                   value={createForm.generalNotes}
+                                   onChange={updateCreateForm}
+                            />
 
-            <section className="client-main-panel">
-                <h2>Clients</h2>
+                            <button type="submit">Create Client</button>
+                        </form>
+                    </section>
+                )}
 
                 <div className="client-list">
                     {clients.map(client => (
@@ -228,72 +245,134 @@ function ClientsPage({trainerId}) {
                         </button>
                     ))}
                 </div>
+            </section>
 
-                {selectedClient && editForm && (
-                    <div className="client-details">
-                        <h2>Edit Client</h2>
-
-                        <form onSubmit={updateClient} className="client-form">
-                            <input name="firstName"
-                                   className={editErrors.firstName ? 'input-error' : ''}
-                                   placeholder="First name"
-                                   value={editForm.firstName}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="lastName"
-                                   className={editErrors.lastName ? 'input-error' : ''}
-                                   placeholder="Last name"
-                                   value={editForm.lastName}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="preferredName"
-                                   placeholder="Preferred name"
-                                   value={editForm.preferredName}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="email"
-                                   className={editErrors.email ? 'input-error' : ''}
-                                   placeholder="Email"
-                                   value={editForm.email}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="phone"
-                                   placeholder="Phone"
-                                   value={editForm.phone}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="birthDate"
-                                   type="date"
-                                   value={editForm.birthDate}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="goals"
-                                   placeholder="Goals"
-                                   value={editForm.goals}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="limitations"
-                                   placeholder="Limitations"
-                                   value={editForm.limitations}
-                                   onChange={updateEditForm}
-                            />
-                            <input name="generalNotes"
-                                   placeholder="General notes"
-                                   value={editForm.generalNotes}
-                                   onChange={updateEditForm}
-                            />
-
-                            <button type="submit">Save Changes</button>
-
-                            {editErrors.firstName && <div className="field-error"> * {editErrors.firstName}</div>}
-                            {editErrors.lastName && <div className="field-error"> * {editErrors.lastName}</div>}
-                            {editErrors.email && <div className="field-error"> * {editErrors.email}</div>}
-                        </form>
+            <section className="client-profile-panel">
+                {!selectedClient && (
+                    <div className="empty-state">
+                        <h2>Select a client</h2>
+                        <p>Choose a client from the list to view their profile.</p>
                     </div>
+                )}
+
+                {selectedClient && (
+                    <>
+                        <div className="client-profile-header">
+                            <div>
+                                <h2>
+                                    {selectedClient.firstName} {selectedClient.lastName}
+                                    {selectedClient.preferredName ? ` (${selectedClient.preferredName})` : ''}
+                                </h2>
+                                <p className="client-contact-info">
+                                    <span>{selectedClient.email || 'No email'}</span>
+                                    <span>{selectedClient.phone || 'No phone'}</span>
+                                </p>
+                            </div>
+
+                            <button
+                                className="edit-details-button"
+                                onClick={() => setEditingDetails(!editingDetails)}
+                            >
+                                {editingDetails ? 'Cancel' : 'Edit Details'}
+                            </button>
+                        </div>
+                        <div className="client-profile-content">
+                            {editingDetails && (
+                                <div className="profile-card">
+                                    <h3>Edit Details</h3>
+                                    <form onSubmit={updateClient} className="client-form">
+                                        <input name="firstName"
+                                               className={editErrors.firstName ? 'input-error' : ''}
+                                               placeholder="First name"
+                                               value={editForm.firstName}
+                                               onChange={updateEditForm}
+                                        />
+                                        {editErrors.firstName && <div className="field-error"> * {editErrors.firstName}</div>}
+                                        <input name="lastName"
+                                               className={editErrors.lastName ? 'input-error' : ''}
+                                               placeholder="Last name"
+                                               value={editForm.lastName}
+                                               onChange={updateEditForm}
+                                        />
+                                        {editErrors.lastName && <div className="field-error"> * {editErrors.lastName}</div>}
+                                        <input name="preferredName"
+                                               placeholder="Preferred name"
+                                               value={editForm.preferredName}
+                                               onChange={updateEditForm}
+                                        />
+                                        <input name="email"
+                                               className={editErrors.email ? 'input-error' : ''}
+                                               placeholder="Email"
+                                               value={editForm.email}
+                                               onChange={updateEditForm}
+                                        />
+                                        {editErrors.email && <div className="field-error"> * {editErrors.email}</div>}
+                                        <input name="phone"
+                                               placeholder="Phone"
+                                               value={editForm.phone}
+                                               onChange={updateEditForm}
+                                        />
+                                        <input name="birthDate"
+                                               type="date"
+                                               value={editForm.birthDate}
+                                               onChange={updateEditForm}
+                                        />
+                                        <textarea name="goals"
+                                               placeholder="Goals"
+                                               value={editForm.goals}
+                                               onChange={updateEditForm}
+                                        />
+                                        <textarea name="limitations"
+                                               placeholder="Limitations"
+                                               value={editForm.limitations}
+                                               onChange={updateEditForm}
+                                        />
+                                        <textarea name="generalNotes"
+                                               placeholder="General notes"
+                                               value={editForm.generalNotes}
+                                               onChange={updateEditForm}
+                                        />
+
+                                        <button type="submit">Save Changes</button>
+                                    </form>
+                                </div>
+                            )}
+
+                            <div className="profile-card-grid">
+                                <div className="profile-card">
+                                    <h3>Upcoming Sessions</h3>
+                                    <p>No sessions scheduled yet.</p>
+                                    <button>+ Schedule Session</button>
+                                </div>
+
+                                <div className="profile-card">
+                                    <h3>Current Workout Plan</h3>
+                                    <p>No workout plan assigned yet.</p>
+                                    <button>+ Create Workout Plan</button>
+                                </div>
+
+                                <div className="profile-card">
+                                    <h3>Recent Notes</h3>
+                                    <p>No notes yet.</p>
+                                    <button>+ Add Note</button>
+                                </div>
+                            </div>
+
+                            {!editingDetails && (
+                                <div className="profile-card">
+                                    <h3>Details</h3>
+                                    <p><strong>Goals:</strong> {selectedClient.goals || 'None'}</p>
+                                    <p><strong>Limitations:</strong> {selectedClient.limitations || 'None'}</p>
+                                    <p><strong>General Notes:</strong> {selectedClient.generalNotes || 'None'}</p>
+                                </div>
+                            )}
+                        </div>
+                    </>
                 )}
             </section>
         </div>
     );
+
 }
 
 export default ClientsPage;
