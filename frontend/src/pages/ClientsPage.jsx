@@ -362,19 +362,19 @@ function ClientsPage({trainerId}) {
                                 <div className="profile-card">
                                     <h3>Upcoming Sessions</h3>
                                     <p>No sessions scheduled yet.</p>
-                                    <button>+ Schedule Session</button>
+                                    <button disabled>+ Schedule Session (Coming Soon)</button>
                                 </div>
 
                                 <div className="profile-card">
                                     <h3>Current Workout Plan</h3>
                                     <p>No workout plan assigned yet.</p>
-                                    <button>+ Create Workout Plan</button>
+                                    <button disabled>+ Create Workout Plan (Coming Soon)</button>
                                 </div>
 
                                 <div className="profile-card">
                                     <h3>Recent Notes</h3>
                                     <p>No notes yet.</p>
-                                    <button>+ Add Note</button>
+                                    <button disabled>+ Add Note (Coming Soon)</button>
                                 </div>
                             </div>
 
