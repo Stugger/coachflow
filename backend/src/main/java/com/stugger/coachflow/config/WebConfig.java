@@ -16,7 +16,8 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins(
                         "http://localhost:5173",
-                        "http://10.0.0.84:5173"
+                        "http://10.0.0.84:5173",
+                        "https://coachflow.jacobnh.com"
                 )
                 .allowedMethods("*");
     }

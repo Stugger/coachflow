@@ -57,6 +57,12 @@ input[type="date"] {
     margin-left: 4px;
 }
 
+.dashboard-page {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
 .client-form {
     display: flex;
     flex-direction: column;

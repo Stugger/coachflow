@@ -93,8 +93,40 @@ function App() {
 
             <main className="content">
                 {page === 'dashboard' && (
-                    <div>
-                        <h2>Dashboard</h2>
+                    <div className="dashboard-page">
+                        <section className="profile-card">
+                            <h2>Under Construction</h2>
+                            <p>
+                                The Dashboard will become the main landing page for users after logging in.
+                            </p>
+                            <p>
+                                Planned sections include upcoming sessions, today's schedule, recent client activity,
+                                workout plan reminders, and quick actions.
+                            </p>
+                            <p>
+                                What is included on this page will vary between trainers and clients, depending on which role is logged in.
+                            </p>
+                        </section>
+                        <sectiion></sectiion>
+                        <div className="profile-card-grid">
+                            <div className="profile-card">
+                                <h3>Upcoming Sessions</h3>
+                                <p>Future sessions and calendar items will appear here.</p>
+                                <button disabled>Coming Soon</button>
+                            </div>
+
+                            <div className="profile-card">
+                                <h3>Recent Client Activity</h3>
+                                <p>Recent notes, updates, and completed sessions will appear here.</p>
+                                <button disabled>Coming Soon</button>
+                            </div>
+
+                            <div className="profile-card">
+                                <h3>Quick Actions</h3>
+                                <p>Fast shortcuts for adding clients, scheduling sessions, and creating plans.</p>
+                                <button disabled>Coming Soon</button>
+                            </div>
+                        </div>
                     </div>
                 )}
 

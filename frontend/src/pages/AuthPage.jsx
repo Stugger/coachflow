@@ -12,9 +12,9 @@ function AuthPage({onAuthSuccess}) {
     const [registerForm, setRegisterForm] = useState({
         firstName: '',
         lastName: '',
-        birthDate: '',
         email: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
     });
 
     const [errors, setErrors] = useState({});
@@ -101,10 +101,19 @@ function AuthPage({onAuthSuccess}) {
         setErrors({});
         setMessage('');
 
+        if (registerForm.password !== registerForm.confirmPassword) {
+            setErrors({
+                confirmPassword: 'Passwords do not match'
+            });
+            return;
+        }
+
+        const { confirmPassword, ...payload } = registerForm;
+
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register-trainer`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(normalizeForm(registerForm))
+            body: JSON.stringify(normalizeForm(payload))
         })
             .then(async response => {
                 if (!response.ok) {
@@ -215,6 +224,14 @@ function AuthPage({onAuthSuccess}) {
                                    onChange={updateRegisterForm}
                             />
                             {errors.password && <div className="field-error">* {errors.password}</div>}
+                            <input name="confirmPassword"
+                                   className={errors.confirmPassword ? 'input-error' : ''}
+                                   type="password"
+                                   placeholder="Confirm Password"
+                                   value={registerForm.confirmPassword}
+                                   onChange={updateRegisterForm}
+                            />
+                            {errors.confirmPassword && (<div className="field-error">* {errors.confirmPassword}</div>)}
 
                             <button type="submit">Create Account</button>
                         </form>
