@@ -1,4 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
+import * as PhoneUtils from '../utils/phone-utils';
+import * as TextUtils from '../utils/text-utils';
 
 function ClientsPage({trainerId}) {
 
@@ -72,9 +74,9 @@ function ClientsPage({trainerId}) {
     function createClient(event) {
         event.preventDefault();
 
-        const createPhone = splitPhone(createForm.phone);
+        const createPhone = PhoneUtils.splitPhone(createForm.phone);
 
-        if (isPartialPhone(createPhone.area, createPhone.prefix, createPhone.line)) {
+        if (PhoneUtils.isPartialPhone(createPhone.area, createPhone.prefix, createPhone.line)) {
             setErrors({
                 ...createErrors,
                 phone: 'Phone number must be complete'
@@ -122,9 +124,9 @@ function ClientsPage({trainerId}) {
     function updateClient(event) {
         event.preventDefault();
 
-        const editPhone = splitPhone(editForm.phone);
+        const editPhone = PhoneUtils.splitPhone(editForm.phone);
 
-        if (isPartialPhone(editPhone.area, editPhone.prefix, editPhone.line)) {
+        if (PhoneUtils.isPartialPhone(editPhone.area, editPhone.prefix, editPhone.line)) {
             setEditErrors({
                 ...editErrors,
                 phone: 'Phone number must be complete'
@@ -171,9 +173,9 @@ function ClientsPage({trainerId}) {
     }
 
     function updatePhone(form, setForm, errors, setErrors, part, value) {
-        const numericValue = digitsOnly(value);
+        const numericValue = PhoneUtils.digitsOnly(value);
 
-        const phone = splitPhone(form.phone);
+        const phone = PhoneUtils.splitPhone(form.phone);
 
         const updatedPhone = {
             ...phone,
@@ -182,7 +184,7 @@ function ClientsPage({trainerId}) {
 
         setForm({
             ...form,
-            phone: formatPhone(updatedPhone.area, updatedPhone.prefix, updatedPhone.line)
+            phone: PhoneUtils.formatPhone(updatedPhone.area, updatedPhone.prefix, updatedPhone.line)
         });
 
         if (errors.phone) {
@@ -246,21 +248,21 @@ function ClientsPage({trainerId}) {
                                     <input
                                         inputMode="numeric"
                                         maxLength={3}
-                                        value={splitPhone(createForm.phone).area}
+                                        value={PhoneUtils.splitPhone(createForm.phone).area}
                                         onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'area', event.target.value)}
                                     />
                                     <span>)</span>
                                     <input
                                         inputMode="numeric"
                                         maxLength={3}
-                                        value={splitPhone(createForm.phone).prefix}
+                                        value={PhoneUtils.splitPhone(createForm.phone).prefix}
                                         onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'prefix', event.target.value)}
                                     />
                                     <span>-</span>
                                     <input
                                         inputMode="numeric"
                                         maxLength={4}
-                                        value={splitPhone(createForm.phone).line}
+                                        value={PhoneUtils.splitPhone(createForm.phone).line}
                                         onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'line', event.target.value)}
                                     />
                                 </div>
@@ -389,21 +391,21 @@ function ClientsPage({trainerId}) {
                                                 <input
                                                     inputMode="numeric"
                                                     maxLength={3}
-                                                    value={splitPhone(editForm.phone).area}
+                                                    value={PhoneUtils.splitPhone(editForm.phone).area}
                                                     onChange={(event) => updatePhone(editForm, setEditForm, editErrors, setEditErrors, 'area', event.target.value)}
                                                 />
                                                 <span>)</span>
                                                 <input
                                                     inputMode="numeric"
                                                     maxLength={3}
-                                                    value={splitPhone(editForm.phone).prefix}
+                                                    value={PhoneUtils.splitPhone(editForm.phone).prefix}
                                                     onChange={(event) => updatePhone(editForm, setEditForm, editErrors, setEditErrors, 'prefix', event.target.value)}
                                                 />
                                                 <span>-</span>
                                                 <input
                                                     inputMode="numeric"
                                                     maxLength={4}
-                                                    value={splitPhone(editForm.phone).line}
+                                                    value={PhoneUtils.splitPhone(editForm.phone).line}
                                                     onChange={(event) => updatePhone(editForm, setEditForm, editErrors, setEditErrors, 'line', event.target.value)}
                                                 />
                                             </div>
@@ -528,59 +530,15 @@ function ClientsPage({trainerId}) {
     function normalizeForm(form) {
         return {
             ...form,
-            firstName: formatName(form.firstName),
-            lastName: formatName(form.lastName),
-            preferredName: formatName(form.preferredName),
-            email: form.email.trim().toLowerCase(),
+            firstName: TextUtils.normalizeName(form.firstName),
+            lastName: TextUtils.normalizeName(form.lastName),
+            preferredName: TextUtils.normalizeName(form.preferredName),
+            email: TextUtils.normalizeEmail(form.email),
             phone: form.phone.trim(),
             goals: form.goals.trim(),
             limitations: form.limitations.trim(),
             generalNotes: form.generalNotes.trim()
         };
-    }
-
-    function formatName(name) {
-        if (!name) {
-            return '';
-        }
-        return name
-            .trim()
-            .toLowerCase()
-            .split(' ')
-            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(' ');
-    }
-
-    function digitsOnly(value) {
-        return value.replace(/\D/g, '');
-    }
-
-    function splitPhone(phone) {
-        const digits = digitsOnly(phone || '');
-
-        return {
-            area: digits.substring(0, 3),
-            prefix: digits.substring(3, 6),
-            line: digits.substring(6, 10)
-        };
-    }
-
-    function formatPhone(area, prefix, line) {
-        if (!area && !prefix && !line) {
-            return '';
-        }
-
-        return `(${area}) ${prefix}-${line}`;
-    }
-
-    function isPartialPhone(area, prefix, line) {
-        const totalLength = area.length + prefix.length + line.length;
-
-        if (totalLength === 0) {
-            return false;
-        }
-
-        return area.length !== 3 || prefix.length !== 3 || line.length !== 4;
     }
 
 }

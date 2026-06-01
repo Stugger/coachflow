@@ -5,6 +5,7 @@ import './styles/clients.css';
 import {useState} from 'react';
 import ClientsPage from './pages/ClientsPage';
 import AuthPage from './pages/AuthPage';
+import {MOBILE_BREAKPOINT} from './constants/layout';
 
 function App() {
 
@@ -36,7 +37,7 @@ function App() {
     function navigate(page) {
         setPage(page);
         localStorage.setItem('coachflow_page', page);
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= MOBILE_BREAKPOINT) {
             setSidebarOpen(false);
         }
     }
@@ -48,7 +49,7 @@ function App() {
         } else if (page === 'clients') {
             pageTitle = 'Clients';
         }
-        return window.innerWidth > 768
+        return window.innerWidth > MOBILE_BREAKPOINT
             ? `CoachFlow · ${pageTitle}`
             : pageTitle;
     }

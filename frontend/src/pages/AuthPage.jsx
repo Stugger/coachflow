@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import * as TextUtils from "../utils/text-utils.js";
 
 function AuthPage({onAuthSuccess}) {
 
@@ -244,22 +245,10 @@ function AuthPage({onAuthSuccess}) {
     function normalizeForm(form) {
         return {
             ...form,
-            firstName: formatName(form.firstName),
-            lastName: formatName(form.lastName),
-            email: form.email.trim().toLowerCase(),
+            firstName: TextUtils.normalizeName(form.firstName),
+            lastName: TextUtils.normalizeName(form.lastName),
+            email: TextUtils.normalizeEmail(form.email),
         };
-    }
-
-    function formatName(name) {
-        if (!name) {
-            return '';
-        }
-        return name
-            .trim()
-            .toLowerCase()
-            .split(' ')
-            .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-            .join(' ');
     }
 }
 
