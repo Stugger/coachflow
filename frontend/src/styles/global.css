@@ -1,11 +1,13 @@
 input,
 textarea,
-button {
+button,
+select {
     font-family: inherit;
 }
 
 input,
-textarea {
+textarea,
+select {
     width: 100%;
     box-sizing: border-box;
     padding: 12px 14px;
@@ -28,17 +30,30 @@ textarea {
     resize: vertical;
 }
 
+select {
+    min-height: 44px;
+    height: 44px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23eee' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+}
+
 input::placeholder,
-textarea::placeholder {
+textarea::placeholder,
+select::placeholder {
     color: #999;
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
     border-color: #6aa9ff;
     box-shadow: 0 0 0 3px rgba(106, 169, 255, 0.15);
 }
 
+input[type="time"],
 input[type="date"] {
     appearance: none;
     -webkit-appearance: none;
@@ -60,7 +75,7 @@ input[type="date"] {
 .dashboard-page {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 20px;
 }
 
 .client-form {
@@ -79,6 +94,35 @@ input[type="date"] {
     width: 100%;
     margin-bottom: 10px;
     padding: 10px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.form-actions button {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.secondary-button {
+    background: #2f2f2f !important;
+    border-color: #444 !important;
+    color: #ddd !important;
+}
+
+.secondary-button:hover {
+    background: #3a3a3a !important;
+}
+
+.danger-button {
+    background: #4d2222 !important;
+    border-color: #733 !important;
+}
+
+.danger-button:hover {
+    background: #633 !important;
 }
 
 button:not(.link-button) {
@@ -185,4 +229,10 @@ button:disabled:hover {
 
 .phone-input-group input {
     text-align: center;
+}
+
+@media (max-width: 768px) {
+    .dashboard-page {
+        gap: 16px;
+    }
 }
