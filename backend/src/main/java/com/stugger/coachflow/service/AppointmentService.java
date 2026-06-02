@@ -1,6 +1,7 @@
 package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.CreateAppointmentRequest;
+import com.stugger.coachflow.api.dto.request.UpdateAppointmentRequest;
 import com.stugger.coachflow.api.dto.response.AppointmentResponse;
 import com.stugger.coachflow.entity.*;
 import com.stugger.coachflow.repository.AppointmentRepository;
@@ -58,9 +59,36 @@ public class AppointmentService {
         return new AppointmentResponse(appointmentRepository.save(appointment));
     }
 
+    public AppointmentResponse updateAppointment(Long appointmentId, UpdateAppointmentRequest request) {
+        if (!request.endTime().isAfter(request.startTime())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
+        }
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment with id " + appointmentId + " not found"));
+
+        Client client = clientRepository.findById(request.clientId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found"));
+
+        appointment.setClient(client);
+        appointment.setTitle(TextUtils.trimToNull(request.title()));
+        appointment.setStartTime(request.startTime());
+        appointment.setEndTime(request.endTime());
+        appointment.setStatus(request.status());
+        appointment.setNotes(TextUtils.trimToNull(request.notes()));
+        appointment.setUpdatedAt(LocalDateTime.now());
+
+        return new AppointmentResponse(appointmentRepository.save(appointment));
+    }
+
+    public void deleteAppointment(Long appointmentId) {
+        if (!appointmentRepository.existsById(appointmentId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment with id " + appointmentId + " not found");
+        }
+        appointmentRepository.deleteById(appointmentId);
+    }
+
     public List<AppointmentResponse> getAppointmentsByTrainerId(Long trainerId) {
         Sort sort = Sort.by("startTime").ascending();
-
         return appointmentRepository.findByTrainerId(trainerId, sort).stream()
                 .map(AppointmentResponse::new)
                 .toList();
@@ -68,8 +96,14 @@ public class AppointmentService {
 
     public List<AppointmentResponse> getAppointmentsByClientId(Long clientId) {
         Sort sort = Sort.by("startTime").ascending();
-
         return appointmentRepository.findByClientId(clientId, sort).stream()
+                .map(AppointmentResponse::new)
+                .toList();
+    }
+
+    public List<AppointmentResponse> getAppointmentsOfStatusByTrainerId(Long trainerId, AppointmentStatus status) {
+        Sort sort = Sort.by("startTime").ascending();
+        return appointmentRepository.findByTrainerIdAndStatus(trainerId, status, sort).stream()
                 .map(AppointmentResponse::new)
                 .toList();
     }

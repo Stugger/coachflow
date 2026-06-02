@@ -1,9 +1,12 @@
 package com.stugger.coachflow.api.controller;
 
 import com.stugger.coachflow.api.dto.request.CreateAppointmentRequest;
+import com.stugger.coachflow.api.dto.request.UpdateAppointmentRequest;
 import com.stugger.coachflow.api.dto.response.AppointmentResponse;
+import com.stugger.coachflow.entity.AppointmentStatus;
 import com.stugger.coachflow.service.AppointmentService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,6 +30,17 @@ public class AppointmentController {
         return appointmentService.createAppointment(request);
     }
 
+    @PutMapping("/{appointmentId}")
+    public AppointmentResponse updateAppointment(@PathVariable Long appointmentId, @Valid @RequestBody UpdateAppointmentRequest request) {
+        return appointmentService.updateAppointment(appointmentId, request);
+    }
+
+    @DeleteMapping("/{appointmentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteAppointment(@PathVariable Long appointmentId) {
+        appointmentService.deleteAppointment(appointmentId);
+    }
+
     @GetMapping("/trainer/{trainerId}")
     public List<AppointmentResponse> getAppointmentsByTrainerId(@PathVariable Long trainerId) {
         return appointmentService.getAppointmentsByTrainerId(trainerId);
@@ -36,4 +50,10 @@ public class AppointmentController {
     public List<AppointmentResponse> getAppointmentsByClientId(@PathVariable Long clientId) {
         return appointmentService.getAppointmentsByClientId(clientId);
     }
+
+    @GetMapping("/trainer/{trainerId}/scheduled")
+    public List<AppointmentResponse> getScheduledAppointmentsByTrainerId(@PathVariable Long trainerId) {
+        return appointmentService.getAppointmentsOfStatusByTrainerId(trainerId, AppointmentStatus.SCHEDULED);
+    }
+
 }
