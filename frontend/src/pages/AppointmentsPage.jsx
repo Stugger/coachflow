@@ -7,6 +7,10 @@ function AppointmentsPage({trainerId}) {
 
     const now = new Date();
 
+    const [daysToShow, setDaysToShow] = useState(7);
+
+    const MAX_DAYS_TO_SHOW = 28;
+
     const needsReviewAppointments = appointments
         .filter(a => a.status === 'SCHEDULED' && new Date(a.endTime) < now);
 
@@ -259,8 +263,6 @@ function AppointmentsPage({trainerId}) {
         });
     }
 
-    const daysToShow = 7;
-
     function getUpcomingAppointmentsForDay(dayDate) {
         const dayKey = TimeUtils.getDateKeyFromDate(dayDate);
 
@@ -397,12 +399,15 @@ function AppointmentsPage({trainerId}) {
             <div className="appointments-right-column">
                 <section className="profile-card">
                     <h3>Upcoming Appointments</h3>
-                    {upcomingAppointments.length === 0 && (
+                    {upcomingAppointments.length === 0 ? (
                         <p>No upcoming appointments scheduled.</p>
+                    ) : (
+                        <>
+                            <small>Total appointments: {upcomingAppointments.length}</small>
+                            <p>Below are your upcoming appointments for the next {daysToShow} days.</p>
+                        </>
                     )}
-                    {upcomingAppointments.length > 0 && (
-                        <p>Below are your upcoming appointments for the next {daysToShow} days.</p>
-                    )}
+                    <div className="section-divider" />
                     {getVisibleDays().map(day => {
                         const dayAppointments = getUpcomingAppointmentsForDay(day);
 
@@ -421,6 +426,17 @@ function AppointmentsPage({trainerId}) {
                             </div>
                         );
                     })}
+
+                    {daysToShow < MAX_DAYS_TO_SHOW && (
+                        <button
+                            className="appointments-load-more-button secondary-button"
+                            onClick={() =>
+                                setDaysToShow(Math.min(daysToShow + 7, MAX_DAYS_TO_SHOW))
+                            }
+                        >
+                            Load 7 More Days
+                        </button>
+                    )}
                 </section>
 
                 <section className="profile-card">
@@ -473,7 +489,7 @@ function AppointmentsPage({trainerId}) {
 
                 {editingAppointmentId === appointment.id && (
                     <form
-                        className="client-form appointment-edit-divider"
+                        className="client-form section-divider spaced"
                         onSubmit={updateAppointment}
                         onClick={(event) => event.stopPropagation()}
                     >
@@ -490,7 +506,9 @@ function AppointmentsPage({trainerId}) {
                                 <option value="CANCELLED">Cancelled</option>
                             </select>
                         </div>
-                        <div className="appointment-edit-divider" />
+
+                        <div className="section-divider spaced" />
+
                         <div className="form-field">
                             <label>Client</label>
                             <select name="clientId"

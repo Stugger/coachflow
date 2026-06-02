@@ -101,10 +101,9 @@
     margin: 0;
 }
 
-.appointment-edit-divider {
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #444;
+.appointments-load-more-button {
+    width: 100%;
+    margin-top: 16px;
 }
 
 @media (max-width: 768px) {

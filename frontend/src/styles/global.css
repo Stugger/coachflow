@@ -231,6 +231,15 @@ button:disabled:hover {
     text-align: center;
 }
 
+.section-divider {
+    border-top: 1px solid #444;
+}
+
+.section-divider.spaced {
+    margin-top: 12px;
+    padding-top: 12px;
+}
+
 @media (max-width: 768px) {
     .dashboard-page {
         gap: 16px;
