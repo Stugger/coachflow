@@ -2,9 +2,11 @@ import './styles/global.css';
 import './styles/app-shell.css';
 import './styles/auth.css';
 import './styles/clients.css';
+import './styles/appointments.css';
 import {useState} from 'react';
-import ClientsPage from './pages/ClientsPage';
 import AuthPage from './pages/AuthPage';
+import AppointmentsPage from './pages/AppointmentsPage';
+import ClientsPage from './pages/ClientsPage';
 import {MOBILE_BREAKPOINT} from './constants/layout';
 
 function App() {
@@ -46,6 +48,8 @@ function App() {
         let pageTitle = '';
         if (page === 'dashboard') {
             pageTitle = 'Dashboard';
+        } else if (page === 'appointments') {
+            pageTitle = 'Appointments';
         } else if (page === 'clients') {
             pageTitle = 'Clients';
         }
@@ -81,6 +85,11 @@ function App() {
                     <span className="nav-label">Dashboard</span>
                 </button>
 
+                <button className={`sidebar-button ${page === 'appointments' ? 'active' : ''}`} onClick={() => navigate('appointments')}>
+                    <span className="nav-icon">🗓️</span>
+                    <span className="nav-label">Appointments</span>
+                </button>
+
                 <button className={`sidebar-button ${page === 'clients' ? 'active' : ''}`} onClick={() => navigate('clients')}>
                     <span className="nav-icon">👥</span>
                     <span className="nav-label">Clients</span>
@@ -108,7 +117,6 @@ function App() {
                                 What is included on this page will vary between trainers and clients, depending on which role is logged in.
                             </p>
                         </section>
-                        <sectiion></sectiion>
                         <div className="profile-card-grid">
                             <div className="profile-card">
                                 <h3>Upcoming Sessions</h3>
@@ -129,6 +137,10 @@ function App() {
                             </div>
                         </div>
                     </div>
+                )}
+
+                {page === 'appointments' && (
+                    <AppointmentsPage trainerId={auth.trainer.id}/>
                 )}
 
                 {page === 'clients' && (

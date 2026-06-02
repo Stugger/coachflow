@@ -1,0 +1,59 @@
+export function toLocalDateTimeString(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hour}:${minute}:00`;
+}
+
+export function addMinutesToLocalDateTime(date, time, minutesToAdd) {
+    const [year, month, day] = date.split('-').map(Number);
+    const [hour, minute] = time.split(':').map(Number);
+    const localDate = new Date(year, month - 1, day, hour, minute);
+    localDate.setMinutes(
+        localDate.getMinutes() + Number(minutesToAdd)
+    );
+    return toLocalDateTimeString(localDate);
+}
+
+export function formatDisplayTime(dateTime) {
+    return new Date(dateTime).toLocaleTimeString([], {
+        hour: 'numeric',
+        minute: '2-digit'
+    });
+}
+
+export function formatDisplayDate(dateTime) {
+    return new Date(dateTime).toLocaleDateString([], {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+    });
+}
+
+export function toDateKey(dateTime) {
+    const date = new Date(dateTime);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+export function getDateKeyFromDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+export function formatDayHeading(date) {
+    return date.toLocaleDateString([], {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+    });
+}
