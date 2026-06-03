@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -42,24 +44,27 @@ public class ClientIntake {
     @Column(name = "current_step", length = 64)
     private IntakeStep currentStep;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "goals_json", columnDefinition = "jsonb")
     private String goalsJson;
 
-    @Column(name = "training_history_json", columnDefinition = "jsonb")
-    private String trainingHistoryJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "activity_history_json", columnDefinition = "jsonb")
+    private String activityHistory;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "medical_history_json", columnDefinition = "jsonb")
     private String medicalHistoryJson;
 
-    @Column(name = "injuries_limitations_json", columnDefinition = "jsonb")
-    private String injuriesLimitationsJson;
-
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "lifestyle_json", columnDefinition = "jsonb")
     private String lifestyleJson;
 
-    @Column(name = "preferences_json", columnDefinition = "jsonb")
-    private String preferencesJson;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "training_preferences_json", columnDefinition = "jsonb")
+    private String trainingPreferencesJson;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "parq_json", columnDefinition = "jsonb")
     private String parqJson;
 

@@ -5,9 +5,9 @@ package com.stugger.coachflow.entity.intake;
  * @since June 2nd, 2026
  */
 public enum IntakeStep {
-    BASIC_INFO,
     PARQ,
-    GOALS_HISTORY,
+    GOALS,
+    ACTIVITY_HISTORY,
     MEDICAL,
     LIFESTYLE,
     TRAINING_PREFERENCES,

@@ -35,11 +35,10 @@ CREATE TABLE client_intakes (
     current_step VARCHAR(64),
 
     goals_json JSONB,
-    training_history_json JSONB,
+    activity_history_json JSONB,
     medical_history_json JSONB,
-    injuries_limitations_json JSONB,
     lifestyle_json JSONB,
-    preferences_json JSONB,
+    training_preferences_json JSONB,
     parq_json JSONB,
 
     started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
