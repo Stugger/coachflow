@@ -46,9 +46,7 @@ public class ClientService {
         }
         client.setPhone(request.phone());
         client.setBirthDate(request.birthDate());
-        client.setGoals(TextUtils.trimToNull(request.goals()));
-        client.setLimitations(TextUtils.trimToNull(request.limitations()));
-        client.setGeneralNotes(TextUtils.trimToNull(request.generalNotes()));
+        client.setGender(request.gender());
         client.setActive(true);
         client.setCreatedAt(now);
         client.setUpdatedAt(now);
@@ -68,9 +66,7 @@ public class ClientService {
         }
         client.setPhone(request.phone());
         client.setBirthDate(request.birthDate());
-        client.setGoals(TextUtils.trimToNull(request.goals()));
-        client.setLimitations(TextUtils.trimToNull(request.limitations()));
-        client.setGeneralNotes(TextUtils.trimToNull(request.generalNotes()));
+        client.setGender(request.gender());
         client.setUpdatedAt(LocalDateTime.now());
         return clientRepository.save(client);
     }

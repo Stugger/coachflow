@@ -7,7 +7,7 @@ function ClientsPage({trainerId}) {
     const [clients, setClients] = useState([]);
 
     const [createForm, setCreateForm] = useState(createEmptyClientForm(trainerId));
-    const [createErrors, setErrors] = useState({});
+    const [createErrors, setCreateErrors] = useState({});
 
     const [selectedClient, setSelectedClient] = useState(null);
     const [editForm, setEditForm] = useState(null);
@@ -39,7 +39,7 @@ function ClientsPage({trainerId}) {
         if (createErrors[name]) {
             const updatedErrors = {...createErrors};
             delete updatedErrors[name];
-            setErrors(updatedErrors);
+            setCreateErrors(updatedErrors);
         }
     }
 
@@ -74,13 +74,10 @@ function ClientsPage({trainerId}) {
     function createClient(event) {
         event.preventDefault();
 
-        const createPhone = PhoneUtils.splitPhone(createForm.phone);
+        const updatedErrors = validateClientForm(createForm);
 
-        if (PhoneUtils.isPartialPhone(createPhone.area, createPhone.prefix, createPhone.line)) {
-            setErrors({
-                ...createErrors,
-                phone: 'Phone number must be complete'
-            });
+        if (Object.keys(updatedErrors).length > 0) {
+            setCreateErrors(updatedErrors);
             return;
         }
 
@@ -96,7 +93,7 @@ function ClientsPage({trainerId}) {
                     const errorBody = await response.json();
 
                     if (errorBody.fieldErrors) {
-                        setErrors(errorBody.fieldErrors);
+                        setCreateErrors(errorBody.fieldErrors);
                     }
 
                     throw new Error(errorBody.message || 'Failed to create client');
@@ -105,7 +102,7 @@ function ClientsPage({trainerId}) {
             })
             .then(() => {
                 document.activeElement?.blur(); //close mobile keyboard
-                setErrors({});
+                setCreateErrors({});
                 setShowCreateForm(false);
                 setCreateForm(createEmptyClientForm(trainerId));
 
@@ -124,13 +121,10 @@ function ClientsPage({trainerId}) {
     function updateClient(event) {
         event.preventDefault();
 
-        const editPhone = PhoneUtils.splitPhone(editForm.phone);
+        const updatedErrors = validateClientForm(editForm);
 
-        if (PhoneUtils.isPartialPhone(editPhone.area, editPhone.prefix, editPhone.line)) {
-            setEditErrors({
-                ...editErrors,
-                phone: 'Phone number must be complete'
-            });
+        if (Object.keys(updatedErrors).length > 0) {
+            setEditErrors(updatedErrors);
             return;
         }
 
@@ -237,33 +231,40 @@ function ClientsPage({trainerId}) {
                             <div className="form-field">
                                 <label>Preferred Name</label>
                                 <input name="preferredName"
+                                       placeholder={"Optional"}
                                        value={createForm.preferredName}
                                        onChange={updateCreateForm}
                                 />
                             </div>
+
+                            <div className="section-divider spaced" />
+
                             <div className="form-field">
                                 <label>Phone</label>
                                 <div className="phone-input-group">
                                     <span>(</span>
                                     <input
+                                        className={createErrors.phone ? 'input-error' : ''}
                                         inputMode="numeric"
                                         maxLength={3}
                                         value={PhoneUtils.splitPhone(createForm.phone).area}
-                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'area', event.target.value)}
+                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setCreateErrors, 'area', event.target.value)}
                                     />
                                     <span>)</span>
                                     <input
+                                        className={createErrors.phone ? 'input-error' : ''}
                                         inputMode="numeric"
                                         maxLength={3}
                                         value={PhoneUtils.splitPhone(createForm.phone).prefix}
-                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'prefix', event.target.value)}
+                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setCreateErrors, 'prefix', event.target.value)}
                                     />
                                     <span>-</span>
                                     <input
+                                        className={createErrors.phone ? 'input-error' : ''}
                                         inputMode="numeric"
                                         maxLength={4}
                                         value={PhoneUtils.splitPhone(createForm.phone).line}
-                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setErrors, 'line', event.target.value)}
+                                        onChange={(event) => updatePhone(createForm, setCreateForm, createErrors, setCreateErrors, 'line', event.target.value)}
                                     />
                                 </div>
                                 {createErrors.phone && <div className="field-error">* {createErrors.phone}</div>}
@@ -277,34 +278,33 @@ function ClientsPage({trainerId}) {
                                 />
                                 {createErrors.email && <div className="field-error"> * {createErrors.email}</div>}
                             </div>
+
+                            <div className="section-divider spaced" />
+
                             <div className="form-field">
                                 <label>Birth Date</label>
                                 <input name="birthDate"
+                                       className={createErrors.birthDate ? 'input-error' : ''}
                                        type="date"
                                        value={createForm.birthDate}
                                        onChange={updateCreateForm}
                                 />
+                                {createErrors.birthDate && <div className="field-error"> * {createErrors.birthDate}</div>}
                             </div>
                             <div className="form-field">
-                                <label>Goals</label>
-                                <textarea name="goals"
-                                       value={createForm.goals}
-                                       onChange={updateCreateForm}
-                                />
-                            </div>
-                            <div className="form-field">
-                                <label>Limitations</label>
-                                <textarea name="limitations"
-                                       value={createForm.limitations}
-                                       onChange={updateCreateForm}
-                                />
-                            </div>
-                            <div className="form-field">
-                                <label>General Notes</label>
-                                <textarea name="generalNotes"
-                                       value={createForm.generalNotes}
-                                       onChange={updateCreateForm}
-                                />
+                                <label>Gender</label>
+                                <select
+                                    name="gender"
+                                    value={createForm.gender}
+                                    onChange={updateCreateForm}
+                                >
+                                    <option value="">Select gender</option>
+                                    <option value="MALE">Male</option>
+                                    <option value="FEMALE">Female</option>
+                                    <option value="NON_BINARY">Non-binary</option>
+                                    <option value="UNDISCLOSED">Prefer not to say</option>
+                                    <option value="OTHER">Other</option>
+                                </select>
                             </div>
                             <button type="submit">Create Client</button>
                         </form>
@@ -380,15 +380,20 @@ function ClientsPage({trainerId}) {
                                         <div className="form-field">
                                             <label>Preferred Name</label>
                                             <input name="preferredName"
+                                                   placeholder={"Optional"}
                                                    value={editForm.preferredName}
                                                    onChange={updateEditForm}
                                             />
                                         </div>
+
+                                        <div className="section-divider spaced" />
+
                                         <div className="form-field">
                                             <label>Phone</label>
                                             <div className="phone-input-group">
                                                 <span>(</span>
                                                 <input
+                                                    className={editErrors.phone ? 'input-error' : ''}
                                                     inputMode="numeric"
                                                     maxLength={3}
                                                     value={PhoneUtils.splitPhone(editForm.phone).area}
@@ -396,6 +401,7 @@ function ClientsPage({trainerId}) {
                                                 />
                                                 <span>)</span>
                                                 <input
+                                                    className={editErrors.phone ? 'input-error' : ''}
                                                     inputMode="numeric"
                                                     maxLength={3}
                                                     value={PhoneUtils.splitPhone(editForm.phone).prefix}
@@ -403,6 +409,7 @@ function ClientsPage({trainerId}) {
                                                 />
                                                 <span>-</span>
                                                 <input
+                                                    className={editErrors.phone ? 'input-error' : ''}
                                                     inputMode="numeric"
                                                     maxLength={4}
                                                     value={PhoneUtils.splitPhone(editForm.phone).line}
@@ -420,34 +427,33 @@ function ClientsPage({trainerId}) {
                                             />
                                             {editErrors.email && <div className="field-error"> * {editErrors.email}</div>}
                                         </div>
+
+                                        <div className="section-divider spaced" />
+
                                         <div className="form-field">
                                             <label>Birth Date</label>
                                             <input name="birthDate"
+                                                   className={editErrors.birthDate ? 'input-error' : ''}
                                                    type="date"
                                                    value={editForm.birthDate}
                                                    onChange={updateEditForm}
                                             />
+                                            {editErrors.birthDate && <div className="field-error"> * {editErrors.birthDate}</div>}
                                         </div>
                                         <div className="form-field">
-                                            <label>Goals</label>
-                                            <textarea name="goals"
-                                                   value={editForm.goals}
-                                                   onChange={updateEditForm}
-                                            />
-                                        </div>
-                                        <div className="form-field">
-                                            <label>Limitations</label>
-                                            <textarea name="limitations"
-                                                   value={editForm.limitations}
-                                                   onChange={updateEditForm}
-                                            />
-                                        </div>
-                                        <div className="form-field">
-                                            <label>General Notes</label>
-                                            <textarea name="generalNotes"
-                                                   value={editForm.generalNotes}
-                                                   onChange={updateEditForm}
-                                            />
+                                            <label>Gender</label>
+                                            <select
+                                                name="gender"
+                                                value={editForm.gender}
+                                                onChange={updateEditForm}
+                                            >
+                                                <option value="">Select gender</option>
+                                                <option value="MALE">Male</option>
+                                                <option value="FEMALE">Female</option>
+                                                <option value="NON_BINARY">Non-binary</option>
+                                                <option value="UNDISCLOSED">Prefer not to say</option>
+                                                <option value="OTHER">Other</option>
+                                            </select>
                                         </div>
                                         <button type="submit">Save Changes</button>
                                     </form>
@@ -460,43 +466,46 @@ function ClientsPage({trainerId}) {
                                     <p>No sessions scheduled yet.</p>
                                     <button disabled>+ Schedule Session (Coming Soon)</button>
                                 </div>
-
-                                <div className="profile-card">
-                                    <h3>Current Workout Plan</h3>
-                                    <p>No workout plan assigned yet.</p>
-                                    <button disabled>+ Create Workout Plan (Coming Soon)</button>
-                                </div>
-
                                 <div className="profile-card">
                                     <h3>Recent Notes</h3>
                                     <p>No notes yet.</p>
                                     <button disabled>+ Add Note (Coming Soon)</button>
                                 </div>
                             </div>
-
-                            {!editingDetails && (
-                                <div className="profile-card">
-                                    <h3>Details</h3>
-                                    <p>
-                                        <strong>Goals</strong>
-                                        <small className="multiline-text">{selectedClient.goals || 'None'}</small>
-                                    </p>
-                                    <p>
-                                        <strong>Limitations</strong>
-                                        <small className="multiline-text">{selectedClient.limitations || 'None'}</small>
-                                    </p>
-                                    <p>
-                                        <strong>General Notes</strong>
-                                        <small className="multiline-text">{selectedClient.generalNotes || 'None'}</small>
-                                    </p>
-                                </div>
-                            )}
+                            <div className="profile-card">
+                                <h3>Current Workout Plan</h3>
+                                <p>No workout plan assigned yet.</p>
+                                <button disabled>+ Create Workout Plan (Coming Soon)</button>
+                            </div>
                         </div>
                     </>
                 )}
             </section>
         </div>
     );
+
+    function validateClientForm(form) {
+        const updatedErrors = {};
+        if (!form.firstName.trim()) {
+            updatedErrors.firstName = 'First name is required';
+        }
+        if (!form.lastName.trim()) {
+            updatedErrors.lastName = 'Last name is required';
+        }
+        if (!form.birthDate) {
+            updatedErrors.birthDate = 'Birth date is required';
+        }
+        if (!form.phone.trim()) {
+            updatedErrors.phone = 'Phone number is required';
+        } else {
+            const phone = PhoneUtils.splitPhone(form.phone);
+
+            if (PhoneUtils.isPartialPhone(phone.area, phone.prefix, phone.line)) {
+                updatedErrors.phone = 'Phone number must be complete';
+            }
+        }
+        return updatedErrors;
+    }
 
     function createEmptyClientForm(trainerId) {
         return {
@@ -507,9 +516,7 @@ function ClientsPage({trainerId}) {
             email: '',
             phone: '',
             birthDate: '',
-            goals: '',
-            limitations: '',
-            generalNotes: ''
+            gender: '',
         };
     }
 
@@ -521,9 +528,7 @@ function ClientsPage({trainerId}) {
             email: client.email || '',
             phone: client.phone || '',
             birthDate: client.birthDate || '',
-            goals: client.goals || '',
-            limitations: client.limitations || '',
-            generalNotes: client.generalNotes || ''
+            gender: client.gender || '',
         };
     }
 
@@ -535,9 +540,7 @@ function ClientsPage({trainerId}) {
             preferredName: TextUtils.normalizeName(form.preferredName),
             email: TextUtils.normalizeEmail(form.email),
             phone: form.phone.trim(),
-            goals: form.goals.trim(),
-            limitations: form.limitations.trim(),
-            generalNotes: form.generalNotes.trim()
+            gender: form.gender || null,
         };
     }
 

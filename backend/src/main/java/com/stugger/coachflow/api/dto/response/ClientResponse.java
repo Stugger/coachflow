@@ -1,6 +1,7 @@
 package com.stugger.coachflow.api.dto.response;
 
 import com.stugger.coachflow.entity.Client;
+import com.stugger.coachflow.entity.ClientGender;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,9 +20,7 @@ public record ClientResponse(
         String email,
         String phone,
         LocalDate birthDate,
-        String goals,
-        String limitations,
-        String generalNotes,
+        ClientGender gender,
         Boolean active,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
@@ -36,9 +35,7 @@ public record ClientResponse(
             client.getEmail(),
             client.getPhone(),
             client.getBirthDate(),
-            client.getGoals(),
-            client.getLimitations(),
-            client.getGeneralNotes(),
+            client.getGender(),
             client.getActive(),
             client.getCreatedAt(),
             client.getUpdatedAt()

@@ -45,23 +45,18 @@ public class Client {
     @Column
     private String email;
 
-    @Column(length = 32)
+    @Column(length = 32) //TODO nullable = false
     private String phone;
 
-    @Column(name = "birth_date")
+    @Column(name = "birth_date") //TODO nullable = false
     private LocalDate birthDate;
 
-    @Column(columnDefinition = "TEXT")
-    private String goals;
-
-    @Column(columnDefinition = "TEXT")
-    private String limitations;
-
-    @Column(name = "general_notes", columnDefinition = "TEXT")
-    private String generalNotes;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 32)
+    private ClientGender gender;
 
     @Column(nullable = false)
-    private Boolean active = true;
+    private Boolean active = true; //a.k.a `!archived` (maybe rename and invert default value with migration)
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

@@ -1,7 +1,9 @@
 package com.stugger.coachflow.api.dto.request;
 
+import com.stugger.coachflow.entity.ClientGender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
@@ -21,10 +23,12 @@ public record UpdateClientRequest(
         @Email(message = "Invalid email")
         String email,
 
+        @NotBlank(message = "Phone number is required")
         String phone,
+
+        @NotNull(message = "Birth date is required")
         LocalDate birthDate,
-        String goals,
-        String limitations,
-        String generalNotes
+
+        ClientGender gender
 ) {
 }
