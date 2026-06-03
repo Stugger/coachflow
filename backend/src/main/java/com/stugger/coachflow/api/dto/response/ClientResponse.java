@@ -21,7 +21,7 @@ public record ClientResponse(
         String phone,
         LocalDate birthDate,
         ClientGender gender,
-        Boolean active,
+        Boolean archived,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -36,7 +36,7 @@ public record ClientResponse(
             client.getPhone(),
             client.getBirthDate(),
             client.getGender(),
-            client.getActive(),
+            client.getArchived(),
             client.getCreatedAt(),
             client.getUpdatedAt()
         );

@@ -1,7 +1,7 @@
-package com.stugger.coachflow.repository.assessment;
+package com.stugger.coachflow.repository.intake;
 
-import com.stugger.coachflow.entity.assessment.ClientIntake;
-import com.stugger.coachflow.entity.assessment.IntakeStatus;
+import com.stugger.coachflow.entity.intake.ClientIntake;
+import com.stugger.coachflow.entity.intake.IntakeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

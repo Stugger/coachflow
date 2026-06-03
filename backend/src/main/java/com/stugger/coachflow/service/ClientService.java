@@ -47,7 +47,7 @@ public class ClientService {
         client.setPhone(request.phone());
         client.setBirthDate(request.birthDate());
         client.setGender(request.gender());
-        client.setActive(true);
+        client.setArchived(false);
         client.setCreatedAt(now);
         client.setUpdatedAt(now);
         return clientRepository.save(client);

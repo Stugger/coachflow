@@ -42,11 +42,15 @@ public class ClientAssessment {
     @Column(nullable = false, length = 32)
     private AssessmentStatus status;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "current_step", length = 64)
-    private String currentStep;
+    private AssessmentStep currentStep;
 
     @Column(name = "assessment_date", nullable = false)
     private LocalDateTime assessmentDate;
+
+    @Column(name = "check_in_json", columnDefinition = "jsonb")
+    private String checkInJson;
 
     @Column(name = "trainer_notes", columnDefinition = "TEXT")
     private String trainerNotes;

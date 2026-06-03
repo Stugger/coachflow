@@ -45,10 +45,10 @@ public class Client {
     @Column
     private String email;
 
-    @Column(length = 32) //TODO nullable = false
+    @Column(nullable = false, length = 32)
     private String phone;
 
-    @Column(name = "birth_date") //TODO nullable = false
+    @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
     @Enumerated(EnumType.STRING)
@@ -56,7 +56,7 @@ public class Client {
     private ClientGender gender;
 
     @Column(nullable = false)
-    private Boolean active = true; //a.k.a `!archived` (maybe rename and invert default value with migration)
+    private Boolean archived = false;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

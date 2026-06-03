@@ -1,4 +1,4 @@
-package com.stugger.coachflow.entity.assessment;
+package com.stugger.coachflow.entity.intake;
 
 import com.stugger.coachflow.entity.Client;
 import com.stugger.coachflow.entity.Trainer;
@@ -38,8 +38,9 @@ public class ClientIntake {
     @Column(nullable = false, length = 32)
     private IntakeStatus status;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "current_step", length = 64)
-    private String currentStep;
+    private IntakeStep currentStep;
 
     @Column(name = "goals_json", columnDefinition = "jsonb")
     private String goalsJson;

@@ -1,4 +1,4 @@
-package com.stugger.coachflow.entity.assessment;
+package com.stugger.coachflow.entity.intake;
 
 /**
  * @author Jake

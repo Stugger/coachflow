@@ -4,6 +4,27 @@ ALTER TABLE clients
     DROP COLUMN general_notes,
     ADD COLUMN gender VARCHAR(32);
 
+UPDATE clients
+SET phone = '(000) 000-0000'
+WHERE phone IS NULL OR trim(phone) = '';
+
+UPDATE clients
+SET birth_date = '1900-01-01'
+WHERE birth_date IS NULL;
+
+ALTER TABLE clients
+    ALTER COLUMN phone SET NOT NULL,
+    ALTER COLUMN birth_date SET NOT NULL;
+
+ALTER TABLE clients
+    RENAME COLUMN active TO archived;
+
+UPDATE clients
+SET archived = NOT archived;
+
+ALTER TABLE clients
+    ALTER COLUMN archived SET DEFAULT FALSE;
+
 CREATE TABLE client_intakes (
     id BIGSERIAL PRIMARY KEY,
 
@@ -42,6 +63,7 @@ CREATE TABLE client_assessments (
     current_step VARCHAR(64),
 
     assessment_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    check_in_json JSONB,
     trainer_notes TEXT,
 
     started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
