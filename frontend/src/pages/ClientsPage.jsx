@@ -20,9 +20,20 @@ function ClientsPage({trainerId}) {
 
     function loadClients() {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
-            .then(response => response.json())
-            .then(data => setClients(data))
-            .catch(error => console.error('Error loading clients:', error));
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load clients');
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                setClients(Array.isArray(data) ? data : []);
+            })
+            .catch(error => {
+                console.error('Error loading clients:', error);
+                setClients([]);
+            });
     }
 
     useEffect(() => {
