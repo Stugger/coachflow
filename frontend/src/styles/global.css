@@ -230,6 +230,18 @@ button:disabled:hover {
     padding-top: 12px;
 }
 
+.vertical-gap-sm {
+    margin-top: 8px;
+}
+
+.vertical-gap-md {
+    margin-top: 12px;
+}
+
+.vertical-gap-lg {
+    margin-top: 16px;
+}
+
 @media (max-width: 768px) {
     .dashboard-page {
         gap: 16px;

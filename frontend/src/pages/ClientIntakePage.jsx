@@ -15,19 +15,11 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
 
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [parqErrors, setParqErrors] = useState({});
+    const [goalsErrors, setGoalsErrors] = useState({});
 
-    const [basicInfoForm, setBasicInfoForm] = useState({
-        trainerId: trainerId,
-        firstName: '',
-        lastName: '',
-        preferredName: '',
-        email: '',
-        phone: '',
-        birthDate: '',
-        gender: '',
-    });
-
+    const [basicInfoForm, setBasicInfoForm] = useState(createEmptyBasicInfoForm());
     const [parqForm, setParqForm] = useState(createEmptyParqForm());
+    const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
 
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Effects
@@ -57,6 +49,12 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             setParqForm({
                 ...createEmptyParqForm(),
                 ...JSON.parse(intake.parqJson)
+            });
+        }
+        if (intake.goalsJson) {
+            setGoalsForm({
+                ...createEmptyGoalsForm(),
+                ...JSON.parse(intake.goalsJson)
             });
         }
     }
@@ -190,6 +188,24 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         Event Handlers
     --------------------------------------------------------------------------------------------------------------------------------------*/
 
+    function exitIntake() {
+        //TODO navigate will likely be replaced with routing
+        switch (currentStep) {
+            case IntakeSteps.PARQ:
+                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(Pages.CLIENTS));
+                break;
+            case IntakeSteps.GOALS:
+                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(Pages.CLIENTS));
+                break;
+            default:
+                navigate(Pages.CLIENTS);
+        }
+    }
+
+    /*
+     *  Basic Info
+     */
+
     function saveBasicInfo(event) {
         if (clientId) {
             updateClient(event);
@@ -197,6 +213,24 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             createClient(event);
         }
     }
+
+    function updateBasicInfoForm(event) {
+        const {name, value} = event.target;
+
+        setBasicInfoForm({
+            ...basicInfoForm,
+            [name]: value
+        });
+        if (basicInfoErrors[name]) {
+            const updatedErrors = {...basicInfoErrors};
+            delete updatedErrors[name];
+            setBasicInfoErrors(updatedErrors);
+        }
+    }
+
+    /*
+     *  PARQ
+     */
 
     function handleParqBack() {
         saveIntakeStep(IntakeSteps.PARQ, parqForm, () => {
@@ -219,20 +253,6 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             setCurrentStep(IntakeSteps.GOALS);
             scrollToTop();
         });
-    }
-
-    function updateBasicInfoForm(event) {
-        const {name, value} = event.target;
-
-        setBasicInfoForm({
-            ...basicInfoForm,
-            [name]: value
-        });
-        if (basicInfoErrors[name]) {
-            const updatedErrors = {...basicInfoErrors};
-            delete updatedErrors[name];
-            setBasicInfoErrors(updatedErrors);
-        }
     }
 
     function updateParqForm(event) {
@@ -268,11 +288,72 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         setParqErrors(updatedErrors);
     }
 
-    function exitIntake() {
-        if (currentStep === IntakeSteps.PARQ) {
-            saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(Pages.CLIENTS)); //TODO will likely be replaced with routing
-        } else {
-            navigate(Pages.CLIENTS); //TODO will likely be replaced with routing
+    /*
+     *  Goals
+     */
+
+    function handleGoalsBack() {
+        saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => {
+            setCurrentStep(IntakeSteps.PARQ);
+            scrollToTop();
+        });
+    }
+
+    function handleGoalsContinue(event) {
+        event.preventDefault();
+
+        const errors = validateGoalsForm();
+
+        if (Object.keys(errors).length > 0) {
+            setGoalsErrors(errors);
+            return;
+        }
+
+        saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => {
+            setCurrentStep(IntakeSteps.ACTIVITY_HISTORY);
+            scrollToTop();
+        });
+    }
+
+    function updateGoalObjective(objective) {
+        const selected = goalsForm.objectives.includes(objective);
+
+        const updatedObjectives = selected
+            ? goalsForm.objectives.filter(value => value !== objective)
+            : [...goalsForm.objectives, objective];
+
+        const updatedForm = {
+            ...goalsForm,
+            objectives: updatedObjectives
+        };
+
+        const updatedErrors = {...goalsErrors};
+
+        if (updatedObjectives.length > 0) {
+            delete updatedErrors.objectives;
+        }
+
+        if (objective === 'OTHER' && selected) {
+            updatedForm.otherGoal = '';
+            delete updatedErrors.otherGoal;
+        }
+
+        setGoalsForm(updatedForm);
+        setGoalsErrors(updatedErrors);
+    }
+
+    function updateGoalsForm(event) {
+        const {name, value} = event.target;
+
+        setGoalsForm({
+            ...goalsForm,
+            [name]: value
+        });
+
+        if (goalsErrors[name]) {
+            const updatedErrors = {...goalsErrors};
+            delete updatedErrors[name];
+            setGoalsErrors(updatedErrors);
         }
     }
 
@@ -301,6 +382,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             </>
         );
     }
+
+    /*
+     *  Basic Info
+     */
 
     function renderBasicInfo() {
         return (
@@ -406,6 +491,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         );
     }
 
+    /*
+     *  PARQ
+     */
+
     function renderParq() {
         return (
             <>
@@ -488,6 +577,96 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         );
     }
 
+    /*
+     *  Goals
+     */
+
+    function renderGoals() {
+        const goalOptions = [
+            ['LOSE_WEIGHT', 'Lose weight'],
+            ['BUILD_MUSCLE', 'Build muscle'],
+            ['GET_STRONGER', 'Get stronger'],
+            ['IMPROVE_ENDURANCE', 'Improve endurance'],
+            ['IMPROVE_MOBILITY', 'Improve mobility / flexibility'],
+            ['IMPROVE_HEALTH', 'Improve overall health'],
+            ['SPORT_PERFORMANCE', 'Improve sports performance'],
+            ['INCREASE_CONFIDENCE', 'Increase confidence in the gym'],
+            ['OTHER', 'Other']
+        ];
+
+        return (
+            <>
+                {renderIntakeHeader('Step 3 of 6 · Goals')}
+                <form onSubmit={handleGoalsContinue}>
+                    <div className="form-field">
+                        <label>What are your fitness objectives? Select all that apply.</label>
+
+                        <div className={`multi-option-grid ${goalsErrors.objectives ? 'error' : ''}`}>
+                            {goalOptions.map(([value, label]) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    className={`multi-option ${goalsForm.objectives.includes(value) ? 'selected' : ''}`}
+                                    onClick={() => updateGoalObjective(value)}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                        {goalsErrors.objectives && (
+                            <div className="field-error vertical-gap-sm">
+                                * {goalsErrors.objectives}
+                            </div>
+                        )}
+                    </div>
+
+                    {goalsForm.objectives.includes('OTHER') && (
+                        <div className="form-field vertical-gap-md">
+                            <label>Describe your other goal(s):</label>
+                            <textarea
+                                className={goalsErrors.otherGoal ? 'input-error' : ''}
+                                name="otherGoal"
+                                rows="3"
+                                value={goalsForm.otherGoal}
+                                onChange={updateGoalsForm}
+                            />
+                            {goalsErrors.otherGoal && (
+                                <div className="field-error">
+                                    * {goalsErrors.otherGoal}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    <div className="section-divider spaced" />
+                    <div className="form-field">
+                        <label>What would success look like to you?</label>
+                        <textarea
+                            name="successDescription"
+                            rows="3"
+                            placeholder="Optional"
+                            value={goalsForm.successDescription}
+                            onChange={updateGoalsForm}
+                        />
+                    </div>
+
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleGoalsBack}
+                        >
+                            Go Back
+                        </button>
+
+                        <button type="submit">
+                            Save & Continue
+                        </button>
+                    </div>
+                </form>
+            </>
+        );
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Validation
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -535,9 +714,36 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return errors;
     }
 
+    function validateGoalsForm() {
+        const errors = {};
+
+        if (goalsForm.objectives.length === 0) {
+            errors.objectives = 'Select at least one goal';
+        }
+
+        if (goalsForm.objectives.includes('OTHER') && !goalsForm.otherGoal.trim()) {
+            errors.otherGoal = 'Please describe your other goal';
+        }
+
+        return errors;
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Utility
     --------------------------------------------------------------------------------------------------------------------------------------*/
+
+    function createEmptyBasicInfoForm(form) {
+        return {
+            trainerId: trainerId,
+            firstName: '',
+            lastName: '',
+            preferredName: '',
+            email: '',
+            phone: '',
+            birthDate: '',
+            gender: '',
+        };
+    }
 
     function normalizeBasicInfoForm(form) {
         return {
@@ -564,6 +770,14 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         };
     }
 
+    function createEmptyGoalsForm() {
+        return {
+            objectives: [],
+            otherGoal: '',
+            successDescription: ''
+        };
+    }
+
     function scrollToTop() {
         setTimeout(() => {
             window.scrollTo({
@@ -585,6 +799,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 )}
                 {currentStep === IntakeSteps.PARQ && (
                    renderParq()
+                )}
+                {currentStep === IntakeSteps.GOALS && (
+                    renderGoals()
                 )}
             </section>
         </div>
