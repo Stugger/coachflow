@@ -1,0 +1,151 @@
+.intake-page {
+    min-height: 100vh;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.intake-card {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #444;
+    border-radius: 12px;
+    background: #212121;
+}
+
+.intake-header {
+    display: grid;
+    grid-template-columns: 1fr 0fr;
+}
+
+.intake-header h2 {
+    margin: 0;
+}
+
+.intake-header p {
+    margin: 4px 0 0;
+    color: #aaa;
+}
+
+.intake-header button {
+    flex-shrink: 0;
+}
+
+.intake-progress {
+    margin-bottom: 12px;
+}
+
+.intake-step-title {
+    margin-top: 10px;
+    margin-bottom: 22px;
+}
+
+.intake-exit-button {
+    width: 36px;
+    height: 36px;
+    max-width: 36px;
+    max-height: 36px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid #444;
+    border-radius: 8px;
+
+    background: #2a2a2a;
+    color: #ccc;
+
+    font-size: 24px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.parq-question {
+    padding: 16px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.parq-question > label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.parq-answer-group {
+    display: flex;
+    gap: 28px;
+    margin-top: 8px;
+    margin-left: 4px;
+}
+
+.parq-answer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.parq-answer input[type="radio"] {
+    margin: 0;
+    position: relative;
+    top: -1px;
+}
+
+.parq-error {
+    margin-top: 10px;
+}
+
+.parq-question.error {
+    border-color: #ff5a5a !important;
+}
+
+@media (max-width: 768px) {
+    .intake-page {
+        padding: 12px;
+    }
+
+    .intake-header {
+        flex-direction: column;
+        align-items: stretch;
+        margin-bottom: 22px;
+    }
+
+    .intake-header button {
+        width: 100%;
+    }
+
+    .intake-progress {
+        margin-bottom: 0px;
+    }
+
+    .parq-answer-group {
+        gap: 12px;
+        margin-left: 0;
+    }
+
+    .parq-answer {
+        flex: 1;
+        justify-content: center;
+        padding: 12px;
+        border: 1px solid #444;
+        border-radius: 8px;
+        background: #252525;
+        max-height: 8px;
+    }
+
+    .parq-answer input[type="radio"] {
+        display: none;
+    }
+
+    .parq-answer:has(input[type="radio"]:checked) {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.18);
+    }
+
+}

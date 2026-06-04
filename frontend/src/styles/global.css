@@ -62,6 +62,11 @@ input[type="date"] {
     width: 100%;
 
     box-sizing: border-box;
+}
+
+input[type="time"],
+input[type="date"],
+input[type="radio"] {
     color-scheme: dark;
 }
 
@@ -92,12 +97,12 @@ input[type="date"] {
 .client-form button {
     display: block;
     width: 100%;
-    margin-bottom: 10px;
     padding: 10px;
 }
 
 .form-actions {
     display: flex;
+    margin-top: 12px;
     gap: 10px;
 }
 
@@ -214,21 +219,6 @@ button:disabled:hover {
     color: #aaa;
     font-size: 13px;
     margin-bottom: -6px;
-}
-
-.phone-input-group {
-    display: grid;
-    grid-template-columns: auto 1fr auto 1fr auto 1.3fr;
-    align-items: center;
-    gap: 6px;
-}
-
-.phone-input-group span {
-    color: #aaa;
-}
-
-.phone-input-group input {
-    text-align: center;
 }
 
 .section-divider {

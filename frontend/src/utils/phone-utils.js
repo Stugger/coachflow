@@ -25,3 +25,21 @@ export function isPartialPhone(area, prefix, line) {
     }
     return area.length !== 3 || prefix.length !== 3 || line.length !== 4;
 }
+
+export function formatPhoneFromDigits(value) {
+    const digits = digitsOnly(value).substring(0, 10);
+
+    const area = digits.substring(0, 3);
+    const prefix = digits.substring(3, 6);
+    const line = digits.substring(6, 10);
+
+    if (digits.length <= 3) {
+        return area;
+    }
+
+    if (digits.length <= 6) {
+        return `(${area}) ${prefix}`;
+    }
+
+    return `(${area}) ${prefix}-${line}`;
+}
