@@ -13,13 +13,15 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     const [clientId, setClientId] = useState(null);
     const [intakeId, setIntakeId] = useState(null);
 
-    const [basicInfoErrors, setBasicInfoErrors] = useState({});
-    const [parqErrors, setParqErrors] = useState({});
-    const [goalsErrors, setGoalsErrors] = useState({});
-
     const [basicInfoForm, setBasicInfoForm] = useState(createEmptyBasicInfoForm());
     const [parqForm, setParqForm] = useState(createEmptyParqForm());
     const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
+    const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
+
+    const [basicInfoErrors, setBasicInfoErrors] = useState({});
+    const [parqErrors, setParqErrors] = useState({});
+    const [goalsErrors, setGoalsErrors] = useState({});
+    const [activityHistoryErrors, setActivityHistoryErrors] = useState({});
 
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Effects
@@ -55,6 +57,12 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             setGoalsForm({
                 ...createEmptyGoalsForm(),
                 ...JSON.parse(intake.goalsJson)
+            });
+        }
+        if (intake.activityHistoryJson) {
+            setActivityHistoryForm({
+                ...createEmptyActivityHistoryForm(),
+                ...JSON.parse(intake.activityHistoryJson)
             });
         }
     }
@@ -196,6 +204,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 break;
             case IntakeSteps.GOALS:
                 saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(Pages.CLIENTS));
+                break;
+            case IntakeSteps.ACTIVITY_HISTORY:
+                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(Pages.CLIENTS));
                 break;
             default:
                 navigate(Pages.CLIENTS);
@@ -357,6 +368,65 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         }
     }
 
+    /*
+     *  ACTIVITY_HISTORY
+     */
+
+    function handleActivityHistoryBack() {
+        saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => {
+            setCurrentStep(IntakeSteps.GOALS);
+            scrollToTop();
+        });
+    }
+
+    function handleActivityHistoryContinue(event) {
+        event.preventDefault();
+
+        const errors = validateActivityHistoryForm();
+
+        if (Object.keys(errors).length > 0) {
+            setActivityHistoryErrors(errors);
+            return;
+        }
+
+        saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => {
+            setCurrentStep(IntakeSteps.MEDICAL);
+            scrollToTop();
+        });
+    }
+
+    function updateActivityHistoryForm(event) {
+        const {name, value} = event.target;
+
+        setActivityHistoryForm({
+            ...activityHistoryForm,
+            [name]: value
+        });
+
+        if (activityHistoryErrors[name]) {
+            const updatedErrors = {...activityHistoryErrors};
+            delete updatedErrors[name];
+            setActivityHistoryErrors(updatedErrors);
+        }
+    }
+
+    function updatePreviousTrainer(value) {
+        const updatedForm = {
+            ...activityHistoryForm,
+            previousTrainer: value
+        };
+
+        if (!value) {
+            updatedForm.previousTrainerExperience = '';
+        }
+
+        const updatedErrors = {...activityHistoryErrors};
+        delete updatedErrors.previousTrainer;
+
+        setActivityHistoryForm(updatedForm);
+        setActivityHistoryErrors(updatedErrors);
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Render Helpers
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -391,6 +461,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return (
             <>
                 {renderIntakeHeader('Step 1 of 6 · Basic Information')}
+
                 <form onSubmit={saveBasicInfo} className="client-form">
                     {basicInfoErrors.trainerId && <div className="field-error"> * {basicInfoErrors.trainerId}</div>}
                     <div className="form-field">
@@ -499,6 +570,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return (
             <>
                 {renderIntakeHeader('Step 2 of 6 · PAR-Q')}
+
                 <form onSubmit={handleParqContinue}>
                     {renderParqQuestion('heartCondition', 'Has your doctor ever said that you have a heart condition?')}
                     {renderParqQuestion('chestPainDuringActivity', 'Do you feel pain in your chest during physical activity?')}
@@ -527,10 +599,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
 
     function renderParqQuestion(field, label) {
         return (
-            <div className={`parq-question ${parqErrors[field] ? 'error' : ''}`}>
+            <div className={`intake-question ${parqErrors[field] ? 'error' : ''}`}>
                 <label>{label}</label>
-                <div className="parq-answer-group">
-                    <label className="parq-answer">
+                <div className="intake-answer-group">
+                    <label className="intake-answer">
                         <input
                             type="radio"
                             name={field}
@@ -540,7 +612,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                         Yes
                     </label>
 
-                    <label className="parq-answer">
+                    <label className="intake-answer">
                         <input
                             type="radio"
                             name={field}
@@ -551,7 +623,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                     </label>
                 </div>
                 {parqErrors[field] && (
-                    <div className="field-error parq-error">
+                    <div className="field-error intake-error">
                         * Please answer this question
                     </div>
                 )}
@@ -569,7 +641,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                     </div>
                 )}
                 {field === 'otherMedicalReason' && parqForm.otherMedicalReason && parqErrors.additionalNotes && (
-                    <div className="field-error parq-error">
+                    <div className="field-error intake-error">
                         * {parqErrors.additionalNotes}
                     </div>
                 )}
@@ -597,6 +669,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return (
             <>
                 {renderIntakeHeader('Step 3 of 6 · Goals')}
+
                 <form onSubmit={handleGoalsContinue}>
                     <div className="form-field">
                         <label>What are your fitness objectives? Select all that apply.</label>
@@ -637,6 +710,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                             )}
                         </div>
                     )}
+
                     <div className="section-divider spaced" />
                     <div className="form-field">
                         <label>What would success look like to you?</label>
@@ -654,6 +728,108 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                             type="button"
                             className="secondary-button"
                             onClick={handleGoalsBack}
+                        >
+                            Go Back
+                        </button>
+
+                        <button type="submit">
+                            Save & Continue
+                        </button>
+                    </div>
+                </form>
+            </>
+        );
+    }
+
+    function renderActivityHistory() {
+        return (
+            <>
+                {renderIntakeHeader('Step 4 of 6 · Activity History')}
+
+                <form onSubmit={handleActivityHistoryContinue}>
+                    <div className={`intake-question ${activityHistoryErrors.previousTrainer ? 'error' : ''}`}>
+                        <label>Have you worked with a personal trainer before?</label>
+
+                        <div className="intake-answer-group">
+                            <label className="intake-answer">
+                                <input
+                                    type="radio"
+                                    name="previousTrainer"
+                                    checked={activityHistoryForm.previousTrainer === true}
+                                    onChange={() => updatePreviousTrainer(true)}
+                                />
+                                Yes
+                            </label>
+
+                            <label className="intake-answer">
+                                <input
+                                    type="radio"
+                                    name="previousTrainer"
+                                    checked={activityHistoryForm.previousTrainer === false}
+                                    onChange={() => updatePreviousTrainer(false)}
+                                />
+                                No
+                            </label>
+                        </div>
+
+                        {activityHistoryErrors.previousTrainer && (
+                            <div className="field-error intake-error">
+                                * {activityHistoryErrors.previousTrainer}
+                            </div>
+                        )}
+
+                        {activityHistoryForm.previousTrainer && (
+                            <div className="form-field">
+                                <div className="section-divider vertical-gap-md" />
+                                <label className="vertical-gap-sm">Please describe your experience:</label>
+                                <textarea
+                                    name="previousTrainerExperience"
+                                    rows="3"
+                                    placeholder="Optional"
+                                    value={activityHistoryForm.previousTrainerExperience}
+                                    onChange={updateActivityHistoryForm}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-field">
+                        <label>Current level of physical activity</label>
+                        <select
+                            name="activityLevel"
+                            className={activityHistoryErrors.activityLevel ? 'input-error' : ''}
+                            value={activityHistoryForm.activityLevel}
+                            onChange={updateActivityHistoryForm}
+                        >
+                            <option value="">Select activity level</option>
+                            <option value="SEDENTARY">Sedentary</option>
+                            <option value="LIGHTLY_ACTIVE">Lightly active</option>
+                            <option value="MODERATELY_ACTIVE">Moderately active</option>
+                            <option value="VERY_ACTIVE">Very active</option>
+                        </select>
+                        {activityHistoryErrors.activityLevel && (
+                            <div className="field-error">
+                                * {activityHistoryErrors.activityLevel}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Describe your current exercise routine</label>
+                        <textarea
+                            name="currentRoutine"
+                            rows="3"
+                            placeholder="Optional"
+                            value={activityHistoryForm.currentRoutine}
+                            onChange={updateActivityHistoryForm}
+                        />
+                    </div>
+
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleActivityHistoryBack}
                         >
                             Go Back
                         </button>
@@ -728,6 +904,20 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return errors;
     }
 
+    function validateActivityHistoryForm() {
+        const errors = {};
+
+        if (activityHistoryForm.previousTrainer === null) {
+            errors.previousTrainer = 'Please answer this question';
+        }
+
+        if (!activityHistoryForm.activityLevel) {
+            errors.activityLevel = 'Current activity level is required';
+        }
+
+        return errors;
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Utility
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -778,6 +968,15 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         };
     }
 
+    function createEmptyActivityHistoryForm() {
+        return {
+            previousTrainer: null,
+            previousTrainerExperience: '',
+            activityLevel: '',
+            currentRoutine: ''
+        };
+    }
+
     function scrollToTop() {
         setTimeout(() => {
             window.scrollTo({
@@ -802,6 +1001,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 )}
                 {currentStep === IntakeSteps.GOALS && (
                     renderGoals()
+                )}
+                {currentStep === IntakeSteps.ACTIVITY_HISTORY && (
+                    renderActivityHistory()
                 )}
             </section>
         </div>

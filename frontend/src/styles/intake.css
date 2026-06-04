@@ -103,44 +103,44 @@
     background: rgba(59, 130, 246, 0.25) !important;
 }
 
-.parq-question {
+.intake-question {
     padding: 16px;
     border: 1px solid #444;
     border-radius: 8px;
     margin-bottom: 12px;
 }
 
-.parq-question > label {
+.intake-question > label {
     display: block;
     margin-bottom: 12px;
     font-weight: 500;
 }
 
-.parq-answer-group {
+.intake-answer-group {
     display: flex;
     gap: 28px;
     margin-top: 8px;
     margin-left: 4px;
 }
 
-.parq-answer {
+.intake-answer {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
 }
 
-.parq-answer input[type="radio"] {
+.intake-answer input[type="radio"] {
     margin: 0;
     position: relative;
     top: -1px;
 }
 
-.parq-error {
+.intake-error {
     margin-top: 10px;
 }
 
-.parq-question.error {
+.intake-question.error {
     border-color: #ff5a5a !important;
 }
 
@@ -167,12 +167,12 @@
         grid-template-columns: 1fr;
     }
 
-    .parq-answer-group {
+    .intake-answer-group {
         gap: 12px;
         margin-left: 0;
     }
 
-    .parq-answer {
+    .intake-answer {
         flex: 1;
         justify-content: center;
         padding: 12px;
@@ -182,11 +182,11 @@
         max-height: 8px;
     }
 
-    .parq-answer input[type="radio"] {
+    .intake-answer input[type="radio"] {
         display: none;
     }
 
-    .parq-answer:has(input[type="radio"]:checked) {
+    .intake-answer:has(input[type="radio"]:checked) {
         border-color: #3b82f6;
         background: rgba(59, 130, 246, 0.18);
     }
