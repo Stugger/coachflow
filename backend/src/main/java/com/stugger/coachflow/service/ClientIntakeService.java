@@ -101,6 +101,10 @@ public class ClientIntakeService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Intake not found"));
     }
 
+    public ClientIntakeResponse getIntakeById(Long intakeId) {
+        return new ClientIntakeResponse(getIntakeOrThrow(intakeId));
+    }
+
     public List<ClientIntakeResponse> getIntakesByTrainerId(Long trainerId) {
         return clientIntakeRepository.findByTrainerId(trainerId).stream()
                 .map(ClientIntakeResponse::new)

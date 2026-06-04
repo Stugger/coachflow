@@ -30,6 +30,11 @@ public class ClientIntakeController {
         return clientIntakeService.createIntake(request);
     }
 
+    @GetMapping("/{intakeId}")
+    public ClientIntakeResponse getIntakeById(@PathVariable Long intakeId) {
+        return clientIntakeService.getIntakeById(intakeId);
+    }
+
     @GetMapping("/trainer/{trainerId}")
     public List<ClientIntakeResponse> getIntakesByTrainerId(@PathVariable Long trainerId) {
         return clientIntakeService.getIntakesByTrainerId(trainerId);
