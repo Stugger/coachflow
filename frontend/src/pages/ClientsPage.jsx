@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
+import {Pages} from '../constants/layout';
 import * as PhoneUtils from '../utils/phone-utils';
 import * as TextUtils from '../utils/text-utils';
 
@@ -196,7 +197,7 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
                         <p>Manage your clients.</p>
                     </div>
 
-                    <button onClick={() => navigate('intake')}>
+                    <button onClick={() => navigate(Pages.CLIENT_INTAKE)}>
                         + New Client
                     </button>
                 </div>

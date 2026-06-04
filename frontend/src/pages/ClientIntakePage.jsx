@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState} from 'react';
+import {Pages, IntakeSteps} from '../constants/layout';
 import * as PhoneUtils from '../utils/phone-utils';
 import * as TextUtils from '../utils/text-utils';
 
@@ -8,7 +9,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         State
     --------------------------------------------------------------------------------------------------------------------------------------*/
 
-    const [currentStep, setCurrentStep] = useState('BASIC_INFO');
+    const [currentStep, setCurrentStep] = useState(IntakeSteps.BASIC_INFO);
     const [clientId, setClientId] = useState(null);
     const [intakeId, setIntakeId] = useState(null);
 
@@ -107,7 +108,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                     if (errorBody.fieldErrors) {
                         setBasicInfoErrors(errorBody.fieldErrors);
                     }
-                    throw new Error(errorBody.message || 'Failed to create client');
+                    throw new Error(errorBody.message || 'Failed to create client intake');
                 }
                 return response.json();
             })
@@ -117,7 +118,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 setCurrentStep(intake.currentStep);
                 scrollToTop();
             })
-            .catch(error => console.error('Error creating client:', error));
+            .catch(error => console.error('Error creating client or intake:', error));
     }
 
     function updateClient(event) {
@@ -198,8 +199,8 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     }
 
     function handleParqBack() {
-        saveIntakeStep('PARQ', parqForm, () => {
-            setCurrentStep('BASIC_INFO');
+        saveIntakeStep(IntakeSteps.PARQ, parqForm, () => {
+            setCurrentStep(IntakeSteps.BASIC_INFO);
             scrollToTop();
         });
     }
@@ -214,8 +215,8 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             return;
         }
 
-        saveIntakeStep('PARQ', parqForm, () => {
-            setCurrentStep('GOALS');
+        saveIntakeStep(IntakeSteps.PARQ, parqForm, () => {
+            setCurrentStep(IntakeSteps.GOALS);
             scrollToTop();
         });
     }
@@ -268,10 +269,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     }
 
     function exitIntake() {
-        if (currentStep === 'PARQ') {
-            saveIntakeStep('PARQ', parqForm, () => navigate('clients')); //TODO will likely be replaced with routing
+        if (currentStep === IntakeSteps.PARQ) {
+            saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(Pages.CLIENTS)); //TODO will likely be replaced with routing
         } else {
-            navigate('clients'); //TODO will likely be replaced with routing
+            navigate(Pages.CLIENTS); //TODO will likely be replaced with routing
         }
     }
 
@@ -579,10 +580,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     return (
         <div className="intake-page">
             <section className="intake-card">
-                {currentStep === 'BASIC_INFO' && (
+                {currentStep === IntakeSteps.BASIC_INFO && (
                     renderBasicInfo()
                 )}
-                {currentStep === 'PARQ' && (
+                {currentStep === IntakeSteps.PARQ && (
                    renderParq()
                 )}
             </section>

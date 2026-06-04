@@ -5,11 +5,12 @@ import './styles/clients.css';
 import './styles/intake.css';
 import './styles/appointments.css';
 import {useState} from 'react';
+import {MOBILE_BREAKPOINT} from './constants/layout';
+import {Pages} from './constants/layout';
 import AuthPage from './pages/AuthPage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ClientsPage from './pages/ClientsPage';
 import ClientIntakePage from './pages/ClientIntakePage';
-import {MOBILE_BREAKPOINT} from './constants/layout';
 
 function App() {
 
@@ -25,7 +26,7 @@ function App() {
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [page, setPage] = useState(() => {
-        return localStorage.getItem('coachflow_page') || 'dashboard';
+        return localStorage.getItem('coachflow_page') || Pages.DASHBOARD;
     });
 
     /*-------------------------------------------------------------------------------------------------------------------------------------
@@ -60,13 +61,13 @@ function App() {
 
     function getPageTitle() {
         let pageTitle = '';
-        if (page === 'dashboard') {
+        if (page === Pages.DASHBOARD) {
             pageTitle = 'Dashboard';
-        } else if (page === 'appointments') {
+        } else if (page === Pages.APPOINTMENTS) {
             pageTitle = 'Appointments';
-        } else if (page === 'clients') {
+        } else if (page === Pages.CLIENTS) {
             pageTitle = 'Clients';
-        } else if (page === 'intake') {
+        } else if (page === Pages.CLIENT_INTAKE) {
             pageTitle = 'Client Intake';
         }
         return window.innerWidth > MOBILE_BREAKPOINT
@@ -80,7 +81,7 @@ function App() {
 
     return (
         <>
-        {page !== 'intake' ? (
+        {page !== Pages.CLIENT_INTAKE ? (
             <div className={`app ${sidebarOpen ? 'sidebar-open' : 'sidebar-collapsed'}`}>
                 <header className="app-header">
                     <button className="hamburger-button" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -102,17 +103,17 @@ function App() {
                         </span>
                     </div>
 
-                    <button className={`sidebar-button ${page === 'dashboard' ? 'active' : ''}`} onClick={() => navigate('dashboard')}>
+                    <button className={`sidebar-button ${page === Pages.DASHBOARD ? 'active' : ''}`} onClick={() => navigate(Pages.DASHBOARD)}>
                         <span className="nav-icon">🏠</span>
                         <span className="nav-label">Dashboard</span>
                     </button>
 
-                    <button className={`sidebar-button ${page === 'appointments' ? 'active' : ''}`} onClick={() => navigate('appointments')}>
+                    <button className={`sidebar-button ${page === Pages.APPOINTMENTS ? 'active' : ''}`} onClick={() => navigate(Pages.APPOINTMENTS)}>
                         <span className="nav-icon">🗓️</span>
                         <span className="nav-label">Appointments</span>
                     </button>
 
-                    <button className={`sidebar-button ${page === 'clients' ? 'active' : ''}`} onClick={() => navigate('clients')}>
+                    <button className={`sidebar-button ${page === Pages.CLIENTS ? 'active' : ''}`} onClick={() => navigate(Pages.CLIENTS)}>
                         <span className="nav-icon">👥</span>
                         <span className="nav-label">Clients</span>
                     </button>
@@ -124,7 +125,7 @@ function App() {
                 </aside>
 
                 <main className="content">
-                    {page === 'dashboard' && (
+                    {page === Pages.DASHBOARD && (
                         <div className="dashboard-page">
                             <section className="profile-card">
                                 <h2>Under Construction</h2>
@@ -161,11 +162,11 @@ function App() {
                         </div>
                     )}
 
-                    {page === 'appointments' && (
+                    {page === Pages.APPOINTMENTS && (
                         <AppointmentsPage trainerId={auth.trainer.id}/>
                     )}
 
-                    {page === 'clients' && (
+                    {page === Pages.CLIENTS && (
                         <ClientsPage
                             trainerId={auth.trainer.id}
                             navigate={navigate} //to navigate to intake page TODO will likely be removed when routing exists
