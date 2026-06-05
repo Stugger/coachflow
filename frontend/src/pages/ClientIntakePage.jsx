@@ -17,6 +17,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     const [parqForm, setParqForm] = useState(createEmptyParqForm());
     const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
     const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
+    const [medicalForm, setMedicalForm] = useState(createEmptyMedicalForm());
 
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [parqErrors, setParqErrors] = useState({});
@@ -63,6 +64,12 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             setActivityHistoryForm({
                 ...createEmptyActivityHistoryForm(),
                 ...JSON.parse(intake.activityHistoryJson)
+            });
+        }
+        if (intake.medicalJson) {
+            setMedicalForm({
+                ...createEmptyMedicalForm(),
+                ...JSON.parse(intake.medicalJson)
             });
         }
     }
@@ -207,6 +214,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 break;
             case IntakeSteps.ACTIVITY_HISTORY:
                 saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(Pages.CLIENTS));
+                break;
+            case IntakeSteps.MEDICAL:
+                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(Pages.CLIENTS));
                 break;
             default:
                 navigate(Pages.CLIENTS);
@@ -369,7 +379,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     }
 
     /*
-     *  ACTIVITY_HISTORY
+     *  Activity History
      */
 
     function handleActivityHistoryBack() {
@@ -427,6 +437,35 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         setActivityHistoryErrors(updatedErrors);
     }
 
+    /*
+     *  Medical
+     */
+
+    function handleMedicalBack() {
+        saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => {
+            setCurrentStep(IntakeSteps.ACTIVITY_HISTORY);
+            scrollToTop();
+        });
+    }
+
+    function handleMedicalContinue(event) {
+        event.preventDefault();
+
+        saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => {
+            setCurrentStep(IntakeSteps.LIFESTYLE);
+            scrollToTop();
+        });
+    }
+
+    function updateMedicalForm(event) {
+        const {name, value} = event.target;
+
+        setMedicalForm({
+            ...medicalForm,
+            [name]: value
+        });
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Render Helpers
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -460,7 +499,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderBasicInfo() {
         return (
             <>
-                {renderIntakeHeader('Step 1 of 6 · Basic Information')}
+                {renderIntakeHeader('Step 1 of 7 · Basic Information')}
 
                 <form onSubmit={saveBasicInfo} className="client-form">
                     {basicInfoErrors.trainerId && <div className="field-error"> * {basicInfoErrors.trainerId}</div>}
@@ -569,7 +608,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderParq() {
         return (
             <>
-                {renderIntakeHeader('Step 2 of 6 · PAR-Q')}
+                {renderIntakeHeader('Step 2 of 7 · PAR-Q')}
 
                 <form onSubmit={handleParqContinue}>
                     {renderParqQuestion('heartCondition', 'Has your doctor ever said that you have a heart condition?')}
@@ -668,7 +707,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
 
         return (
             <>
-                {renderIntakeHeader('Step 3 of 6 · Goals')}
+                {renderIntakeHeader('Step 3 of 7 · Goals')}
 
                 <form onSubmit={handleGoalsContinue}>
                     <div className="form-field">
@@ -744,7 +783,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderActivityHistory() {
         return (
             <>
-                {renderIntakeHeader('Step 4 of 6 · Activity History')}
+                {renderIntakeHeader('Step 4 of 7 · Activity History')}
 
                 <form onSubmit={handleActivityHistoryContinue}>
                     <div className={`intake-question ${activityHistoryErrors.previousTrainer ? 'error' : ''}`}>
@@ -830,6 +869,74 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                             type="button"
                             className="secondary-button"
                             onClick={handleActivityHistoryBack}
+                        >
+                            Go Back
+                        </button>
+
+                        <button type="submit">
+                            Save & Continue
+                        </button>
+                    </div>
+                </form>
+            </>
+        );
+    }
+
+    function renderMedical() {
+        return (
+            <>
+                {renderIntakeHeader('Step 5 of 7 · Medical History')}
+
+                <form onSubmit={handleMedicalContinue}>
+                    <div className="form-field">
+                        <label>Medical conditions</label>
+                        <textarea
+                            name="medicalConditions"
+                            rows="3"
+                            placeholder="Optional"
+                            value={medicalForm.medicalConditions}
+                            onChange={updateMedicalForm}
+                        />
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Current medications</label>
+                        <textarea
+                            name="currentMedications"
+                            rows="3"
+                            placeholder="Optional"
+                            value={medicalForm.currentMedications}
+                            onChange={updateMedicalForm}
+                        />
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Past injuries or surgeries</label>
+                        <textarea
+                            name="pastSurgeries"
+                            rows="3"
+                            placeholder="Optional"
+                            value={medicalForm.pastSurgeries}
+                            onChange={updateMedicalForm}
+                        />
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Current injuries or physical limitations</label>
+                        <textarea
+                            name="injuriesLimitations"
+                            rows="3"
+                            placeholder="Optional"
+                            value={medicalForm.injuriesLimitations}
+                            onChange={updateMedicalForm}
+                        />
+                    </div>
+
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleMedicalBack}
                         >
                             Go Back
                         </button>
@@ -977,6 +1084,15 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         };
     }
 
+    function createEmptyMedicalForm() {
+        return {
+            medicalConditions: '',
+            currentMedications: '',
+            pastSurgeries: '',
+            injuriesLimitations: ''
+        };
+    }
+
     function scrollToTop() {
         setTimeout(() => {
             window.scrollTo({
@@ -1004,6 +1120,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 )}
                 {currentStep === IntakeSteps.ACTIVITY_HISTORY && (
                     renderActivityHistory()
+                )}
+                {currentStep === IntakeSteps.MEDICAL && (
+                    renderMedical()
                 )}
             </section>
         </div>
