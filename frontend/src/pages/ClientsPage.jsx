@@ -1,16 +1,21 @@
-import {useEffect, useRef, useState} from 'react';
-import {Pages} from '../constants/layout';
+import {useEffect, useMemo, useRef, useState} from 'react';
+import {useNavigate, useSearchParams} from 'react-router-dom';
+import {ROUTES} from '../constants/routes';
 import * as PhoneUtils from '../utils/phone-utils';
 import * as TextUtils from '../utils/text-utils';
 
-function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return to clients page (to be replaced with routing)
+function ClientsPage({trainerId}) {
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        State
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const selectedClientId = searchParams.get('selected');
 
     const [clients, setClients] = useState([]);
+    const [intakeDrafts, setIntakeDrafts] = useState([]);
 
     const [selectedClient, setSelectedClient] = useState(null);
     const [editForm, setEditForm] = useState(null);
@@ -20,17 +25,48 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
 
     const clientProfileRef = useRef(null);
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Effects
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
         loadClients();
+        loadIntakeDrafts();
     }, []);
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Loading
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    useEffect(() => {
+        if (!selectedClientId) {
+            setSelectedClient(null);
+            setEditForm(null);
+            setEditErrors({});
+            setEditingDetails(false);
+            return;
+        }
+
+        const client = clients.find(client => String(client.id) === selectedClientId);
+
+        if (!client) {
+            return;
+        }
+
+        if (selectedClient && String(selectedClient.id) === selectedClientId) {
+            return;
+        }
+
+        applySelectedClient(client);
+    }, [selectedClientId, clients]);
+
+    const clientsById = useMemo(() => {
+        return clients.reduce((lookup, client) => {
+            lookup[client.id] = client;
+            return lookup;
+        }, {});
+    }, [clients]);
+
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // API loading
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function loadClients() {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
@@ -50,12 +86,38 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
             });
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        API Actions
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    function loadIntakeDrafts() {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/trainer/${trainerId}`)
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load intake drafts');
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                const drafts = Array.isArray(data)
+                    ? data.filter(intake => intake.status === 'DRAFT')
+                    : [];
+
+                setIntakeDrafts(drafts);
+            })
+            .catch(error => {
+                console.error('Error loading intake drafts:', error);
+                setIntakeDrafts([]);
+            });
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Client CRUD
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function updateClient(event) {
         event.preventDefault();
+
+        if (!selectedClientId) {
+            return;
+        }
 
         const updatedErrors = validateClientForm(editForm);
 
@@ -64,7 +126,7 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${selectedClient.id}`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${selectedClientId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -86,27 +148,35 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
             })
             .then(updatedClient => {
                 document.activeElement?.blur(); //close mobile keyboard
-                setSelectedClient(updatedClient);
-                setEditErrors({});
-                setEditingDetails(false);
 
+                applySelectedClient(updatedClient, false);
                 loadClients();
 
                 setTimeout(() => {
                     clientProfileRef.current?.scrollIntoView({
                         behavior: 'smooth',
-                        block: 'start'
+                        block: 'start',
                     });
                 }, 200);
             })
             .catch(error => console.error('Error updating client:', error));
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Event Handlers
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Route/query param helpers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function selectClient(client) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+        nextSearchParams.set('selected', client.id);
+        setSearchParams(nextSearchParams);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Client selecting
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function applySelectedClient(client, shouldScroll = true) {
         setSelectedClient(client);
         setEditErrors({});
         setEditingDetails(false);
@@ -119,13 +189,20 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
             birthDate: client.birthDate || '',
             gender: client.gender || '',
         });
-        setTimeout(() => {
-            clientProfileRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }, 200);
+
+        if (shouldScroll) {
+            setTimeout(() => {
+                clientProfileRef.current?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start',
+                });
+            }, 200);
+        }
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Form helpers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function updateEditForm(event) {
         const {name, value} = event.target;
@@ -141,10 +218,6 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
             setEditErrors(updatedErrors);
         }
     }
-
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Validation
-    --------------------------------------------------------------------------------------------------------------------------------------*/
 
     function validateClientForm(form) {
         const updatedErrors = {};
@@ -169,10 +242,6 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
         return updatedErrors;
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Utility
-    --------------------------------------------------------------------------------------------------------------------------------------*/
-
     function normalizeForm(form) {
         return {
             ...form,
@@ -185,9 +254,9 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
         };
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Main Return
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <div className="clients-page">
@@ -197,7 +266,7 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
                         <p>Manage your clients.</p>
                     </div>
 
-                    <button onClick={() => navigate(Pages.CLIENT_INTAKE)}>
+                    <button onClick={() => navigate(ROUTES.INTAKE_NEW)}>
                         + New Client
                     </button>
                 </div>
@@ -205,7 +274,7 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
                     {clients.map(client => (
                         <button
                             key={client.id}
-                            className="client-list-item"
+                            className={`client-list-item ${String(client.id) === selectedClientId ? 'selected' : ''}`}
                             onClick={() => selectClient(client)}
                         >
                             {client.firstName} {client.lastName}
@@ -213,6 +282,31 @@ function ClientsPage({trainerId, navigate}) { //TODO added `navigate` to return 
                         </button>
                     ))}
                 </div>
+
+                {intakeDrafts.length > 0 && (
+                    <>
+                        <div className="section-divider spaced" />
+                        <h3>Draft Intakes</h3>
+                        <div className="client-list">
+                            {intakeDrafts.map(intake => {
+                                const client = clientsById[intake.clientId];
+                                const clientName = client
+                                    ? `${client.firstName} ${client.lastName}`
+                                    : `Client #${intake.clientId}`;
+
+                                return (
+                                    <button
+                                        key={intake.id}
+                                        className="client-list-item"
+                                        onClick={() => navigate(ROUTES.intake(intake.id))}
+                                    >
+                                        {clientName} · {intake.currentStep.replaceAll('_', ' ')}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </>
+                )}
             </section>
 
             <section className="client-profile-panel" ref={clientProfileRef}>

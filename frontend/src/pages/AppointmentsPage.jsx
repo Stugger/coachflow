@@ -1,29 +1,41 @@
 import {useEffect, useState} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import * as TimeUtils from '../utils/time-utils';
 
 function AppointmentsPage({trainerId}) {
 
-    const [appointments, setAppointments] = useState([]);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Route state
+    // ------------------------------------------------------------------------------------------------------------------------
 
-    const now = new Date();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-    const [daysToShow, setDaysToShow] = useState(7);
+    const selectedAppointmentId = searchParams.get('selected');
+    const reviewAppointmentId = searchParams.get('review');
+    const routedAppointmentId = reviewAppointmentId || selectedAppointmentId;
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Constants
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const DEFAULT_DAYS_TO_SHOW = 7;
     const MAX_DAYS_TO_SHOW = 28;
 
-    const needsReviewAppointments = appointments
-        .filter(a => a.status === 'SCHEDULED' && new Date(a.endTime) < now);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Derived route values
+    // ------------------------------------------------------------------------------------------------------------------------
 
-    const upcomingAppointments = appointments.filter(a =>
-        new Date(a.endTime) >= now
-    );
+    const daysParam = Number(searchParams.get('days'));
 
-    const historyAppointments = appointments
-        .filter(a => a.status !== 'SCHEDULED' && new Date(a.endTime) < now)
-        .sort((a, b) =>
-            new Date(b.startTime) - new Date(a.startTime)
-        );
+    const daysToShow = Number.isInteger(daysParam)
+        ? Math.min(Math.max(daysParam, DEFAULT_DAYS_TO_SHOW), MAX_DAYS_TO_SHOW)
+        : DEFAULT_DAYS_TO_SHOW;
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const [appointments, setAppointments] = useState([]);
     const [clients, setClients] = useState([]);
 
     const [showCreateForm, setShowCreateForm] = useState(false);
@@ -52,6 +64,65 @@ function AppointmentsPage({trainerId}) {
 
     const [createErrors, setCreateErrors] = useState({});
     const [editErrors, setEditErrors] = useState({});
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Derived appointment lists
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const now = new Date();
+
+    const needsReviewAppointments = appointments
+        .filter(appointment =>
+            appointment.status === 'SCHEDULED' && new Date(appointment.endTime) < now
+        );
+
+    const upcomingAppointments = appointments
+        .filter(appointment =>
+            new Date(appointment.endTime) >= now
+        );
+
+    const historyAppointments = appointments
+        .filter(appointment =>
+            appointment.status !== 'SCHEDULED' && new Date(appointment.endTime) < now
+        )
+        .sort((a, b) =>
+            new Date(b.startTime) - new Date(a.startTime)
+        );
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        loadAppointments();
+        loadClients();
+    }, []);
+
+    useEffect(() => {
+        if (!routedAppointmentId) {
+            setEditingAppointmentId(null);
+            setEditErrors({});
+            return;
+        }
+
+        const appointment = appointments.find(appointment =>
+            String(appointment.id) === routedAppointmentId
+        );
+
+        if (!appointment) {
+            return;
+        }
+
+        if (String(editingAppointmentId) === routedAppointmentId) {
+            return;
+        }
+
+        beginEditAppointment(appointment);
+    }, [routedAppointmentId, appointments]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // API loading
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function loadAppointments() {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/trainer/${trainerId}`)
@@ -89,10 +160,56 @@ function AppointmentsPage({trainerId}) {
             });
     }
 
-    useEffect(() => {
-        loadAppointments();
-        loadClients();
-    }, []);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Route/query param helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function setVisibleDays(nextDaysToShow) {
+        const clampedDaysToShow = Math.min(
+            Math.max(nextDaysToShow, DEFAULT_DAYS_TO_SHOW),
+            MAX_DAYS_TO_SHOW
+        );
+
+        const nextSearchParams = new URLSearchParams(searchParams);
+
+        if (clampedDaysToShow === DEFAULT_DAYS_TO_SHOW) {
+            nextSearchParams.delete('days');
+        } else {
+            nextSearchParams.set('days', clampedDaysToShow);
+        }
+
+        setSearchParams(nextSearchParams);
+    }
+
+    function selectAppointment(appointment, review) {
+        const nextSearchParams = new URLSearchParams(searchParams);
+
+        nextSearchParams.delete('selected');
+        nextSearchParams.delete('review');
+
+        if (review) {
+            nextSearchParams.set('review', appointment.id);
+        } else {
+            nextSearchParams.set('selected', appointment.id);
+        }
+
+        setSearchParams(nextSearchParams);
+    }
+
+    function clearSelectedAppointment() {
+        const nextSearchParams = new URLSearchParams(searchParams);
+
+        nextSearchParams.delete('selected');
+        nextSearchParams.delete('review');
+
+        setSearchParams(nextSearchParams);
+        setEditingAppointmentId(null);
+        setEditErrors({});
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Form helpers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function updateForm(event) {
         const {name, value} = event.target;
@@ -146,6 +263,25 @@ function AppointmentsPage({trainerId}) {
         return updatedErrors;
     }
 
+    function resetCreateForm() {
+        setCreateForm({
+            trainerId: trainerId,
+            clientId: '',
+            title: '',
+            date: '',
+            startTime: '',
+            durationMinutes: '60',
+            notes: ''
+        });
+
+        setCreateErrors({});
+        setShowCreateForm(false);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Appointment CRUD
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function createAppointment(event) {
         event.preventDefault();
 
@@ -157,7 +293,11 @@ function AppointmentsPage({trainerId}) {
         }
 
         const startTime = `${createForm.date}T${createForm.startTime}:00`;
-        const endTime = TimeUtils.addMinutesToLocalDateTime(createForm.date, createForm.startTime, createForm.durationMinutes);
+        const endTime = TimeUtils.addMinutesToLocalDateTime(
+            createForm.date,
+            createForm.startTime,
+            createForm.durationMinutes
+        );
 
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments`, {
             method: 'POST',
@@ -179,22 +319,11 @@ function AppointmentsPage({trainerId}) {
                 return response.json();
             })
             .then(() => {
-                setCreateForm({
-                    trainerId: trainerId,
-                    clientId: '',
-                    title: '',
-                    date: '',
-                    startTime: '',
-                    durationMinutes: '60',
-                    notes: ''
-                });
-
-                setCreateErrors({});
-                setShowCreateForm(false);
+                resetCreateForm();
                 loadAppointments();
             })
             .catch(error => {
-                console.error('Error creating appointment:', error)
+                console.error('Error creating appointment:', error);
                 window.alert(`${error}`);
             });
     }
@@ -210,7 +339,11 @@ function AppointmentsPage({trainerId}) {
         }
 
         const startTime = `${editForm.date}T${editForm.startTime}:00`;
-        const endTime = TimeUtils.addMinutesToLocalDateTime(editForm.date, editForm.startTime, editForm.durationMinutes);
+        const endTime = TimeUtils.addMinutesToLocalDateTime(
+            editForm.date,
+            editForm.startTime,
+            editForm.durationMinutes
+        );
 
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/${editingAppointmentId}`, {
             method: 'PUT',
@@ -232,12 +365,11 @@ function AppointmentsPage({trainerId}) {
                 return response.json();
             })
             .then(() => {
-                setEditErrors({});
-                setEditingAppointmentId(null);
+                clearSelectedAppointment();
                 loadAppointments();
             })
             .catch(error => {
-                console.error('Error updating appointment:', error)
+                console.error('Error updating appointment:', error);
                 window.alert(`${error}`);
             });
     }
@@ -256,15 +388,19 @@ function AppointmentsPage({trainerId}) {
                 if (!response.ok) {
                     throw new Error('Failed to delete appointment');
                 }
-                setEditErrors({});
-                setEditingAppointmentId(null);
+
+                clearSelectedAppointment();
                 loadAppointments();
             })
             .catch(error => {
-                console.error('Error deleting appointment:', error)
+                console.error('Error deleting appointment:', error);
                 window.alert(`${error}\n\nTry refreshing the page.`);
             });
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Appointment editing
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function beginEditAppointment(appointment) {
         const startDate = new Date(appointment.startTime);
@@ -284,6 +420,10 @@ function AppointmentsPage({trainerId}) {
             notes: appointment.notes || ''
         });
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Appointment grouping
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function getUpcomingAppointmentsForDay(dayDate) {
         const dayKey = TimeUtils.getDateKeyFromDate(dayDate);
@@ -308,184 +448,20 @@ function AppointmentsPage({trainerId}) {
         return days;
     }
 
-    return (
-
-        <div className="appointments-page">
-            <div className="appointments-left-column">
-                <section className="profile-card">
-                    <h3>Schedule Appointment</h3>
-                    {!showCreateForm && (
-                        <>
-                            <p>Schedule an upcoming appointment.</p>
-
-                            <button onClick={() => setShowCreateForm(true)}>
-                                + Schedule Appointment
-                            </button>
-                        </>
-                    )}
-                    {showCreateForm && (
-                        <form className="client-form" onSubmit={createAppointment}>
-                            <div className="form-field">
-                                <label>Client</label>
-                                <select name="clientId"
-                                        className={createErrors.clientId ? 'input-error' : ''}
-                                        value={createForm.clientId}
-                                        onChange={updateForm}
-                                >
-                                    <option value="">Select client</option>
-                                    {clients.map(client => (
-                                        <option key={client.id} value={client.id}>
-                                            {client.firstName} {client.lastName}
-                                        </option>
-                                    ))}
-                                </select>
-                                {createErrors.clientId && <div className="field-error">* {createErrors.clientId}</div>}
-                            </div>
-
-                            <div className="form-field">
-                                <label>Title</label>
-                                <input
-                                    name="title"
-                                    placeholder="e.g. Strength Session"
-                                    value={createForm.title}
-                                    onChange={updateForm}
-                                />
-                            </div>
-
-                            <div className="form-field">
-                                <label>Date</label>
-                                <input name="date" type="date"
-                                       className={createErrors.date ? 'input-error' : ''}
-                                       value={createForm.date}
-                                       onChange={updateForm}
-                                />
-                                {createErrors.date && <div className="field-error">* {createErrors.date}</div>}
-                            </div>
-
-                            <div className="form-field">
-                                <label>Start Time</label>
-                                <input name="startTime" type="time"
-                                       className={createErrors.startTime ? 'input-error' : ''}
-                                       value={createForm.startTime}
-                                       onChange={updateForm}
-                                />
-                                {createErrors.startTime && <div className="field-error">* {createErrors.startTime}</div>}
-                            </div>
-
-                            <div className="form-field">
-                                <label>Duration</label>
-                                <select name="durationMinutes"
-                                        value={createForm.durationMinutes}
-                                        onChange={updateForm}
-                                >
-                                    <option value="30">30 minutes</option>
-                                    <option value="45">45 minutes</option>
-                                    <option value="60">1 hour</option>
-                                    <option value="90">1.5 hours</option>
-                                    <option value="120">2 hours</option>
-                                </select>
-                            </div>
-
-                            <div className="form-field">
-                                <label>Notes</label>
-                                <textarea name="notes" value={createForm.notes} onChange={updateForm} />
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="submit">
-                                    Add Appointment
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="secondary-button"
-                                    onClick={() => setShowCreateForm(false)}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </section>
-
-                {needsReviewAppointments.length > 0 && (
-                    <section className="profile-card">
-                        <h3>Needs Review</h3>
-                        <p>These appointments have passed but are still marked as scheduled.</p>
-                        {needsReviewAppointments.map(appointment =>
-                            renderAppointmentCard(appointment, true)
-                        )}
-                    </section>
-                )}
-            </div>
-            <div className="appointments-right-column">
-                <section className="profile-card">
-                    <h3>Upcoming Appointments</h3>
-                    {upcomingAppointments.length === 0 ? (
-                        <p>No upcoming appointments scheduled.</p>
-                    ) : (
-                        <>
-                            <small>Total appointments: {upcomingAppointments.length}</small>
-                            <p>Below are your upcoming appointments for the next {daysToShow} days.</p>
-                        </>
-                    )}
-                    <div className="section-divider" />
-                    {getVisibleDays().map(day => {
-                        const dayAppointments = getUpcomingAppointmentsForDay(day);
-
-                        return (
-                            <div key={TimeUtils.getDateKeyFromDate(day)} className="appointment-day-group">
-                                <h4>{TimeUtils.formatDayHeading(day)}</h4>
-
-                                {dayAppointments.length === 0 && (
-                                    <div className="appointment-list-empty">
-                                    <p>No appointments.</p>
-                                    </div>
-                                )}
-                                {dayAppointments.map(appointment =>
-                                    renderAppointmentCard(appointment, false)
-                                )}
-                            </div>
-                        );
-                    })}
-
-                    {daysToShow < MAX_DAYS_TO_SHOW && (
-                        <button
-                            className="appointments-load-more-button secondary-button"
-                            onClick={() =>
-                                setDaysToShow(Math.min(daysToShow + 7, MAX_DAYS_TO_SHOW))
-                            }
-                        >
-                            Load 7 More Days
-                        </button>
-                    )}
-                </section>
-
-                <section className="profile-card">
-                    <h3>Appointment History</h3>
-
-                    {historyAppointments.length === 0 ? (
-                        <p>No appointment history yet.</p>
-                    ) : (
-                        <p>Below are your past appointments.</p>
-                    )}
-
-                    {historyAppointments.map(appointment =>
-                        renderAppointmentCard(appointment, true)
-                    )}
-                </section>
-            </div>
-        </div>
-    );
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function renderAppointmentCard(appointment, review) {
+        const isEditing = String(editingAppointmentId) === String(appointment.id);
+
         return (
             <div
                 key={appointment.id}
-                className={`appointment-list-item ${editingAppointmentId === appointment.id ? 'editing' : ''}`}
+                className={`appointment-list-item ${isEditing ? 'editing' : ''}`}
                 onClick={() => {
-                    if (editingAppointmentId !== appointment.id) {
-                        beginEditAppointment(appointment);
+                    if (!isEditing) {
+                        selectAppointment(appointment, review);
                     }
                 }}
             >
@@ -495,7 +471,9 @@ function AppointmentsPage({trainerId}) {
                         {appointment.status}
                     </span>
                 </div>
+
                 {appointment.title && <p>{appointment.clientName}</p>}
+
                 <p>
                     {review && (
                         <>
@@ -507,9 +485,10 @@ function AppointmentsPage({trainerId}) {
                     {' - '}
                     {TimeUtils.formatDisplayTime(appointment.endTime)}
                 </p>
+
                 {appointment.notes && <p>{appointment.notes}</p>}
 
-                {editingAppointmentId === appointment.id && (
+                {isEditing && (
                     <form
                         className="client-form section-divider spaced"
                         onSubmit={updateAppointment}
@@ -533,10 +512,11 @@ function AppointmentsPage({trainerId}) {
 
                         <div className="form-field">
                             <label>Client</label>
-                            <select name="clientId"
-                                    className={editErrors.clientId ? 'input-error' : ''}
-                                    value={editForm.clientId}
-                                    onChange={updateEditForm}
+                            <select
+                                name="clientId"
+                                className={editErrors.clientId ? 'input-error' : ''}
+                                value={editForm.clientId}
+                                onChange={updateEditForm}
                             >
                                 <option value="">Select client</option>
                                 {clients.map(client => (
@@ -560,29 +540,34 @@ function AppointmentsPage({trainerId}) {
 
                         <div className="form-field">
                             <label>Date</label>
-                            <input name="date" type="date"
-                                   className={editErrors.date ? 'input-error' : ''}
-                                   value={editForm.date}
-                                   onChange={updateEditForm}
+                            <input
+                                name="date"
+                                type="date"
+                                className={editErrors.date ? 'input-error' : ''}
+                                value={editForm.date}
+                                onChange={updateEditForm}
                             />
                             {editErrors.date && <div className="field-error">* {editErrors.date}</div>}
                         </div>
 
                         <div className="form-field">
                             <label>Start Time</label>
-                            <input name="startTime" type="time"
-                                   className={editErrors.startTime ? 'input-error' : ''}
-                                   value={editForm.startTime}
-                                   onChange={updateEditForm}
+                            <input
+                                name="startTime"
+                                type="time"
+                                className={editErrors.startTime ? 'input-error' : ''}
+                                value={editForm.startTime}
+                                onChange={updateEditForm}
                             />
                             {editErrors.startTime && <div className="field-error">* {editErrors.startTime}</div>}
                         </div>
 
                         <div className="form-field">
                             <label>Duration</label>
-                            <select name="durationMinutes"
-                                    value={editForm.durationMinutes}
-                                    onChange={updateEditForm}
+                            <select
+                                name="durationMinutes"
+                                value={editForm.durationMinutes}
+                                onChange={updateEditForm}
                             >
                                 <option value="30">30 minutes</option>
                                 <option value="45">45 minutes</option>
@@ -594,7 +579,11 @@ function AppointmentsPage({trainerId}) {
 
                         <div className="form-field">
                             <label>Notes</label>
-                            <textarea name="notes" value={editForm.notes} onChange={updateEditForm} />
+                            <textarea
+                                name="notes"
+                                value={editForm.notes}
+                                onChange={updateEditForm}
+                            />
                         </div>
 
                         <div className="form-actions">
@@ -605,7 +594,7 @@ function AppointmentsPage({trainerId}) {
                             <button
                                 type="button"
                                 className="secondary-button"
-                                onClick={() => setEditingAppointmentId(null)}
+                                onClick={() => clearSelectedAppointment()}
                             >
                                 Cancel
                             </button>
@@ -623,6 +612,195 @@ function AppointmentsPage({trainerId}) {
             </div>
         );
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    return (
+        <div className="appointments-page">
+            <div className="appointments-left-column">
+                <section className="profile-card">
+                    <h3>Schedule Appointment</h3>
+
+                    {!showCreateForm && (
+                        <>
+                            <p>Schedule an upcoming appointment.</p>
+
+                            <button onClick={() => setShowCreateForm(true)}>
+                                + Schedule Appointment
+                            </button>
+                        </>
+                    )}
+
+                    {showCreateForm && (
+                        <form className="client-form" onSubmit={createAppointment}>
+                            <div className="form-field">
+                                <label>Client</label>
+                                <select
+                                    name="clientId"
+                                    className={createErrors.clientId ? 'input-error' : ''}
+                                    value={createForm.clientId}
+                                    onChange={updateForm}
+                                >
+                                    <option value="">Select client</option>
+                                    {clients.map(client => (
+                                        <option key={client.id} value={client.id}>
+                                            {client.firstName} {client.lastName}
+                                        </option>
+                                    ))}
+                                </select>
+                                {createErrors.clientId && <div className="field-error">* {createErrors.clientId}</div>}
+                            </div>
+
+                            <div className="form-field">
+                                <label>Title</label>
+                                <input
+                                    name="title"
+                                    placeholder="e.g. Strength Session"
+                                    value={createForm.title}
+                                    onChange={updateForm}
+                                />
+                            </div>
+
+                            <div className="form-field">
+                                <label>Date</label>
+                                <input
+                                    name="date"
+                                    type="date"
+                                    className={createErrors.date ? 'input-error' : ''}
+                                    value={createForm.date}
+                                    onChange={updateForm}
+                                />
+                                {createErrors.date && <div className="field-error">* {createErrors.date}</div>}
+                            </div>
+
+                            <div className="form-field">
+                                <label>Start Time</label>
+                                <input
+                                    name="startTime"
+                                    type="time"
+                                    className={createErrors.startTime ? 'input-error' : ''}
+                                    value={createForm.startTime}
+                                    onChange={updateForm}
+                                />
+                                {createErrors.startTime && <div className="field-error">* {createErrors.startTime}</div>}
+                            </div>
+
+                            <div className="form-field">
+                                <label>Duration</label>
+                                <select
+                                    name="durationMinutes"
+                                    value={createForm.durationMinutes}
+                                    onChange={updateForm}
+                                >
+                                    <option value="30">30 minutes</option>
+                                    <option value="45">45 minutes</option>
+                                    <option value="60">1 hour</option>
+                                    <option value="90">1.5 hours</option>
+                                    <option value="120">2 hours</option>
+                                </select>
+                            </div>
+
+                            <div className="form-field">
+                                <label>Notes</label>
+                                <textarea
+                                    name="notes"
+                                    value={createForm.notes}
+                                    onChange={updateForm}
+                                />
+                            </div>
+
+                            <div className="form-actions">
+                                <button type="submit">
+                                    Add Appointment
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() => setShowCreateForm(false)}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </section>
+
+                {needsReviewAppointments.length > 0 && (
+                    <section className="profile-card">
+                        <h3>Needs Review</h3>
+                        <p>These appointments have passed but are still marked as scheduled.</p>
+
+                        {needsReviewAppointments.map(appointment =>
+                            renderAppointmentCard(appointment, true)
+                        )}
+                    </section>
+                )}
+            </div>
+
+            <div className="appointments-right-column">
+                <section className="profile-card">
+                    <h3>Upcoming Appointments</h3>
+
+                    {upcomingAppointments.length === 0 ? (
+                        <p>No upcoming appointments scheduled.</p>
+                    ) : (
+                        <>
+                            <small>Total appointments: {upcomingAppointments.length}</small>
+                            <p>Below are your upcoming appointments for the next {daysToShow} days.</p>
+                        </>
+                    )}
+
+                    <div className="section-divider" />
+
+                    {getVisibleDays().map(day => {
+                        const dayAppointments = getUpcomingAppointmentsForDay(day);
+
+                        return (
+                            <div key={TimeUtils.getDateKeyFromDate(day)} className="appointment-day-group">
+                                <h4>{TimeUtils.formatDayHeading(day)}</h4>
+
+                                {dayAppointments.length === 0 && (
+                                    <div className="appointment-list-empty">
+                                        <p>No appointments.</p>
+                                    </div>
+                                )}
+
+                                {dayAppointments.map(appointment =>
+                                    renderAppointmentCard(appointment, false)
+                                )}
+                            </div>
+                        );
+                    })}
+
+                    {daysToShow < MAX_DAYS_TO_SHOW && (
+                        <button
+                            className="appointments-load-more-button secondary-button"
+                            onClick={() => setVisibleDays(daysToShow + 7)}
+                        >
+                            Load 7 More Days
+                        </button>
+                    )}
+                </section>
+
+                <section className="profile-card">
+                    <h3>Appointment History</h3>
+
+                    {historyAppointments.length === 0 ? (
+                        <p>No appointment history yet.</p>
+                    ) : (
+                        <p>Below are your past appointments.</p>
+                    )}
+
+                    {historyAppointments.map(appointment =>
+                        renderAppointmentCard(appointment, true)
+                    )}
+                </section>
+            </div>
+        </div>
+    );
 }
 
 export default AppointmentsPage;

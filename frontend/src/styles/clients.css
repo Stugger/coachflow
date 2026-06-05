@@ -59,6 +59,16 @@
     transform: scale(0.99);
 }
 
+.client-list-item.selected {
+    border-color: #3b82f6 !important;
+    background: rgba(59, 130, 246, 0.18) !important;
+    color: #fff !important;
+}
+
+.client-list-item.selected:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+}
+
 .client-contact-info {
     display: flex;
     gap: 6px;

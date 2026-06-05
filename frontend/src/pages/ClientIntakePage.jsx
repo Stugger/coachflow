@@ -1,13 +1,22 @@
 import {useEffect, useRef, useState} from 'react';
-import {Pages, IntakeSteps} from '../constants/layout';
+import {useNavigate, useParams} from 'react-router-dom';
+import {ROUTES} from '../constants/routes';
+import {IntakeSteps} from '../constants/layout';
 import * as PhoneUtils from '../utils/phone-utils';
 import * as TextUtils from '../utils/text-utils';
 
-function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to return to clients page (to be replaced with routing)
+function ClientIntakePage({trainerId}) {
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        State
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Route state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const navigate = useNavigate();
+    const {intakeId: routeIntakeId} = useParams();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const [currentStep, setCurrentStep] = useState(IntakeSteps.BASIC_INFO);
     const [clientId, setClientId] = useState(null);
@@ -28,22 +37,28 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     const [lifestyleErrors, setLifestyleErrors] = useState({});
     const [trainingPreferencesErrors, setTrainingPreferencesErrors] = useState({});
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Effects
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
 
-    //
+    useEffect(() => {
+        if (routeIntakeId) {
+            loadIntake(routeIntakeId);
+        }
+    }, [routeIntakeId]);
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Loading
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Loading
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function loadIntake(id) {
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/${id}`)
             .then(response => response.json())
             .then(intake => {
                 hydrateIntake(intake);
+                loadClient(intake.clientId);
                 setCurrentStep(intake.currentStep);
+                scrollToTop();
             })
             .catch(error => console.error('Error loading intake:', error));
     }
@@ -70,10 +85,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 ...JSON.parse(intake.activityHistoryJson)
             });
         }
-        if (intake.medicalJson) {
+        if (intake.medicalHistoryJson) {
             setMedicalForm({
                 ...createEmptyMedicalForm(),
-                ...JSON.parse(intake.medicalJson)
+                ...JSON.parse(intake.medicalHistoryJson)
             });
         }
         if (intake.lifestyleJson) {
@@ -90,9 +105,36 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         }
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        API Actions
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    function loadClient(id) {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${id}`)
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load client');
+                }
+
+                return response.json();
+            })
+            .then(client => {
+                setBasicInfoForm({
+                    trainerId,
+                    firstName: client.firstName || '',
+                    lastName: client.lastName || '',
+                    preferredName: client.preferredName || '',
+                    email: client.email || '',
+                    phone: client.phone || '',
+                    birthDate: client.birthDate || '',
+                    gender: client.gender || '',
+                });
+            })
+            .catch(error => {
+                console.error('Error loading client:', error)
+                setFailedLoadError(error);
+            });
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // API actions
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function createClient(event) {
         event.preventDefault();
@@ -145,6 +187,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 setClientId(intake.clientId);
                 setIntakeId(intake.id);
                 setCurrentStep(intake.currentStep);
+                navigate(ROUTES.intake(intake.id), { replace: true });
                 scrollToTop();
             })
             .catch(error => console.error('Error creating client or intake:', error));
@@ -179,7 +222,6 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             })
             .then(() => {
                 loadIntake(intakeId);
-                scrollToTop();
             })
             .catch(error => console.error('Error updating client:', error));
     }
@@ -234,33 +276,32 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             .catch(error => console.error('Error completing intake:', error));
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Event Handlers
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function exitIntake() {
-        //TODO navigate will likely be replaced with routing
         switch (currentStep) {
             case IntakeSteps.PARQ:
-                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(Pages.CLIENTS));
+                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.CLIENTS));
                 break;
             case IntakeSteps.GOALS:
-                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(Pages.CLIENTS));
+                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(ROUTES.CLIENTS));
                 break;
             case IntakeSteps.ACTIVITY_HISTORY:
-                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(Pages.CLIENTS));
+                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(ROUTES.CLIENTS));
                 break;
             case IntakeSteps.MEDICAL:
-                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(Pages.CLIENTS));
+                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(ROUTES.CLIENTS));
                 break;
             case IntakeSteps.LIFESTYLE:
-                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(Pages.CLIENTS));
+                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(ROUTES.CLIENTS));
                 break;
             case IntakeSteps.TRAINING_PREFERENCES:
-                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(Pages.CLIENTS));
+                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.CLIENTS));
                 break;
             default:
-                navigate(Pages.CLIENTS);
+                navigate(ROUTES.CLIENTS);
         }
     }
 
@@ -627,9 +668,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         });
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Render Helpers
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function renderIntakeHeader(progress) {
         return (
@@ -1408,9 +1449,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         );
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Validation
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Validation
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function validateBasicInfoForm(form) {
         const updatedErrors = {};
@@ -1515,9 +1556,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return errors;
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Utility
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Form helpers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function createEmptyBasicInfoForm(form) {
         return {
@@ -1594,6 +1635,10 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         };
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Utility
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function showStressSources() {
         return lifestyleForm.stressLevel === 'MODERATE'
             || lifestyleForm.stressLevel === 'HIGH'
@@ -1620,9 +1665,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         }, 200);
     }
 
-    /*-------------------------------------------------------------------------------------------------------------------------------------
-        Main Return
-    --------------------------------------------------------------------------------------------------------------------------------------*/
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <div className="intake-page">
