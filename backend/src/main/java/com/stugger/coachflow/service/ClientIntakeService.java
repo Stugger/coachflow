@@ -62,7 +62,7 @@ public class ClientIntakeService {
         switch (step) {
             case PARQ -> intake.setParqJson(request.json());
             case GOALS -> intake.setGoalsJson(request.json());
-            case ACTIVITY_HISTORY -> intake.setActivityHistory(request.json());
+            case ACTIVITY_HISTORY -> intake.setActivityHistoryJson(request.json());
             case MEDICAL -> intake.setMedicalHistoryJson(request.json());
             case LIFESTYLE -> intake.setLifestyleJson(request.json());
             case TRAINING_PREFERENCES -> intake.setTrainingPreferencesJson(request.json());
@@ -77,7 +77,7 @@ public class ClientIntakeService {
 
         if (intake.getParqJson() == null || intake.getParqJson().isBlank()
                 || intake.getGoalsJson() == null || intake.getGoalsJson().isBlank()
-                || intake.getMedicalHistoryJson() == null ||  intake.getMedicalHistoryJson().isBlank()
+                || intake.getActivityHistoryJson() == null || intake.getActivityHistoryJson().isBlank()
                 || intake.getLifestyleJson() == null || intake.getLifestyleJson().isBlank()
                 || intake.getTrainingPreferencesJson() == null || intake.getTrainingPreferencesJson().isBlank()) {
 

@@ -19,12 +19,14 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
     const [medicalForm, setMedicalForm] = useState(createEmptyMedicalForm());
     const [lifestyleForm, setLifestyleForm] = useState(createEmptyLifestyleForm());
+    const [trainingPreferencesForm, setTrainingPreferencesForm] = useState(createEmptyTrainingPreferencesForm());
 
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [parqErrors, setParqErrors] = useState({});
     const [goalsErrors, setGoalsErrors] = useState({});
     const [activityHistoryErrors, setActivityHistoryErrors] = useState({});
     const [lifestyleErrors, setLifestyleErrors] = useState({});
+    const [trainingPreferencesErrors, setTrainingPreferencesErrors] = useState({});
 
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Effects
@@ -78,6 +80,12 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             setLifestyleForm({
                 ...createEmptyLifestyleForm(),
                 ...JSON.parse(intake.lifestyleJson)
+            });
+        }
+        if (intake.trainingPreferencesJson) {
+            setTrainingPreferencesForm({
+                ...createEmptyTrainingPreferencesForm(),
+                ...JSON.parse(intake.trainingPreferencesJson)
             });
         }
     }
@@ -207,6 +215,25 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             .catch(error => console.error(error));
     }
 
+    function completeIntake() {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/${intakeId}/complete`, {
+            method: 'PATCH'
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to complete intake');
+                }
+
+                return response.json();
+            })
+            .then(intake => {
+                hydrateIntake(intake);
+                setCurrentStep(IntakeSteps.COMPLETED);
+                scrollToTop();
+            })
+            .catch(error => console.error('Error completing intake:', error));
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Event Handlers
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -228,6 +255,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 break;
             case IntakeSteps.LIFESTYLE:
                 saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(Pages.CLIENTS));
+                break;
+            case IntakeSteps.TRAINING_PREFERENCES:
+                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(Pages.CLIENTS));
                 break;
             default:
                 navigate(Pages.CLIENTS);
@@ -530,6 +560,73 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         }
     }
 
+    /*
+     * Training Preferences
+     */
+
+    function handleTrainingPreferencesBack() {
+        saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => {
+            setCurrentStep(IntakeSteps.LIFESTYLE);
+            scrollToTop();
+        });
+    }
+
+    function handleTrainingPreferencesContinue(event) {
+        event.preventDefault();
+
+        const errors = validateTrainingPreferencesForm();
+
+        if (Object.keys(errors).length > 0) {
+            setTrainingPreferencesErrors(errors);
+            return;
+        }
+
+        saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => {
+            completeIntake();
+        });
+    }
+
+    function updateTrainingPreferencesForm(event) {
+        const {name, value} = event.target;
+
+        setTrainingPreferencesForm({
+            ...trainingPreferencesForm,
+            [name]: value
+        });
+
+        if (trainingPreferencesErrors[name]) {
+            const updatedErrors = {...trainingPreferencesErrors};
+            delete updatedErrors[name];
+            setTrainingPreferencesErrors(updatedErrors);
+        }
+    }
+
+    function updatePreferredWorkoutDay(day) {
+        const selected = trainingPreferencesForm.preferredWorkoutDays.includes(day);
+
+        const updatedDays = selected
+            ? trainingPreferencesForm.preferredWorkoutDays.filter(value => value !== day)
+            : [...trainingPreferencesForm.preferredWorkoutDays, day];
+
+        setTrainingPreferencesForm({
+            ...trainingPreferencesForm,
+            preferredWorkoutDays: updatedDays
+        });
+    }
+
+    function updateLearningStyle(style) {
+        const selected = trainingPreferencesForm.learningStyles.includes(style);
+
+        const updatedLearningStyles = selected
+            ? trainingPreferencesForm.learningStyles.filter(value => value !== style)
+            : [...trainingPreferencesForm.learningStyles, style];
+
+        setTrainingPreferencesForm({
+            ...trainingPreferencesForm,
+            learningStyles: updatedLearningStyles
+        });
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Render Helpers
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -563,7 +660,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderBasicInfo() {
         return (
             <>
-                {renderIntakeHeader('Step 1 of 7 · Basic Information')}
+                {renderIntakeHeader('Step 1 of 8 · Basic Information')}
 
                 <form onSubmit={saveBasicInfo} className="client-form">
                     {basicInfoErrors.trainerId && <div className="field-error"> * {basicInfoErrors.trainerId}</div>}
@@ -672,7 +769,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderParq() {
         return (
             <>
-                {renderIntakeHeader('Step 2 of 7 · PAR-Q')}
+                {renderIntakeHeader('Step 2 of 8 · PAR-Q')}
 
                 <form onSubmit={handleParqContinue}>
                     {renderParqQuestion('heartCondition', 'Has your doctor ever said that you have a heart condition?')}
@@ -771,7 +868,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
 
         return (
             <>
-                {renderIntakeHeader('Step 3 of 7 · Goals')}
+                {renderIntakeHeader('Step 3 of 8 · Goals')}
 
                 <form onSubmit={handleGoalsContinue}>
                     <div className="form-field">
@@ -847,7 +944,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderActivityHistory() {
         return (
             <>
-                {renderIntakeHeader('Step 4 of 7 · Activity History')}
+                {renderIntakeHeader('Step 4 of 8 · Activity History')}
 
                 <form onSubmit={handleActivityHistoryContinue}>
                     <div className={`intake-question ${activityHistoryErrors.previousTrainer ? 'error' : ''}`}>
@@ -949,7 +1046,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderMedical() {
         return (
             <>
-                {renderIntakeHeader('Step 5 of 7 · Medical History')}
+                {renderIntakeHeader('Step 5 of 8 · Medical History')}
 
                 <form onSubmit={handleMedicalContinue}>
                     <div className="form-field">
@@ -1017,7 +1114,7 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     function renderLifestyle() {
         return (
             <>
-                {renderIntakeHeader('Step 6 of 7 · Lifestyle')}
+                {renderIntakeHeader('Step 6 of 8 · Lifestyle')}
 
                 <form onSubmit={handleLifestyleContinue}>
                     <div className="form-field">
@@ -1138,6 +1235,179 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         );
     }
 
+    function renderTrainingPreferences() {
+        const workoutDayOptions = [
+            ['MONDAY', 'Mon'],
+            ['TUESDAY', 'Tue'],
+            ['WEDNESDAY', 'Wed'],
+            ['THURSDAY', 'Thu'],
+            ['FRIDAY', 'Fri'],
+            ['SATURDAY', 'Sat'],
+            ['SUNDAY', 'Sun'],
+        ];
+
+        const learningStyleOptions = [
+            ['VISUAL_DEMONSTRATION', 'Visual demonstration'],
+            ['VERBAL_EXPLANATION', 'Verbal explanation'],
+            ['HANDS_ON_CORRECTION', 'Hands-on correction'],
+            ['WRITTEN_INSTRUCTIONS', 'Written instructions'],
+            ['NOT_SURE', 'Not sure']
+        ];
+
+        return (
+            <>
+                {renderIntakeHeader('Step 7 of 8 · Training Preferences')}
+
+                <form onSubmit={handleTrainingPreferencesContinue}>
+                    <div className="form-field">
+                        <label>How many days per week would you like to train?</label>
+                        <select
+                            name="daysPerWeek"
+                            className={trainingPreferencesErrors.daysPerWeek ? 'input-error' : ''}
+                            value={trainingPreferencesForm.daysPerWeek}
+                            onChange={updateTrainingPreferencesForm}
+                        >
+                            <option value="">Select days per week</option>
+                            <option value="1">1 day</option>
+                            <option value="2">2 days</option>
+                            <option value="3">3 days</option>
+                            <option value="4">4 days</option>
+                            <option value="5">5 days</option>
+                            <option value="6">6 days</option>
+                            <option value="7">7 days</option>
+                        </select>
+                        {trainingPreferencesErrors.daysPerWeek && (
+                            <div className="field-error">
+                                * {trainingPreferencesErrors.daysPerWeek}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Preferred workout time</label>
+                        <select
+                            name="workoutTimePreference"
+                            className={trainingPreferencesErrors.workoutTimePreference ? 'input-error' : ''}
+                            value={trainingPreferencesForm.workoutTimePreference}
+                            onChange={updateTrainingPreferencesForm}
+                        >
+                            <option value="">Select workout time</option>
+                            <option value="MORNING">Morning</option>
+                            <option value="AFTERNOON">Afternoon</option>
+                            <option value="EVENING">Evening</option>
+                            <option value="FLEXIBLE">Flexible</option>
+                        </select>
+                        {trainingPreferencesErrors.workoutTimePreference && (
+                            <div className="field-error">
+                                * {trainingPreferencesErrors.workoutTimePreference}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="section-divider spaced" />
+
+                    <div className="form-field">
+                        <label>Which days are you generally available to train? Select all that apply. (Optional)</label>
+
+                        <div className="multi-option-grid">
+                            {workoutDayOptions.map(([value, label]) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    className={`multi-option ${trainingPreferencesForm.preferredWorkoutDays.includes(value) ? 'selected' : ''}`}
+                                    onClick={() => updatePreferredWorkoutDay(value)}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="section-divider spaced" />
+
+                    <div className="form-field">
+                        <label>How do you best learn new exercises? Select all that apply. (Optional)</label>
+
+                        <div className="multi-option-grid">
+                            {learningStyleOptions.map(([value, label]) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    className={`multi-option ${trainingPreferencesForm.learningStyles.includes(value) ? 'selected' : ''}`}
+                                    onClick={() => updateLearningStyle(value)}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="section-divider spaced" />
+
+                    <div className="form-field">
+                        <label>Are there any specific exercises you would like to avoid?</label>
+                        <textarea
+                            name="exercisesToAvoid"
+                            rows="3"
+                            placeholder="Optional"
+                            value={trainingPreferencesForm.exercisesToAvoid}
+                            onChange={updateTrainingPreferencesForm}
+                        />
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Additional training preferences</label>
+                        <textarea
+                            name="additionalPreferences"
+                            rows="3"
+                            placeholder="Optional"
+                            value={trainingPreferencesForm.additionalPreferences}
+                            onChange={updateTrainingPreferencesForm}
+                        />
+                    </div>
+
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleTrainingPreferencesBack}
+                        >
+                            Go Back
+                        </button>
+
+                        <button type="submit">
+                            Complete Intake
+                        </button>
+                    </div>
+                </form>
+            </>
+        );
+    }
+
+    function renderCompleted() {
+        return (
+            <>
+                {renderIntakeHeader('Step 8 of 8 · Complete')}
+
+                <div className="empty-state">
+                    <h2>🎉 Intake Completed</h2>
+                    <p>Thank you. Please return the device to your trainer.</p>
+                    <p>Your trainer will review your answers with you before beginning the assessment.</p>
+                </div>
+
+                <div className="form-actions">
+                    <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => setCurrentStep(IntakeSteps.TRAINING_PREFERENCES)}
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </>
+        );
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Validation
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1231,6 +1501,20 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return errors;
     }
 
+    function validateTrainingPreferencesForm() {
+        const errors = {};
+
+        if (!trainingPreferencesForm.daysPerWeek) {
+            errors.daysPerWeek = 'Training days per week is required';
+        }
+
+        if (!trainingPreferencesForm.workoutTimePreference) {
+            errors.workoutTimePreference = 'Workout time preference is required';
+        }
+
+        return errors;
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Utility
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1316,6 +1600,17 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             || lifestyleForm.stressLevel === 'VERY_HIGH';
     }
 
+    function createEmptyTrainingPreferencesForm() {
+        return {
+            daysPerWeek: '',
+            workoutTimePreference: '',
+            preferredWorkoutDays: [],
+            learningStyles: [],
+            exercisesToAvoid: '',
+            additionalPreferences: ''
+        };
+    }
+
     function scrollToTop() {
         setTimeout(() => {
             window.scrollTo({
@@ -1349,6 +1644,12 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 )}
                 {currentStep === IntakeSteps.LIFESTYLE && (
                     renderLifestyle()
+                )}
+                {currentStep === IntakeSteps.TRAINING_PREFERENCES && (
+                    renderTrainingPreferences()
+                )}
+                {currentStep === IntakeSteps.COMPLETED && (
+                    renderCompleted()
                 )}
             </section>
         </div>

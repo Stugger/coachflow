@@ -33,7 +33,7 @@ public record ClientIntakeResponse(
             intake.getStatus(),
             intake.getCurrentStep(),
             intake.getGoalsJson(),
-            intake.getActivityHistory(),
+            intake.getActivityHistoryJson(),
             intake.getMedicalHistoryJson(),
             intake.getLifestyleJson(),
             intake.getTrainingPreferencesJson(),

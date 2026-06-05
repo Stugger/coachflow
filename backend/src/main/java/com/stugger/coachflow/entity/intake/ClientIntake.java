@@ -50,7 +50,7 @@ public class ClientIntake {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "activity_history_json", columnDefinition = "jsonb")
-    private String activityHistory;
+    private String activityHistoryJson;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "medical_history_json", columnDefinition = "jsonb")
