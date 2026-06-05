@@ -1,6 +1,6 @@
-package com.stugger.coachflow.repository;
+package com.stugger.coachflow.repository.person;
 
-import com.stugger.coachflow.entity.Client;
+import com.stugger.coachflow.entity.person.Client;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 

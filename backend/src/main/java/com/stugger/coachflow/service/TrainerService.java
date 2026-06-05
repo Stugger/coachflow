@@ -1,11 +1,11 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.api.dto.request.RegisterTrainerRequest;
-import com.stugger.coachflow.api.dto.response.TrainerResponse;
-import com.stugger.coachflow.entity.Trainer;
-import com.stugger.coachflow.entity.User;
-import com.stugger.coachflow.entity.UserRole;
-import com.stugger.coachflow.repository.TrainerRepository;
+import com.stugger.coachflow.api.dto.request.auth.RegisterTrainerRequest;
+import com.stugger.coachflow.api.dto.response.person.TrainerResponse;
+import com.stugger.coachflow.entity.person.Trainer;
+import com.stugger.coachflow.entity.person.User;
+import com.stugger.coachflow.entity.person.UserRole;
+import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.util.TextUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;

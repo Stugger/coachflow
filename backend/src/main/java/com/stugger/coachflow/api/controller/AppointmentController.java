@@ -1,9 +1,9 @@
 package com.stugger.coachflow.api.controller;
 
-import com.stugger.coachflow.api.dto.request.CreateAppointmentRequest;
-import com.stugger.coachflow.api.dto.request.UpdateAppointmentRequest;
-import com.stugger.coachflow.api.dto.response.AppointmentResponse;
-import com.stugger.coachflow.entity.AppointmentStatus;
+import com.stugger.coachflow.api.dto.request.appointment.CreateAppointmentRequest;
+import com.stugger.coachflow.api.dto.request.appointment.UpdateAppointmentRequest;
+import com.stugger.coachflow.api.dto.response.appointment.AppointmentResponse;
+import com.stugger.coachflow.entity.appointment.AppointmentStatus;
 import com.stugger.coachflow.service.AppointmentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

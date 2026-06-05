@@ -1,9 +1,9 @@
 package com.stugger.coachflow.api.controller;
 
-import com.stugger.coachflow.api.dto.request.CreateClientRequest;
-import com.stugger.coachflow.api.dto.request.UpdateClientRequest;
-import com.stugger.coachflow.api.dto.response.ClientResponse;
-import com.stugger.coachflow.entity.Client;
+import com.stugger.coachflow.api.dto.request.person.CreateClientRequest;
+import com.stugger.coachflow.api.dto.request.person.UpdateClientRequest;
+import com.stugger.coachflow.api.dto.response.person.ClientResponse;
+import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.service.ClientService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;

@@ -1,6 +1,6 @@
 package com.stugger.coachflow.api.controller;
 
-import com.stugger.coachflow.api.dto.response.TrainerResponse;
+import com.stugger.coachflow.api.dto.response.person.TrainerResponse;
 import com.stugger.coachflow.service.TrainerService;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,7 +1,7 @@
-package com.stugger.coachflow.repository;
+package com.stugger.coachflow.repository.appointment;
 
-import com.stugger.coachflow.entity.Appointment;
-import com.stugger.coachflow.entity.AppointmentStatus;
+import com.stugger.coachflow.entity.appointment.Appointment;
+import com.stugger.coachflow.entity.appointment.AppointmentStatus;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 

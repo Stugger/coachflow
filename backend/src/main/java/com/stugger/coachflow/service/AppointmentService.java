@@ -1,12 +1,15 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.api.dto.request.CreateAppointmentRequest;
-import com.stugger.coachflow.api.dto.request.UpdateAppointmentRequest;
-import com.stugger.coachflow.api.dto.response.AppointmentResponse;
-import com.stugger.coachflow.entity.*;
-import com.stugger.coachflow.repository.AppointmentRepository;
-import com.stugger.coachflow.repository.ClientRepository;
-import com.stugger.coachflow.repository.TrainerRepository;
+import com.stugger.coachflow.api.dto.request.appointment.CreateAppointmentRequest;
+import com.stugger.coachflow.api.dto.request.appointment.UpdateAppointmentRequest;
+import com.stugger.coachflow.api.dto.response.appointment.AppointmentResponse;
+import com.stugger.coachflow.entity.appointment.Appointment;
+import com.stugger.coachflow.entity.appointment.AppointmentStatus;
+import com.stugger.coachflow.entity.person.Client;
+import com.stugger.coachflow.entity.person.Trainer;
+import com.stugger.coachflow.repository.appointment.AppointmentRepository;
+import com.stugger.coachflow.repository.person.ClientRepository;
+import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.util.TextUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;

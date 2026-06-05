@@ -1,6 +1,6 @@
-package com.stugger.coachflow.api.dto.request;
+package com.stugger.coachflow.api.dto.request.person;
 
-import com.stugger.coachflow.entity.ClientGender;
+import com.stugger.coachflow.entity.person.ClientGender;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,12 +9,9 @@ import java.time.LocalDate;
 
 /**
  * @author Jake
- * @since May 27th, 2026
+ * @since May 29th, 2026
  */
-public record CreateClientRequest(
-        @NotNull(message = "Trainer is required")
-        Long trainerId,
-
+public record UpdateClientRequest(
         @NotBlank(message = "First name is required")
         String firstName,
 

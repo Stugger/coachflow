@@ -1,4 +1,4 @@
-package com.stugger.coachflow.entity;
+package com.stugger.coachflow.entity.person;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -17,22 +18,25 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "trainers")
+public class Trainer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    @Column(name = "first_name", nullable = false, length = 32)
+    private String firstName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
-    private UserRole role;
+    @Column(name = "last_name", nullable = false, length = 32)
+    private String lastName;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

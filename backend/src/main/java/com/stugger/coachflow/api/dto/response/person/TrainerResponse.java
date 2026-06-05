@@ -1,6 +1,6 @@
-package com.stugger.coachflow.api.dto.response;
+package com.stugger.coachflow.api.dto.response.person;
 
-import com.stugger.coachflow.entity.Trainer;
+import com.stugger.coachflow.entity.person.Trainer;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

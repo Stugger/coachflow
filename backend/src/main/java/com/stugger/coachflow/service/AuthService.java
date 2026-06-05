@@ -1,15 +1,15 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.api.dto.request.LoginRequest;
-import com.stugger.coachflow.api.dto.request.RegisterTrainerRequest;
-import com.stugger.coachflow.api.dto.response.AuthResponse;
-import com.stugger.coachflow.api.dto.response.TrainerResponse;
-import com.stugger.coachflow.api.dto.response.UserResponse;
-import com.stugger.coachflow.entity.Trainer;
-import com.stugger.coachflow.entity.User;
-import com.stugger.coachflow.entity.UserRole;
-import com.stugger.coachflow.repository.TrainerRepository;
-import com.stugger.coachflow.repository.UserRepository;
+import com.stugger.coachflow.api.dto.request.auth.LoginRequest;
+import com.stugger.coachflow.api.dto.request.auth.RegisterTrainerRequest;
+import com.stugger.coachflow.api.dto.response.auth.AuthResponse;
+import com.stugger.coachflow.api.dto.response.person.TrainerResponse;
+import com.stugger.coachflow.api.dto.response.person.UserResponse;
+import com.stugger.coachflow.entity.person.Trainer;
+import com.stugger.coachflow.entity.person.User;
+import com.stugger.coachflow.entity.person.UserRole;
+import com.stugger.coachflow.repository.person.TrainerRepository;
+import com.stugger.coachflow.repository.person.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

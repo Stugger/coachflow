@@ -1,7 +1,7 @@
-package com.stugger.coachflow.repository;
+package com.stugger.coachflow.repository.person;
 
-import com.stugger.coachflow.entity.Trainer;
-import com.stugger.coachflow.entity.User;
+import com.stugger.coachflow.entity.person.Trainer;
+import com.stugger.coachflow.entity.person.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

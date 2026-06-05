@@ -1,4 +1,4 @@
-package com.stugger.coachflow.entity;
+package com.stugger.coachflow.entity.appointment;
 
 /**
  * @author Jake

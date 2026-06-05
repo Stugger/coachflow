@@ -1,8 +1,8 @@
 package com.stugger.coachflow.api.controller;
 
-import com.stugger.coachflow.api.dto.request.LoginRequest;
-import com.stugger.coachflow.api.dto.request.RegisterTrainerRequest;
-import com.stugger.coachflow.api.dto.response.AuthResponse;
+import com.stugger.coachflow.api.dto.request.auth.LoginRequest;
+import com.stugger.coachflow.api.dto.request.auth.RegisterTrainerRequest;
+import com.stugger.coachflow.api.dto.response.auth.AuthResponse;
 import com.stugger.coachflow.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;

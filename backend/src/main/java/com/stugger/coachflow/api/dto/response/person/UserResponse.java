@@ -1,7 +1,7 @@
-package com.stugger.coachflow.api.dto.response;
+package com.stugger.coachflow.api.dto.response.person;
 
-import com.stugger.coachflow.entity.User;
-import com.stugger.coachflow.entity.UserRole;
+import com.stugger.coachflow.entity.person.User;
+import com.stugger.coachflow.entity.person.UserRole;
 
 /**
  * @author Jake

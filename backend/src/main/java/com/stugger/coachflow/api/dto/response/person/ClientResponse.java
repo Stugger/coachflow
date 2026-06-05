@@ -1,7 +1,7 @@
-package com.stugger.coachflow.api.dto.response;
+package com.stugger.coachflow.api.dto.response.person;
 
-import com.stugger.coachflow.entity.Client;
-import com.stugger.coachflow.entity.ClientGender;
+import com.stugger.coachflow.entity.person.Client;
+import com.stugger.coachflow.entity.person.ClientGender;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,8 +1,8 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.entity.User;
-import com.stugger.coachflow.entity.UserRole;
-import com.stugger.coachflow.repository.UserRepository;
+import com.stugger.coachflow.entity.person.User;
+import com.stugger.coachflow.entity.person.UserRole;
+import com.stugger.coachflow.repository.person.UserRepository;
 import com.stugger.coachflow.util.TextUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -1,5 +1,7 @@
-package com.stugger.coachflow.entity;
+package com.stugger.coachflow.entity.appointment;
 
+import com.stugger.coachflow.entity.person.Client;
+import com.stugger.coachflow.entity.person.Trainer;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

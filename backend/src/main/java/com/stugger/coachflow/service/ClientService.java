@@ -1,12 +1,12 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.api.dto.request.CreateClientRequest;
-import com.stugger.coachflow.api.dto.request.UpdateClientRequest;
-import com.stugger.coachflow.api.dto.response.ClientResponse;
-import com.stugger.coachflow.entity.Client;
-import com.stugger.coachflow.entity.Trainer;
-import com.stugger.coachflow.repository.ClientRepository;
-import com.stugger.coachflow.repository.TrainerRepository;
+import com.stugger.coachflow.api.dto.request.person.CreateClientRequest;
+import com.stugger.coachflow.api.dto.request.person.UpdateClientRequest;
+import com.stugger.coachflow.api.dto.response.person.ClientResponse;
+import com.stugger.coachflow.entity.person.Client;
+import com.stugger.coachflow.entity.person.Trainer;
+import com.stugger.coachflow.repository.person.ClientRepository;
+import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.util.TextUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Sort;

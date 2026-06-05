@@ -1,7 +1,7 @@
-package com.stugger.coachflow.api.dto.response;
+package com.stugger.coachflow.api.dto.response.appointment;
 
-import com.stugger.coachflow.entity.Appointment;
-import com.stugger.coachflow.entity.AppointmentStatus;
+import com.stugger.coachflow.entity.appointment.Appointment;
+import com.stugger.coachflow.entity.appointment.AppointmentStatus;
 
 import java.time.LocalDateTime;
 

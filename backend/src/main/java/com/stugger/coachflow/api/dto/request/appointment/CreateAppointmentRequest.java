@@ -1,6 +1,5 @@
-package com.stugger.coachflow.api.dto.request;
+package com.stugger.coachflow.api.dto.request.appointment;
 
-import com.stugger.coachflow.entity.AppointmentStatus;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
@@ -9,7 +8,10 @@ import java.time.LocalDateTime;
  * @author Jake
  * @since June 1st, 2026
  */
-public record UpdateAppointmentRequest(
+public record CreateAppointmentRequest(
+        @NotNull(message = "Trainer is required")
+        Long trainerId,
+
         @NotNull(message = "Client is required")
         Long clientId,
 
@@ -20,9 +22,6 @@ public record UpdateAppointmentRequest(
 
         @NotNull(message = "End time is required")
         LocalDateTime endTime,
-
-        @NotNull(message = "Status is required")
-        AppointmentStatus status,
 
         String notes
 ) {
