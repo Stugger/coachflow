@@ -18,11 +18,13 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
     const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
     const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
     const [medicalForm, setMedicalForm] = useState(createEmptyMedicalForm());
+    const [lifestyleForm, setLifestyleForm] = useState(createEmptyLifestyleForm());
 
     const [basicInfoErrors, setBasicInfoErrors] = useState({});
     const [parqErrors, setParqErrors] = useState({});
     const [goalsErrors, setGoalsErrors] = useState({});
     const [activityHistoryErrors, setActivityHistoryErrors] = useState({});
+    const [lifestyleErrors, setLifestyleErrors] = useState({});
 
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Effects
@@ -70,6 +72,12 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             setMedicalForm({
                 ...createEmptyMedicalForm(),
                 ...JSON.parse(intake.medicalJson)
+            });
+        }
+        if (intake.lifestyleJson) {
+            setLifestyleForm({
+                ...createEmptyLifestyleForm(),
+                ...JSON.parse(intake.lifestyleJson)
             });
         }
     }
@@ -217,6 +225,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 break;
             case IntakeSteps.MEDICAL:
                 saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(Pages.CLIENTS));
+                break;
+            case IntakeSteps.LIFESTYLE:
+                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(Pages.CLIENTS));
                 break;
             default:
                 navigate(Pages.CLIENTS);
@@ -464,6 +475,59 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
             ...medicalForm,
             [name]: value
         });
+    }
+
+    /*
+     * Lifestyle
+     */
+
+    function handleLifestyleBack() {
+        saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => {
+            setCurrentStep(IntakeSteps.MEDICAL);
+            scrollToTop();
+        });
+    }
+
+    function handleLifestyleContinue(event) {
+        event.preventDefault();
+
+        const errors = validateLifestyleForm();
+
+        if (Object.keys(errors).length > 0) {
+            setLifestyleErrors(errors);
+            return;
+        }
+
+        saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => {
+            setCurrentStep(IntakeSteps.TRAINING_PREFERENCES);
+            scrollToTop();
+        });
+    }
+
+    function updateLifestyleForm(event) {
+        const {name, value} = event.target;
+
+        const updatedForm = {
+            ...lifestyleForm,
+            [name]: value
+        };
+
+        if (
+            name === 'stressLevel'
+            && value !== 'MODERATE'
+            && value !== 'HIGH'
+            && value !== 'VERY_HIGH'
+        ) {
+            updatedForm.stressSources = '';
+        }
+
+        setLifestyleForm(updatedForm);
+
+        if (lifestyleErrors[name]) {
+            const updatedErrors = {...lifestyleErrors};
+            delete updatedErrors[name];
+            setLifestyleErrors(updatedErrors);
+        }
     }
 
     /*-------------------------------------------------------------------------------------------------------------------------------------
@@ -950,6 +1014,130 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         );
     }
 
+    function renderLifestyle() {
+        return (
+            <>
+                {renderIntakeHeader('Step 6 of 7 · Lifestyle')}
+
+                <form onSubmit={handleLifestyleContinue}>
+                    <div className="form-field">
+                        <label>Occupation</label>
+                        <input
+                            name="occupation"
+                            placeholder="Optional"
+                            value={lifestyleForm.occupation}
+                            onChange={updateLifestyleForm}
+                        />
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Daily activity level</label>
+                        <select
+                            name="dailyActivityLevel"
+                            className={lifestyleErrors.dailyActivityLevel ? 'input-error' : ''}
+                            value={lifestyleForm.dailyActivityLevel}
+                            onChange={updateLifestyleForm}
+                        >
+                            <option value="">Select daily activity level</option>
+                            <option value="MOSTLY_SITTING">Mostly sitting</option>
+                            <option value="MOSTLY_STANDING">Mostly standing</option>
+                            <option value="MODERATELY_ACTIVE">Moderately active</option>
+                            <option value="HIGHLY_ACTIVE">Highly active</option>
+                        </select>
+                        {lifestyleErrors.dailyActivityLevel && (
+                            <div className="field-error">
+                                * {lifestyleErrors.dailyActivityLevel}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Average sleep</label>
+                        <select
+                            name="averageSleep"
+                            className={lifestyleErrors.averageSleep ? 'input-error' : ''}
+                            value={lifestyleForm.averageSleep}
+                            onChange={updateLifestyleForm}
+                        >
+                            <option value="">Select average sleep</option>
+                            <option value="LESS_THAN_5">Less than 5 hours</option>
+                            <option value="FIVE_TO_SIX">5-6 hours</option>
+                            <option value="SIX_TO_SEVEN">6-7 hours</option>
+                            <option value="SEVEN_TO_EIGHT">7-8 hours</option>
+                            <option value="MORE_THAN_8">8+ hours</option>
+                        </select>
+                        {lifestyleErrors.averageSleep && (
+                            <div className="field-error">
+                                * {lifestyleErrors.averageSleep}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-field vertical-gap-md">
+                        <label>Stress level</label>
+                        <select
+                            name="stressLevel"
+                            className={lifestyleErrors.stressLevel ? 'input-error' : ''}
+                            value={lifestyleForm.stressLevel}
+                            onChange={updateLifestyleForm}
+                        >
+                            <option value="">Select stress level</option>
+                            <option value="LOW">Low</option>
+                            <option value="MODERATE">Moderate</option>
+                            <option value="HIGH">High</option>
+                            <option value="VERY_HIGH">Very High</option>
+                        </select>
+                        {lifestyleErrors.stressLevel && (
+                            <div className="field-error">
+                                * {lifestyleErrors.stressLevel}
+                            </div>
+                        )}
+                    </div>
+
+                    {showStressSources() && (
+                        <div className="form-field vertical-gap-md">
+                            <label>What are your main sources of stress?</label>
+                            <textarea
+                                name="stressSources"
+                                rows="3"
+                                placeholder="Optional"
+                                value={lifestyleForm.stressSources}
+                                onChange={updateLifestyleForm}
+                            />
+                        </div>
+                    )}
+
+                    <div className="section-divider spaced" />
+
+                    <div className="form-field">
+                        <label>Additional lifestyle notes</label>
+                        <textarea
+                            name="additionalNotes"
+                            rows="3"
+                            placeholder="Optional"
+                            value={lifestyleForm.additionalNotes}
+                            onChange={updateLifestyleForm}
+                        />
+                    </div>
+
+                    <div className="form-actions">
+                        <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={handleLifestyleBack}
+                        >
+                            Go Back
+                        </button>
+
+                        <button type="submit">
+                            Save & Continue
+                        </button>
+                    </div>
+                </form>
+            </>
+        );
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Validation
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1025,6 +1213,24 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         return errors;
     }
 
+    function validateLifestyleForm() {
+        const errors = {};
+
+        if (!lifestyleForm.dailyActivityLevel) {
+            errors.dailyActivityLevel = 'Daily activity level is required';
+        }
+
+        if (!lifestyleForm.averageSleep) {
+            errors.averageSleep = 'Average sleep is required';
+        }
+
+        if (!lifestyleForm.stressLevel) {
+            errors.stressLevel = 'Stress level is required';
+        }
+
+        return errors;
+    }
+
     /*-------------------------------------------------------------------------------------------------------------------------------------
         Utility
     --------------------------------------------------------------------------------------------------------------------------------------*/
@@ -1093,6 +1299,23 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
         };
     }
 
+    function createEmptyLifestyleForm() {
+        return {
+            occupation: '',
+            dailyActivityLevel: '',
+            averageSleep: '',
+            stressLevel: '',
+            stressSources: '',
+            additionalNotes: ''
+        };
+    }
+
+    function showStressSources() {
+        return lifestyleForm.stressLevel === 'MODERATE'
+            || lifestyleForm.stressLevel === 'HIGH'
+            || lifestyleForm.stressLevel === 'VERY_HIGH';
+    }
+
     function scrollToTop() {
         setTimeout(() => {
             window.scrollTo({
@@ -1123,6 +1346,9 @@ function ClientIntakePage({trainerId, navigate}) { //TODO added `navigate` to re
                 )}
                 {currentStep === IntakeSteps.MEDICAL && (
                     renderMedical()
+                )}
+                {currentStep === IntakeSteps.LIFESTYLE && (
+                    renderLifestyle()
                 )}
             </section>
         </div>
