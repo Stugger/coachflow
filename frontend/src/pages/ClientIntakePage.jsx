@@ -281,27 +281,38 @@ function ClientIntakePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function exitIntake() {
+        if (currentStep !== IntakeSteps.BASIC_INFO && currentStep !== IntakeSteps.COMPLETED) {
+            const confirmed = window.confirm('Are you sure you wish to exit?\n\nYour progress will be saved and the intake can be resumed later.');
+
+            if (!confirmed) {
+                return;
+            }
+        }
         switch (currentStep) {
             case IntakeSteps.PARQ:
-                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.CLIENTS));
+                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.selectedClient(clientId)));
                 break;
             case IntakeSteps.GOALS:
-                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(ROUTES.CLIENTS));
+                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(ROUTES.selectedClient(clientId)));
                 break;
             case IntakeSteps.ACTIVITY_HISTORY:
-                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(ROUTES.CLIENTS));
+                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(ROUTES.selectedClient(clientId)));
                 break;
             case IntakeSteps.MEDICAL:
-                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(ROUTES.CLIENTS));
+                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(ROUTES.selectedClient(clientId)));
                 break;
             case IntakeSteps.LIFESTYLE:
-                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(ROUTES.CLIENTS));
+                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(ROUTES.selectedClient(clientId)));
                 break;
             case IntakeSteps.TRAINING_PREFERENCES:
-                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.CLIENTS));
+                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.selectedClient(clientId)));
                 break;
             default:
-                navigate(ROUTES.CLIENTS);
+                if (clientId) {
+                    navigate(ROUTES.selectedClient(clientId));
+                } else {
+                    navigate(ROUTES.CLIENTS);
+                }
         }
     }
 

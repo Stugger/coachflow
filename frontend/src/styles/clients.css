@@ -1,7 +1,15 @@
 .clients-page {
     display: grid;
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: minmax(280px, 380px) 1fr;
     gap: 20px;
+    align-items: start;
+}
+
+.clients-left-column,
+.clients-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .client-list-panel,
@@ -12,7 +20,48 @@
     border: 1px solid #333;
     border-radius: 8px;
     padding: 16px;
-    scroll-margin-top: 72px;
+    scroll-margin-top: 84px;
+}
+
+.page-header,
+.client-profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.page-header {
+    margin-bottom: 16px;
+}
+
+.client-profile-header {
+    margin-bottom: 8px;
+}
+
+.page-header p,
+.client-profile-header p,
+.empty-state p,
+.profile-card p {
+    color: #aaa;
+}
+
+.profile-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.profile-card.review-action.urgent {
+    background: rgba(239, 68, 68, 0.04);
+    border: 2px solid #333;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.profile-card.review-action.warning {
+    background: rgba(234, 179, 8, 0.04);
+    border: 2px solid #333;
+    border-color: rgba(234, 179, 8, 0.4);
 }
 
 .client-form-panel {
@@ -33,12 +82,15 @@
 }
 
 .client-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
     width: 100%;
     text-align: left;
 
     background: #2b2b2b !important;
     border: 1px solid #444 !important;
-
     color: #f0f0f0;
 
     padding: 12px 14px;
@@ -69,6 +121,32 @@
     background: rgba(59, 130, 246, 0.25) !important;
 }
 
+.client-list-name {
+    min-width: 0;
+}
+
+.client-review-pill {
+    flex-shrink: 0;
+    padding: 3px 8px;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.client-review-pill.intake {
+    background: rgba(239, 68, 68, 0.16);
+    border-color: rgba(239, 68, 68, 0.35);
+    color: #fca5a5;
+}
+
+.client-review-pill.assess {
+    background: rgba(234, 179, 8, 0.16);
+    border-color: rgba(234, 179, 8, 0.45);
+    color: #fde68a;
+}
+
 .client-contact-info {
     display: flex;
     gap: 6px;
@@ -80,39 +158,18 @@
     margin-left: 6px;
 }
 
-.page-header,
-.client-profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-}
-
-.page-header {
-    margin-bottom: 16px;
-}
-
-.client-profile-header {
-    margin-bottom: 8px;
-}
-
-.page-header p,
-.client-profile-header p,
-.empty-state p,
-.profile-card p {
-    color: #aaa;
-}
-
-.profile-card-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-
 @media (max-width: 768px) {
     .clients-page {
         grid-template-columns: 1fr;
         gap: 16px;
+    }
+
+    .clients-left-column {
+        order: 1;
+    }
+
+    .clients-right-column {
+        order: 2;
     }
 
     .profile-card-grid {
@@ -120,13 +177,17 @@
         gap: 16px;
     }
 
+    .client-profile-header {
+        margin-bottom: 0px;
+    }
+
+    .client-profile-panel {
+        scroll-margin-top: 78px;
+    }
+
     .client-contact-info {
         flex-direction: column;
         gap: 4px;
-    }
-
-    .client-profile-header {
-        margin-bottom: 0px;
     }
 
     .client-contact-info span::after {
