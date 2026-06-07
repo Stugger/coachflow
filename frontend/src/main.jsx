@@ -7,7 +7,21 @@ import './index.css'
 
 createRoot(document.getElementById('root')).render(
     <BrowserRouter>
-        <MantineProvider defaultColorScheme="dark">
+        <MantineProvider defaultColorScheme="dark"
+             theme={{
+                 components: {
+                     TextInput: {
+                         defaultProps: {
+                             size: 'md',
+                         },
+                     },
+                     PasswordInput: {
+                         defaultProps: {
+                             size: 'md',
+                         },
+                     },
+                 },
+             }}>
             <App />
         </MantineProvider>
     </BrowserRouter>

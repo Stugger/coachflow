@@ -1,6 +1,5 @@
 import './styles/global.css';
 import './styles/app-shell.css';
-import './styles/auth.css';
 import './styles/clients.css';
 import './styles/intake.css';
 import './styles/appointments.css';

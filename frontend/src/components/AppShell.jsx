@@ -154,6 +154,7 @@ function AppShell({auth, onLogout}) {
                         <Button
                             hiddenFrom="sm"
                             variant="subtle"
+                            color="gray"
                             onClick={closeMobile}
                             px="4"
                         >

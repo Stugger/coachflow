@@ -1,7 +1,34 @@
 import {useState} from 'react';
-import * as TextUtils from "../utils/text-utils.js";
+import {
+    Alert,
+    Anchor,
+    Button,
+    Container,
+    Group,
+    Paper,
+    PasswordInput,
+    Stack,
+    Text,
+    TextInput,
+    Title,
+    ActionIcon
+} from '@mantine/core';
+import {IconMoon, IconSun, IconAlertCircle} from '@tabler/icons-react';
+import {useMantineColorScheme} from '@mantine/core';
+
+import * as TextUtils from '../utils/text-utils.js';
 
 function AuthPage({onAuthSuccess}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Mantine state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const {colorScheme, toggleColorScheme} = useMantineColorScheme();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const [mode, setMode] = useState('login');
 
@@ -21,6 +48,10 @@ function AuthPage({onAuthSuccess}) {
     const [errors, setErrors] = useState({});
     const [message, setMessage] = useState('');
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function switchMode(mode) {
         setErrors({});
         setMessage('');
@@ -35,23 +66,21 @@ function AuthPage({onAuthSuccess}) {
             [name]: value
         });
 
-        if (errors[name]) {
-            const updatedErrors = {...errors};
-            delete updatedErrors[name];
-            setErrors(updatedErrors);
-        }
-
-        if (message) {
-            setMessage('');
-        }
+        clearValidationState(name);
     }
 
     function updateRegisterForm(event) {
         const {name, value} = event.target;
+
         setRegisterForm({
             ...registerForm,
             [name]: value
         });
+
+        clearValidationState(name);
+    }
+
+    function clearValidationState(name) {
         if (errors[name]) {
             const updatedErrors = {...errors};
             delete updatedErrors[name];
@@ -73,8 +102,13 @@ function AuthPage({onAuthSuccess}) {
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Auth
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function login(event) {
         event.preventDefault();
+
         setErrors({});
         setMessage('');
 
@@ -99,6 +133,7 @@ function AuthPage({onAuthSuccess}) {
 
     function register(event) {
         event.preventDefault();
+
         setErrors({});
         setMessage('');
 
@@ -109,7 +144,7 @@ function AuthPage({onAuthSuccess}) {
             return;
         }
 
-        const { confirmPassword, ...payload } = registerForm;
+        const {confirmPassword, ...payload} = registerForm;
 
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register-trainer`, {
             method: 'POST',
@@ -130,117 +165,225 @@ function AuthPage({onAuthSuccess}) {
             .catch(error => console.error(error));
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderMessageAlert() {
+        if (!message || Object.keys(errors).length > 0) {
+            return null;
+        }
+
+        return (
+            <Alert
+                color="red"
+                icon={<IconAlertCircle size={18}/>}
+                variant="light"
+            >
+                {message}
+            </Alert>
+        );
+    }
+
+    function renderLoginForm() {
+        return (
+            <>
+                <Stack gap="xs" ta="center">
+                    <Title order={1}>CoachFlow</Title>
+                    <Text c="dimmed" size="sm">
+                        Sign in to manage your clients, sessions, and coaching workflow.
+                    </Text>
+                </Stack>
+
+                {renderMessageAlert()}
+
+                <form onSubmit={login}>
+                    <Stack>
+                        <TextInput
+                            name="email"
+                            type="email"
+                            label="Email"
+                            placeholder="you@example.com"
+                            value={loginForm.email}
+                            onChange={updateLoginForm}
+                            error={errors.email}
+                        />
+
+                        <PasswordInput
+                            name="password"
+                            label="Password"
+                            placeholder="Your password"
+                            value={loginForm.password}
+                            onChange={updateLoginForm}
+                            error={errors.password}
+                        />
+
+                        <Button type="submit"
+                                fullWidth
+                        >
+                            Login
+                        </Button>
+                    </Stack>
+                </form>
+
+                <Group justify="center" gap={6}>
+                    <Text size="sm" c="dimmed">
+                        Don't have an account?
+                    </Text>
+
+                    <Anchor
+                        component="button"
+                        type="button"
+                        size="sm"
+                        onClick={() => switchMode('register')}
+                    >
+                        Register now
+                    </Anchor>
+                </Group>
+            </>
+        );
+    }
+
+    function renderRegisterForm() {
+        return (
+            <>
+                <Stack gap="xs" ta="center">
+                    <Title order={3}>Create your coach account</Title>
+                    <Text c="dimmed" size="sm">
+                        Create your CoachFlow account to start managing clients.
+                    </Text>
+                </Stack>
+
+                {renderMessageAlert()}
+
+                <form onSubmit={register}>
+                    <Stack>
+                        <TextInput
+                            name="firstName"
+                            label="First name"
+                            placeholder="First name"
+                            required
+                            value={registerForm.firstName}
+                            onChange={updateRegisterForm}
+                            error={errors.firstName}
+                        />
+
+                        <TextInput
+                            name="lastName"
+                            label="Last name"
+                            placeholder="Last name"
+                            required
+                            value={registerForm.lastName}
+                            onChange={updateRegisterForm}
+                            error={errors.lastName}
+                        />
+
+                        <TextInput
+                            name="email"
+                            type="email"
+                            label="Email"
+                            placeholder="you@example.com"
+                            required
+                            value={registerForm.email}
+                            onChange={updateRegisterForm}
+                            error={errors.email}
+                        />
+
+                        <PasswordInput
+                            name="password"
+                            label="Password"
+                            placeholder="Password"
+                            required
+                            value={registerForm.password}
+                            onChange={updateRegisterForm}
+                            error={errors.password}
+                        />
+
+                        <PasswordInput
+                            name="confirmPassword"
+                            label="Confirm password"
+                            placeholder="Confirm password"
+                            required
+                            value={registerForm.confirmPassword}
+                            onChange={updateRegisterForm}
+                            error={errors.confirmPassword}
+                        />
+
+                        <Button type="submit" fullWidth>
+                            Create Account
+                        </Button>
+
+                        <Group justify="center" gap={6}>
+                            <Text size="sm" c="dimmed">
+                                Already have an account?
+                            </Text>
+
+                            <Anchor
+                                component="button"
+                                type="button"
+                                size="sm"
+                                onClick={() => switchMode('login')}
+                            >
+                                Sign in
+                            </Anchor>
+                        </Group>
+                    </Stack>
+                </form>
+            </>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
-        <div className="auth-page">
-            <div className="auth-card">
-                <h1>CoachFlow</h1>
-
-                {mode === 'login' && (
-                    <>
-                        {message && Object.keys(errors).length === 0 && (
-                            <div className="form-error">
-                                {message}
-                            </div>
-                        )}
-
-                        <form onSubmit={login} className="client-form">
-                            <input name="email"
-                                   className={errors.email ? 'input-error' : ''}
-                                   placeholder="Email"
-                                   value={loginForm.email}
-                                   onChange={updateLoginForm}
-                            />
-                            {errors.email && <div className="field-error">* {errors.email}</div>}
-
-                            <input name="password"
-                                   className={errors.password ? 'input-error' : ''}
-                                   type="password"
-                                   placeholder="Password"
-                                   value={loginForm.password}
-                                   onChange={updateLoginForm}
-                            />
-                            {errors.password && <div className="field-error">* {errors.password}</div>}
-
-                            <button type="submit" className="primary-button">
-                                Login
-                            </button>
-                        </form>
-
-                        <div className="auth-switch">
-                            <p>Don't have an account?</p>
-                            <button type="button" className="link-button" onClick={() => switchMode('register')}>
-                                Register now
-                            </button>
-                        </div>
-                    </>
-                )}
-                {mode === 'register' && (
-                    <>
-                        <button type="button" className="link-button back-link" onClick={() => switchMode('login')}>
-                            &lt; Back to login
-                        </button>
-
-                        {message && Object.keys(errors).length === 0 && (
-                            <div className="form-error">
-                                {message}
-                            </div>
-                        )}
-
-                        <h2>Create trainer account</h2>
-
-                        <form onSubmit={register} className="client-form">
-                            <label className="form-label">Identity</label>
-
-                            <input name="firstName"
-                                   className={errors.firstName ? 'input-error' : ''}
-                                   placeholder="First name"
-                                   value={registerForm.firstName}
-                                   onChange={updateRegisterForm}
-                            />
-                            {errors.firstName && <div className="field-error">* {errors.firstName}</div>}
-
-                            <input name="lastName"
-                                   className={errors.lastName ? 'input-error' : ''}
-                                   placeholder="Last name"
-                                   value={registerForm.lastName}
-                                   onChange={updateRegisterForm}
-                            />
-                            {errors.lastName && <div className="field-error">* {errors.lastName}</div>}
-
-                            <label className="form-label">Credentials</label>
-
-                            <input name="email"
-                                   className={errors.email ? 'input-error' : ''}
-                                   placeholder="Email"
-                                   value={registerForm.email}
-                                   onChange={updateRegisterForm}
-                            />
-                            {errors.email && <div className="field-error">* {errors.email}</div>}
-
-                            <input name="password"
-                                   className={errors.password ? 'input-error' : ''}
-                                   type="password"
-                                   placeholder="Password"
-                                   value={registerForm.password}
-                                   onChange={updateRegisterForm}
-                            />
-                            {errors.password && <div className="field-error">* {errors.password}</div>}
-                            <input name="confirmPassword"
-                                   className={errors.confirmPassword ? 'input-error' : ''}
-                                   type="password"
-                                   placeholder="Confirm Password"
-                                   value={registerForm.confirmPassword}
-                                   onChange={updateRegisterForm}
-                            />
-                            {errors.confirmPassword && (<div className="field-error">* {errors.confirmPassword}</div>)}
-
-                            <button type="submit">Create Account</button>
-                        </form>
-                    </>
-                )}
-            </div>
-        </div>
+        <Container size={420}
+           px="xl"
+           py="xl"
+           style={{
+               minHeight: '100dvh',
+               display: 'flex',
+               alignItems: 'center',
+           }}
+        >
+            <Paper
+                radius="md"
+                p="lg"
+                withBorder
+                shadow="sm"
+                style={{
+                    position: 'relative',
+                    width: '100%',
+                }}
+            >
+                <ActionIcon
+                    variant="subtle"
+                    size="lg"
+                    color="gray"
+                    onClick={() => toggleColorScheme()}
+                    style={{
+                        position: 'absolute',
+                        top: '0.8rem',
+                        right: '1rem'
+                    }}
+                >
+                    {colorScheme === 'dark'
+                        ? <IconSun size={20} stroke={1.8}/>
+                        : <IconMoon size={20} stroke={1.8}/>
+                    }
+                </ActionIcon>
+                <Stack style={{paddingTop: '2.25rem'}}>
+                    {mode === 'login' && renderLoginForm()}
+                    {mode === 'register' && renderRegisterForm()}
+                </Stack>
+            </Paper>
+        </Container>
     );
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Utility
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function normalizeForm(form) {
         return {
