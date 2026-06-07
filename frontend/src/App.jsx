@@ -12,6 +12,7 @@ import {ROUTES} from './constants/routes';
 import AuthPage from './pages/AuthPage';
 import ClientIntakePage from './pages/ClientIntakePage';
 import ClientsPage from './pages/ClientsPage';
+import ClientProfilePage from './pages/ClientProfilePage';
 import AppointmentsPage from './pages/AppointmentsPage';
 
 import AppShell from './components/AppShell';
@@ -78,15 +79,24 @@ function App() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Other routes
+    // App routes
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <Routes>
             <Route element={<AppShell auth={auth} onLogout={logout}/>}>
                 <Route path={ROUTES.HOME} element={<DashboardPage/>}/>
+
                 <Route path={ROUTES.CLIENTS} element={<ClientsPage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENT_BY_ID} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENT_HISTORY} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENT_PROGRAMS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENT_RECORDS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENT_HABITS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+
                 <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage trainerId={auth.trainer.id}/>}/>
+
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>
             </Route>
         </Routes>

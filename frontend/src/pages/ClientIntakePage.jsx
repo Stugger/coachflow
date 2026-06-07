@@ -290,26 +290,26 @@ function ClientIntakePage({trainerId}) {
         }
         switch (currentStep) {
             case IntakeSteps.PARQ:
-                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.selectedClient(clientId)));
+                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             case IntakeSteps.GOALS:
-                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(ROUTES.selectedClient(clientId)));
+                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             case IntakeSteps.ACTIVITY_HISTORY:
-                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(ROUTES.selectedClient(clientId)));
+                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             case IntakeSteps.MEDICAL:
-                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(ROUTES.selectedClient(clientId)));
+                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             case IntakeSteps.LIFESTYLE:
-                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(ROUTES.selectedClient(clientId)));
+                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             case IntakeSteps.TRAINING_PREFERENCES:
-                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.selectedClient(clientId)));
+                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             default:
                 if (clientId) {
-                    navigate(ROUTES.selectedClient(clientId));
+                    navigate(ROUTES.clientProfile(clientId));
                 } else {
                     navigate(ROUTES.CLIENTS);
                 }
