@@ -16,8 +16,8 @@
 .client-profile-panel,
 .client-form-panel,
 .profile-card {
-    background: #202020;
-    border: 1px solid #333;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 16px;
     scroll-margin-top: 84px;
@@ -43,7 +43,7 @@
 .client-profile-header p,
 .empty-state p,
 .profile-card p {
-    color: #aaa;
+    color: var(--color-text-muted);
 }
 
 .profile-card-grid {
@@ -53,15 +53,15 @@
 }
 
 .profile-card.review-action.urgent {
-    background: rgba(239, 68, 68, 0.04);
-    border: 2px solid #333;
-    border-color: rgba(239, 68, 68, 0.4);
+    background: var(--color-danger-surface-faint);
+    border: 2px solid var(--color-border);
+    border-color: var(--color-danger-border-strong);
 }
 
 .profile-card.review-action.warning {
-    background: rgba(234, 179, 8, 0.04);
-    border: 2px solid #333;
-    border-color: rgba(234, 179, 8, 0.4);
+    background: var(--color-warning-surface-faint);
+    border: 2px solid var(--color-border);
+    border-color: var(--color-warning-border);
 }
 
 .client-form-panel {
@@ -89,9 +89,9 @@
     width: 100%;
     text-align: left;
 
-    background: #2b2b2b !important;
-    border: 1px solid #444 !important;
-    color: #f0f0f0;
+    background: var(--color-surface-hover) !important;
+    border: 1px solid var(--color-border-light) !important;
+    color: var(--color-text);
 
     padding: 12px 14px;
     border-radius: 8px;
@@ -103,8 +103,8 @@
 }
 
 .client-list-item:hover {
-    background: #363636 !important;
-    border-color: #555 !important;
+    background: var(--color-surface-active) !important;
+    border-color: var(--color-border-hover) !important;
 }
 
 .client-list-item:active {
@@ -112,13 +112,13 @@
 }
 
 .client-list-item.selected {
-    border-color: #3b82f6 !important;
-    background: rgba(59, 130, 246, 0.18) !important;
-    color: #fff !important;
+    border-color: var(--color-primary) !important;
+    background: var(--color-primary-surface) !important;
+    color: var(--color-text-inverse) !important;
 }
 
 .client-list-item.selected:hover {
-    background: rgba(59, 130, 246, 0.25) !important;
+    background: var(--color-primary-surface-hover) !important;
 }
 
 .client-list-name {
@@ -128,7 +128,7 @@
 .client-review-pill {
     flex-shrink: 0;
     padding: 3px 8px;
-    border: 1px solid rgba(59, 130, 246, 0.35);
+    border: 1px solid var(--color-primary-border);
     border-radius: 999px;
     font-size: 10px;
     font-weight: 700;
@@ -136,21 +136,21 @@
 }
 
 .client-review-pill.intake {
-    background: rgba(239, 68, 68, 0.16);
-    border-color: rgba(239, 68, 68, 0.35);
-    color: #fca5a5;
+    background: var(--color-danger-surface);
+    border-color: var(--color-danger-border);
+    color: var(--color-danger-text);
 }
 
 .client-review-pill.assess {
-    background: rgba(234, 179, 8, 0.16);
-    border-color: rgba(234, 179, 8, 0.45);
-    color: #fde68a;
+    background: var(--color-warning-surface);
+    border-color: var(--color-warning-border-strong);
+    color: var(--color-warning-text);
 }
 
 .client-contact-info {
     display: flex;
     gap: 6px;
-    color: #aaa;
+    color: var(--color-text-muted);
 }
 
 .client-contact-info span:not(:last-child)::after {
@@ -159,6 +159,7 @@
 }
 
 @media (max-width: 768px) {
+
     .clients-page {
         grid-template-columns: 1fr;
         gap: 16px;
