@@ -1,22 +1,37 @@
-function IntakeHeader({progress, exitIntake}) {
+import {
+    Title,
+    Progress,
+    Group,
+    Stack,
+    Text,
+    ActionIcon,
+    Divider,
+} from '@mantine/core';
+import {
+    IconX
+} from '@tabler/icons-react';
+import {TOTAL_STEPS} from '../../constants/intake';
+
+function IntakeHeader({step, stepNumber, exitIntake}) {
     return (
-        <>
-            <div className="intake-header">
-                <h3 className="intake-step-title">
-                    New Client Intake
-                </h3>
-                <button type="button"
-                        className="danger-button intake-exit-button"
-                        onClick={exitIntake}
+        <Stack gap="xs" mb="xs">
+            <Group justify="space-between">
+                <Title order={3}>New Client Intake</Title>
+
+                <ActionIcon
+                    variant="default"
+                    size="lg"
+                    onClick={exitIntake}
                 >
-                    ×
-                </button>
-                <div className="intake-progress">
-                    {progress}
-                </div>
-            </div>
-            <div className="section-divider spaced"></div>
-        </>
+                    <IconX size={18} stroke={1.5} />
+                </ActionIcon>
+            </Group>
+            <Text size="xs" c="dimmed">
+                Step {stepNumber} of {TOTAL_STEPS}
+            </Text>
+            <Progress value={(stepNumber / TOTAL_STEPS) * 100}/>
+            <Divider my="xs" size="sm" label={step} labelPosition="center" />
+        </Stack>
     );
 }
 

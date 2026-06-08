@@ -1,3 +1,17 @@
+import {
+    Alert,
+    Checkbox,
+    Group,
+    Select,
+    SimpleGrid,
+    Stack,
+    Text,
+    Textarea,
+    Divider,
+} from '@mantine/core';
+import {IconClipboardList} from '@tabler/icons-react';
+import StepNavigation from "../StepNavigation.jsx";
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants
 // ------------------------------------------------------------------------------------------------------------------------
@@ -17,7 +31,7 @@ const LEARNING_STYLE_OPTIONS = [
     ['VERBAL_EXPLANATION', 'Verbal explanation'],
     ['HANDS_ON_CORRECTION', 'Hands-on correction'],
     ['WRITTEN_INSTRUCTIONS', 'Written instructions'],
-    ['NOT_SURE', 'Not sure']
+    ['NOT_SURE', 'Not sure'],
 ];
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -31,7 +45,7 @@ export function createEmptyTrainingPreferencesForm() {
         preferredWorkoutDays: [],
         learningStyles: [],
         exercisesToAvoid: '',
-        additionalPreferences: ''
+        additionalPreferences: '',
     };
 }
 
@@ -55,128 +69,154 @@ export function validateTrainingPreferencesForm(form) {
 
 function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updateLearningStyle, onChange, onBack, onContinue}) {
 
+    const hasErrors = Object.keys(errors).length > 0;
+
+    function updateSelect(name, value) {
+        onChange({
+            target: {
+                name,
+                value: value || '',
+            },
+        });
+    }
+
+    function renderCheckboxCard(value, label, selected, onClick) {
+        return (
+            <Checkbox.Card
+                key={value}
+                radius="md"
+                checked={selected}
+                onClick={onClick}
+                style={{
+                    border: 'none'
+                }}
+            >
+                <Group wrap="nowrap" align="center">
+                    <Checkbox.Indicator/>
+
+                    <Text size="sm" fw={500}>
+                        {label}
+                    </Text>
+                </Group>
+            </Checkbox.Card>
+        );
+    }
+
     return (
         <form onSubmit={onContinue}>
-            <div className="form-field">
-                <label>How many days per week would you like to train?</label>
-                <select
-                    name="daysPerWeek"
-                    className={errors.daysPerWeek ? 'input-error' : ''}
+            <Stack gap="md">
+                <Alert
+                    color={hasErrors ? 'red' : 'blue'}
+                    variant="light"
+                    icon={<IconClipboardList size={18}/>}
+                >
+                    {hasErrors
+                        ? 'Please complete the required training preference fields before finishing.'
+                        : 'Tell us how this client prefers to train and learn.'}
+                </Alert>
+
+                <Select
+                    label="How many days per week would you like to train?"
+                    placeholder="Select days per week"
                     value={form.daysPerWeek}
-                    onChange={onChange}
-                >
-                    <option value="">Select days per week</option>
-                    <option value="1">1 day</option>
-                    <option value="2">2 days</option>
-                    <option value="3">3 days</option>
-                    <option value="4">4 days</option>
-                    <option value="5">5 days</option>
-                    <option value="6">6 days</option>
-                    <option value="7">7 days</option>
-                </select>
-                {errors.daysPerWeek && (
-                    <div className="field-error">
-                        * {errors.daysPerWeek}
-                    </div>
-                )}
-            </div>
+                    error={errors.daysPerWeek}
+                    required
+                    onChange={(value) => updateSelect('daysPerWeek', value)}
+                    data={[
+                        {value: '1', label: '1 day'},
+                        {value: '2', label: '2 days'},
+                        {value: '3', label: '3 days'},
+                        {value: '4', label: '4 days'},
+                        {value: '5', label: '5 days'},
+                        {value: '6', label: '6 days'},
+                        {value: '7', label: '7 days'},
+                    ]}
+                />
 
-            <div className="form-field vertical-gap-md">
-                <label>Preferred workout time</label>
-                <select
-                    name="workoutTimePreference"
-                    className={errors.workoutTimePreference ? 'input-error' : ''}
+                <Select
+                    label="Preferred workout time"
+                    placeholder="Select workout time"
                     value={form.workoutTimePreference}
-                    onChange={onChange}
-                >
-                    <option value="">Select workout time</option>
-                    <option value="MORNING">Morning</option>
-                    <option value="AFTERNOON">Afternoon</option>
-                    <option value="EVENING">Evening</option>
-                    <option value="FLEXIBLE">Flexible</option>
-                </select>
-                {errors.workoutTimePreference && (
-                    <div className="field-error">
-                        * {errors.workoutTimePreference}
-                    </div>
-                )}
-            </div>
+                    error={errors.workoutTimePreference}
+                    required
+                    onChange={(value) => updateSelect('workoutTimePreference', value)}
+                    data={[
+                        {value: 'MORNING', label: 'Morning'},
+                        {value: 'AFTERNOON', label: 'Afternoon'},
+                        {value: 'EVENING', label: 'Evening'},
+                        {value: 'FLEXIBLE', label: 'Flexible'},
+                    ]}
+                />
 
-            <div className="section-divider spaced" />
+                <Stack gap="xs">
+                    <Stack gap={0}>
+                        <Text size="sm" fw={600}>
+                            Which days are you most available to train?
+                        </Text>
+                        <Text size="sm" c="dimmed" fw={400}>
+                            Optional. Select all that apply.
+                        </Text>
+                    </Stack>
+                    <SimpleGrid cols={{base: 2, sm: 4}}>
+                        {WORKOUT_DAY_OPTIONS.map(([value, label]) =>
+                            renderCheckboxCard(
+                                value,
+                                label,
+                                form.preferredWorkoutDays.includes(value),
+                                () => updatePreferredWorkoutDay(value)
+                            )
+                        )}
+                    </SimpleGrid>
+                </Stack>
 
-            <div className="form-field">
-                <label>Which days are you generally available to train? Select all that apply. (Optional)</label>
+                <Divider />
 
-                <div className="multi-option-grid">
-                    {WORKOUT_DAY_OPTIONS.map(([value, label]) => (
-                        <button
-                            key={value}
-                            type="button"
-                            className={`multi-option ${form.preferredWorkoutDays.includes(value) ? 'selected' : ''}`}
-                            onClick={() => updatePreferredWorkoutDay(value)}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-            </div>
+                <Stack gap="xs">
+                    <Stack gap={0}>
+                        <Text size="sm" fw={600}>
+                            How do you best learn new exercises?
+                        </Text>
+                        <Text size="sm" c="dimmed" fw={400}>
+                            Optional. Select all that apply.
+                        </Text>
+                    </Stack>
+                    <SimpleGrid cols={{base: 1, sm: 2}}>
+                        {LEARNING_STYLE_OPTIONS.map(([value, label]) =>
+                            renderCheckboxCard(
+                                value,
+                                label,
+                                form.learningStyles.includes(value),
+                                () => updateLearningStyle(value)
+                            )
+                        )}
+                    </SimpleGrid>
+                </Stack>
 
-            <div className="section-divider spaced" />
+                <Divider />
 
-            <div className="form-field">
-                <label>How do you best learn new exercises? Select all that apply. (Optional)</label>
-
-                <div className="multi-option-grid">
-                    {LEARNING_STYLE_OPTIONS.map(([value, label]) => (
-                        <button
-                            key={value}
-                            type="button"
-                            className={`multi-option ${form.learningStyles.includes(value) ? 'selected' : ''}`}
-                            onClick={() => updateLearningStyle(value)}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            <div className="section-divider spaced" />
-
-            <div className="form-field">
-                <label>Are there any specific exercises you would like to avoid?</label>
-                <textarea
+                <Textarea
+                    label="Are there any specific exercises you would like to avoid?"
                     name="exercisesToAvoid"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.exercisesToAvoid}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-field vertical-gap-md">
-                <label>Additional training preferences</label>
-                <textarea
+                <Textarea
+                    label="Additional training preferences"
                     name="additionalPreferences"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.additionalPreferences}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-actions">
-                <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={onBack}
-                >
-                    Go Back
-                </button>
-
-                <button type="submit">
-                    Complete Intake
-                </button>
-            </div>
+                <StepNavigation
+                    onBack={onBack}
+                    submitLabel={"Complete Intake"}
+                />
+            </Stack>
         </form>
     );
 }

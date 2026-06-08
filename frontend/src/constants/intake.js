@@ -1,3 +1,5 @@
+export const TOTAL_STEPS = 8;
+
 export const IntakeSteps = {
     BASIC_INFO: 'BASIC_INFO',
     PARQ: 'PARQ',

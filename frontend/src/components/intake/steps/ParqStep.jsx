@@ -1,3 +1,15 @@
+import {
+    Alert,
+    Divider,
+    Paper,
+    SegmentedControl,
+    Stack,
+    Text,
+    Textarea,
+} from '@mantine/core';
+import {IconAlertCircle} from '@tabler/icons-react';
+import StepNavigation from '../StepNavigation';
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants
 // ------------------------------------------------------------------------------------------------------------------------
@@ -30,7 +42,7 @@ const PARQ_QUESTIONS = [
     {
         field: 'otherMedicalReason',
         label: 'Is there any other reason you should not participate in physical activity?',
-    }
+    },
 ];
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -76,79 +88,84 @@ export function validateParqForm(form) {
 
 function ParqStep({form, errors, updateField, onChange, onBack, onContinue}) {
 
-    function renderParqQuestion(field, label) {
-        return (
-            <div
-                key={field}
-                className={`intake-question ${errors[field] ? 'error' : ''}`}
-            >
-                <label>{label}</label>
-                <div className="intake-answer-group">
-                    <label className="intake-answer">
-                        <input
-                            type="radio"
-                            name={field}
-                            checked={form[field] === true}
-                            onChange={() => updateField(field, true)}
-                        />
-                        Yes
-                    </label>
+    const hasErrors = PARQ_QUESTIONS.some(question => errors[question.field]) || Boolean(errors.additionalNotes);
 
-                    <label className="intake-answer">
-                        <input
-                            type="radio"
-                            name={field}
-                            checked={form[field] === false}
-                            onChange={() => updateField(field, false)}
-                        />
-                        No
-                    </label>
-                </div>
-                {errors[field] && (
-                    <div className="field-error intake-error">
-                        * Please answer this question
-                    </div>
-                )}
-                {field === 'otherMedicalReason' && form.otherMedicalReason && (
-                    <div className="form-field">
-                        <div className="section-divider spaced" />
-                        <label>Please explain:</label>
-                        <textarea
-                            className={errors.additionalNotes ? 'input-error' : ''}
-                            name="additionalNotes"
-                            rows="4"
-                            value={form.additionalNotes}
-                            onChange={onChange}
-                        />
-                    </div>
-                )}
-                {field === 'otherMedicalReason' && form.otherMedicalReason && errors.additionalNotes && (
-                    <div className="field-error intake-error">
-                        * {errors.additionalNotes}
-                    </div>
-                )}
-            </div>
+    function renderParqQuestion(question) {
+        const value = form[question.field];
+
+        return (
+            <Paper
+                key={question.field}
+                p="md"
+                radius="md"
+                withBorder
+                style={{
+                    borderColor: errors[question.field]
+                        ? 'var(--mantine-color-red-6)'
+                        : undefined,
+                }}
+            >
+                <Stack gap="sm">
+                    <Text fw={500}>
+                        {question.label}
+                    </Text>
+
+                    <SegmentedControl
+                        value={value === null ? '' : String(value)}
+                        onChange={(value) => updateField(question.field, value === 'true')}
+                        color="blue"
+                        data={[
+                            {label: 'Yes', value: 'true'},
+                            {label: 'No', value: 'false'},
+                        ]}
+                        fullWidth
+                    />
+
+                    {errors[question.field] && (
+                        <Text c="red" size="sm">
+                            Please answer this question
+                        </Text>
+                    )}
+
+                    {question.field === 'otherMedicalReason' && form.otherMedicalReason && (
+                        <>
+                            <Divider/>
+
+                            <Textarea
+                                label="Please explain"
+                                name="additionalNotes"
+                                required
+                                rows={4}
+                                value={form.additionalNotes}
+                                onChange={onChange}
+                                error={errors.additionalNotes}
+                            />
+                        </>
+                    )}
+                </Stack>
+            </Paper>
         );
     }
 
     return (
         <form onSubmit={onContinue}>
-            {PARQ_QUESTIONS.map(question =>
-                renderParqQuestion(question.field, question.label)
-            )}
-            <div className="form-actions">
-                <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={onBack}
+            <Stack gap="md">
+                <Alert
+                    color={hasErrors ? 'red' : 'blue'}
+                    variant="light"
+                    icon={<IconAlertCircle size={18}/>}
                 >
-                    Go Back
-                </button>
+                    {hasErrors
+                        ? 'Please fix the highlighted PAR-Q answers before continuing.'
+                        : 'Please answer each PAR-Q question before continuing.'}
+                </Alert>
 
-                <button type="submit">
-                    Save & Continue
-                </button>
-            </div>
+                {PARQ_QUESTIONS.map(renderParqQuestion)}
+
+                <StepNavigation
+                    onBack={onBack}
+                />
+            </Stack>
         </form>
     );
 }

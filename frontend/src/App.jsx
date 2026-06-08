@@ -1,7 +1,6 @@
 import './styles/global.css';
 import './styles/app-shell.css';
 import './styles/clients.css';
-import './styles/intake.css';
 import './styles/appointments.css';
 
 import {useState} from 'react';

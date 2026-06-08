@@ -1,3 +1,13 @@
+import {
+    Alert,
+    Select,
+    Stack,
+    Textarea,
+    TextInput,
+} from '@mantine/core';
+import {IconHeartRateMonitor} from '@tabler/icons-react';
+import StepNavigation from "../StepNavigation.jsx";
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------
@@ -9,7 +19,7 @@ export function createEmptyLifestyleForm() {
         averageSleep: '',
         stressLevel: '',
         stressSources: '',
-        additionalNotes: ''
+        additionalNotes: '',
     };
 }
 
@@ -37,127 +47,114 @@ export function validateLifestyleForm(form) {
 
 function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
 
+    const hasErrors = Object.keys(errors).length > 0;
+
     function showStressSources() {
         return form.stressLevel === 'MODERATE'
             || form.stressLevel === 'HIGH'
             || form.stressLevel === 'VERY_HIGH';
     }
 
+    function updateSelect(name, value) {
+        onChange({
+            target: {
+                name,
+                value: value || '',
+            },
+        });
+    }
+
     return (
         <form onSubmit={onContinue}>
-            <div className="form-field">
-                <label>Occupation</label>
-                <input
+            <Stack gap="md">
+                <Alert
+                    color={hasErrors ? 'red' : 'blue'}
+                    variant="light"
+                    icon={<IconHeartRateMonitor size={18}/>}
+                >
+                    {hasErrors
+                        ? 'Please complete the required lifestyle fields before continuing.'
+                        : 'Tell us about your daily lifestyle, sleep, stress, and activity level.'}
+                </Alert>
+
+                <TextInput
+                    label="Occupation"
                     name="occupation"
                     placeholder="Optional"
                     value={form.occupation}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-field vertical-gap-md">
-                <label>Daily activity level</label>
-                <select
-                    name="dailyActivityLevel"
-                    className={errors.dailyActivityLevel ? 'input-error' : ''}
+                <Select
+                    label="Daily activity level"
+                    placeholder="Select daily activity level"
                     value={form.dailyActivityLevel}
-                    onChange={onChange}
-                >
-                    <option value="">Select daily activity level</option>
-                    <option value="MOSTLY_SITTING">Mostly sitting</option>
-                    <option value="MOSTLY_STANDING">Mostly standing</option>
-                    <option value="MODERATELY_ACTIVE">Moderately active</option>
-                    <option value="HIGHLY_ACTIVE">Highly active</option>
-                </select>
-                {errors.dailyActivityLevel && (
-                    <div className="field-error">
-                        * {errors.dailyActivityLevel}
-                    </div>
-                )}
-            </div>
+                    error={errors.dailyActivityLevel}
+                    required
+                    onChange={(value) => updateSelect('dailyActivityLevel', value)}
+                    data={[
+                        {value: 'MOSTLY_SITTING', label: 'Mostly sitting'},
+                        {value: 'MOSTLY_STANDING', label: 'Mostly standing'},
+                        {value: 'MODERATELY_ACTIVE', label: 'Moderately active'},
+                        {value: 'HIGHLY_ACTIVE', label: 'Highly active'},
+                    ]}
+                />
 
-            <div className="form-field vertical-gap-md">
-                <label>Average sleep</label>
-                <select
-                    name="averageSleep"
-                    className={errors.averageSleep ? 'input-error' : ''}
+                <Select
+                    label="Average sleep"
+                    placeholder="Select average sleep"
                     value={form.averageSleep}
-                    onChange={onChange}
-                >
-                    <option value="">Select average sleep</option>
-                    <option value="LESS_THAN_5">Less than 5 hours</option>
-                    <option value="FIVE_TO_SIX">5-6 hours</option>
-                    <option value="SIX_TO_SEVEN">6-7 hours</option>
-                    <option value="SEVEN_TO_EIGHT">7-8 hours</option>
-                    <option value="MORE_THAN_8">8+ hours</option>
-                </select>
-                {errors.averageSleep && (
-                    <div className="field-error">
-                        * {errors.averageSleep}
-                    </div>
-                )}
-            </div>
+                    error={errors.averageSleep}
+                    required
+                    onChange={(value) => updateSelect('averageSleep', value)}
+                    data={[
+                        {value: 'LESS_THAN_5', label: 'Less than 5 hours'},
+                        {value: 'FIVE_TO_SIX', label: '5-6 hours'},
+                        {value: 'SIX_TO_SEVEN', label: '6-7 hours'},
+                        {value: 'SEVEN_TO_EIGHT', label: '7-8 hours'},
+                        {value: 'MORE_THAN_8', label: '8+ hours'},
+                    ]}
+                />
 
-            <div className="form-field vertical-gap-md">
-                <label>Stress level</label>
-                <select
-                    name="stressLevel"
-                    className={errors.stressLevel ? 'input-error' : ''}
+                <Select
+                    label="Stress level"
+                    placeholder="Select stress level"
                     value={form.stressLevel}
-                    onChange={onChange}
-                >
-                    <option value="">Select stress level</option>
-                    <option value="LOW">Low</option>
-                    <option value="MODERATE">Moderate</option>
-                    <option value="HIGH">High</option>
-                    <option value="VERY_HIGH">Very High</option>
-                </select>
-                {errors.stressLevel && (
-                    <div className="field-error">
-                        * {errors.stressLevel}
-                    </div>
-                )}
-            </div>
+                    error={errors.stressLevel}
+                    required
+                    onChange={(value) => updateSelect('stressLevel', value)}
+                    data={[
+                        {value: 'LOW', label: 'Low'},
+                        {value: 'MODERATE', label: 'Moderate'},
+                        {value: 'HIGH', label: 'High'},
+                        {value: 'VERY_HIGH', label: 'Very High'},
+                    ]}
+                />
 
-            {showStressSources() && (
-                <div className="form-field vertical-gap-md">
-                    <label>What are your main sources of stress?</label>
-                    <textarea
+                {showStressSources() && (
+                    <Textarea
+                        label="What are your main sources of stress?"
                         name="stressSources"
-                        rows="3"
+                        rows={3}
                         placeholder="Optional"
                         value={form.stressSources}
                         onChange={onChange}
                     />
-                </div>
-            )}
+                )}
 
-            <div className="section-divider spaced" />
-
-            <div className="form-field">
-                <label>Additional lifestyle notes</label>
-                <textarea
+                <Textarea
+                    label="Additional lifestyle notes"
                     name="additionalNotes"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.additionalNotes}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-actions">
-                <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={onBack}
-                >
-                    Go Back
-                </button>
-
-                <button type="submit">
-                    Save & Continue
-                </button>
-            </div>
+                <StepNavigation
+                    onBack={onBack}
+                />
+            </Stack>
         </form>
     );
 }

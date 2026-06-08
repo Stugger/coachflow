@@ -1,3 +1,11 @@
+import {
+    Alert,
+    Stack,
+    Textarea,
+} from '@mantine/core';
+import {IconMedicalCross} from '@tabler/icons-react';
+import StepNavigation from "../StepNavigation.jsx";
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------
@@ -7,7 +15,7 @@ export function createEmptyMedicalHistoryForm() {
         medicalConditions: '',
         currentMedications: '',
         pastSurgeries: '',
-        injuriesLimitations: ''
+        injuriesLimitations: '',
     };
 }
 
@@ -16,66 +24,57 @@ export function createEmptyMedicalHistoryForm() {
 // ------------------------------------------------------------------------------------------------------------------------
 
 function MedicalHistoryStep({form, onChange, onBack, onContinue}) {
-
     return (
         <form onSubmit={onContinue}>
-            <div className="form-field">
-                <label>Medical conditions</label>
-                <textarea
+            <Stack gap="md">
+                <Alert
+                    color="blue"
+                    variant="light"
+                    icon={<IconMedicalCross size={18}/>}
+                >
+                    Add any relevant medical details, injuries, medications, or limitations. This step can be left blank.
+                </Alert>
+
+                <Textarea
+                    label="Medical conditions"
                     name="medicalConditions"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.medicalConditions}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-field vertical-gap-md">
-                <label>Current medications</label>
-                <textarea
+                <Textarea
+                    label="Current medications"
                     name="currentMedications"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.currentMedications}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-field vertical-gap-md">
-                <label>Past injuries or surgeries</label>
-                <textarea
+                <Textarea
+                    label="Past injuries or surgeries"
                     name="pastSurgeries"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.pastSurgeries}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-field vertical-gap-md">
-                <label>Current injuries or physical limitations</label>
-                <textarea
+                <Textarea
+                    label="Current injuries or physical limitations"
                     name="injuriesLimitations"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.injuriesLimitations}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-actions">
-                <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={onBack}
-                >
-                    Go Back
-                </button>
-
-                <button type="submit">
-                    Save & Continue
-                </button>
-            </div>
+                <StepNavigation
+                    onBack={onBack}
+                />
+            </Stack>
         </form>
     );
 }

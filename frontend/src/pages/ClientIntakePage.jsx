@@ -1,6 +1,24 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 
+import {
+    LoadingOverlay,
+    Container,
+    Paper,
+    Alert,
+    Button,
+    Center,
+    Stack,
+    Text,
+    ThemeIcon,
+    Title,
+    Group,
+    Modal,
+} from '@mantine/core';
+import {
+    IconCheck,
+} from '@tabler/icons-react';
+
 import {ROUTES} from '../constants/routes';
 import {IntakeSteps} from '../constants/intake';
 
@@ -32,6 +50,13 @@ function ClientIntakePage({trainerId}) {
     const [currentStep, setCurrentStep] = useState(IntakeSteps.BASIC_INFO);
     const [clientId, setClientId] = useState(null);
     const [intakeId, setIntakeId] = useState(null);
+
+    const [clientLoaded, setClientLoaded] = useState(true);
+    const [intakeLoaded, setIntakeLoaded] = useState(true);
+
+    const loading = !clientLoaded || !intakeLoaded;
+
+    const [exitModalOpen, setExitModalOpen] = useState(false);
 
     const [basicInfoForm, setBasicInfoForm] = useState({
         trainerId,
@@ -66,6 +91,7 @@ function ClientIntakePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function loadIntake(id) {
+        setIntakeLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/${id}`)
             .then(response => response.json())
             .then(intake => {
@@ -74,7 +100,12 @@ function ClientIntakePage({trainerId}) {
                 setCurrentStep(intake.currentStep);
                 scrollToTop();
             })
-            .catch(error => console.error('Error loading intake:', error));
+            .catch(error => {
+                console.error('Error loading intake:', error)
+            })
+            .finally(() => {
+                setIntakeLoaded(true);
+            });
     }
 
     function hydrateIntake(intake) {
@@ -120,6 +151,7 @@ function ClientIntakePage({trainerId}) {
     }
 
     function loadClient(id) {
+        setClientLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${id}`)
             .then(async response => {
                 if (!response.ok) {
@@ -136,6 +168,9 @@ function ClientIntakePage({trainerId}) {
             })
             .catch(error => {
                 console.error('Error loading client:', error)
+            })
+            .finally(() => {
+                setClientLoaded(true);
             });
     }
 
@@ -288,13 +323,7 @@ function ClientIntakePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function exitIntake() {
-        if (currentStep !== IntakeSteps.BASIC_INFO && currentStep !== IntakeSteps.COMPLETED) {
-            const confirmed = window.confirm('Are you sure you wish to exit?\n\nYour progress will be saved and the intake can be resumed later.');
-
-            if (!confirmed) {
-                return;
-            }
-        }
+        setExitModalOpen(false);
         switch (currentStep) {
             case IntakeSteps.PARQ:
                 saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.clientProfile(clientId)));
@@ -691,7 +720,8 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 1 of 8 · Basic Information"
+                    step="Basic Information"
+                    stepNumber={1}
                     exitIntake={exitIntake}
                 />
                 <ClientDetailsForm
@@ -710,8 +740,9 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 2 of 8 · PAR-Q"
-                    exitIntake={exitIntake}
+                    step="PAR-Q"
+                    stepNumber={2}
+                    exitIntake={() => setExitModalOpen(true)}
                 />
                 <ParqStep
                     form={parqForm}
@@ -730,8 +761,9 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 3 of 8 · Goals"
-                    exitIntake={exitIntake}
+                    step="Goals"
+                    stepNumber={3}
+                    exitIntake={() => setExitModalOpen(true)}
                 />
                 <GoalsStep
                     form={goalsForm}
@@ -749,8 +781,9 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 4 of 8 · Activity History"
-                    exitIntake={exitIntake}
+                    step="Activity History"
+                    stepNumber={4}
+                    exitIntake={() => setExitModalOpen(true)}
                 />
                 <ActivityHistoryStep
                     form={activityHistoryForm}
@@ -768,8 +801,9 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 5 of 8 · Medical History"
-                    exitIntake={exitIntake}
+                    step="Medical History"
+                    stepNumber={5}
+                    exitIntake={() => setExitModalOpen(true)}
                 />
                 <MedicalHistoryStep
                     form={medicalForm}
@@ -785,8 +819,9 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 6 of 8 · Lifestyle"
-                    exitIntake={exitIntake}
+                    step="Lifestyle"
+                    stepNumber={6}
+                    exitIntake={() => setExitModalOpen(true)}
                 />
                 <LifestyleStep
                     form={lifestyleForm}
@@ -803,8 +838,9 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 7 of 8 · Training Preferences"
-                    exitIntake={exitIntake}
+                    step="Training Preferences"
+                    stepNumber={7}
+                    exitIntake={() => setExitModalOpen(true)}
                 />
                 <TrainingPreferencesStep
                     form={trainingPreferencesForm}
@@ -823,24 +859,59 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 <IntakeHeader
-                    progress="Step 8 of 8 · Complete"
+                    step="Complete"
+                    stepNumber={8}
                     exitIntake={exitIntake}
                 />
-                <div className="empty-state">
-                    <h2>🎉 Intake Completed</h2>
-                    <p>Thank you. Please return the device to your trainer.</p>
-                    <p>Your trainer will review your answers with you before beginning the assessment.</p>
-                </div>
 
-                <div className="form-actions">
-                    <button
-                        type="button"
-                        className="secondary-button"
+                <Paper
+                    withBorder
+                    p="xl"
+                    radius="md"
+                >
+                    <Center>
+                        <Stack align="center" gap="md">
+                            <ThemeIcon
+                                size={64}
+                                radius="xl"
+                                color="green"
+                            >
+                                <IconCheck size={32}/>
+                            </ThemeIcon>
+
+                            <Title order={2}>
+                                Intake Completed
+                            </Title>
+
+                            <Text ta="center" c="dimmed">
+                                Thank you for completing your intake.
+                            </Text>
+
+                            <Alert
+                                color="blue"
+                                variant="light"
+                            >
+                                <Stack gap={20} align="center">
+                                    <Text size="sm" ta="center" fw={600}>
+                                        Please return the device.
+                                    </Text>
+                                    <Text size="sm" ta="center">
+                                        Your trainer will review your answers with you before beginning an assessment.
+                                    </Text>
+                                </Stack>
+                            </Alert>
+                        </Stack>
+                    </Center>
+                </Paper>
+
+                <Group justify="flex-start" mt="md">
+                    <Button
+                        variant="default"
                         onClick={() => setCurrentStep(IntakeSteps.TRAINING_PREFERENCES)}
                     >
                         Go Back
-                    </button>
-                </div>
+                    </Button>
+                </Group>
             </>
         );
     }
@@ -876,34 +947,63 @@ function ClientIntakePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <div className="intake-page">
-            <section className="intake-card">
-                {currentStep === IntakeSteps.BASIC_INFO && (
-                    renderBasicInfo()
-                )}
-                {currentStep === IntakeSteps.PARQ && (
-                   renderParq()
-                )}
-                {currentStep === IntakeSteps.GOALS && (
-                    renderGoals()
-                )}
-                {currentStep === IntakeSteps.ACTIVITY_HISTORY && (
-                    renderActivityHistory()
-                )}
-                {currentStep === IntakeSteps.MEDICAL && (
-                    renderMedical()
-                )}
-                {currentStep === IntakeSteps.LIFESTYLE && (
-                    renderLifestyle()
-                )}
-                {currentStep === IntakeSteps.TRAINING_PREFERENCES && (
-                    renderTrainingPreferences()
-                )}
-                {currentStep === IntakeSteps.COMPLETED && (
-                    renderCompleted()
-                )}
-            </section>
-        </div>
+        <>
+            {/* Confirm Exit */}
+            <Modal
+                opened={exitModalOpen}
+                onClose={() => setExitModalOpen(false)}
+                title="Exit intake?"
+                centered
+            >
+                <Stack gap="lg">
+                    <Text visibleFrom="sm" c="dimmed" size={"sm"}>
+                        You can return later and continue where you left off.
+                    </Text>
+                    <Text hiddenFrom="sm" c="dimmed" size={"sm"}>
+                        The intake can be resumed later.
+                    </Text>
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            onClick={() => setExitModalOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            color="red"
+                            onClick={exitIntake}
+                        >
+                            Save & Exit
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
+            {/* Intake */}
+            <Container size="md" py="md">
+                <Paper
+                    pos="relative"
+                    p="xl"
+                    radius="md"
+                    withBorder
+                >
+                    <LoadingOverlay
+                        visible={loading}
+                        overlayProps={{blur: 2}}
+                    />
+                    {currentStep === IntakeSteps.BASIC_INFO && renderBasicInfo()}
+                    {currentStep === IntakeSteps.PARQ && renderParq()}
+                    {currentStep === IntakeSteps.GOALS && renderGoals()}
+                    {currentStep === IntakeSteps.ACTIVITY_HISTORY && renderActivityHistory()}
+                    {currentStep === IntakeSteps.MEDICAL && renderMedical()}
+                    {currentStep === IntakeSteps.LIFESTYLE && renderLifestyle()}
+                    {currentStep === IntakeSteps.TRAINING_PREFERENCES && renderTrainingPreferences()}
+                    {currentStep === IntakeSteps.COMPLETED && renderCompleted()}
+                </Paper>
+            </Container>
+        </>
     );
 }
 

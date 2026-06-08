@@ -1,3 +1,16 @@
+import {
+    Alert,
+    Divider,
+    Paper,
+    SegmentedControl,
+    Select,
+    Stack,
+    Text,
+    Textarea,
+} from '@mantine/core';
+import { IconBarbell } from '@tabler/icons-react';
+import StepNavigation from "../StepNavigation.jsx";
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Utility
 // ------------------------------------------------------------------------------------------------------------------------
@@ -31,99 +44,114 @@ export function validateActivityHistoryForm(form) {
 
 function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onContinue}) {
 
+    const hasErrors = Object.keys(errors).length > 0;
+
     return (
         <form onSubmit={onContinue}>
-            <div className={`intake-question ${errors.previousTrainer ? 'error' : ''}`}>
-                <label>Have you worked with a personal trainer before?</label>
+            <Stack gap="md">
 
-                <div className="intake-answer-group">
-                    <label className="intake-answer">
-                        <input
-                            type="radio"
-                            name="previousTrainer"
-                            checked={form.previousTrainer === true}
-                            onChange={() => updateTrainer(true)}
-                        />
-                        Yes
-                    </label>
-
-                    <label className="intake-answer">
-                        <input
-                            type="radio"
-                            name="previousTrainer"
-                            checked={form.previousTrainer === false}
-                            onChange={() => updateTrainer(false)}
-                        />
-                        No
-                    </label>
-                </div>
-
-                {errors.previousTrainer && (
-                    <div className="field-error intake-error">
-                        * {errors.previousTrainer}
-                    </div>
-                )}
-
-                {form.previousTrainer && (
-                    <div className="form-field">
-                        <div className="section-divider vertical-gap-md" />
-                        <label className="vertical-gap-sm">Please describe your experience:</label>
-                        <textarea
-                            name="previousTrainerExperience"
-                            rows="3"
-                            placeholder="Optional"
-                            value={form.previousTrainerExperience}
-                            onChange={onChange}
-                        />
-                    </div>
-                )}
-            </div>
-
-            <div className="form-field">
-                <label>Current level of physical activity</label>
-                <select
-                    name="activityLevel"
-                    className={errors.activityLevel ? 'input-error' : ''}
-                    value={form.activityLevel}
-                    onChange={onChange}
+                <Alert
+                    color={hasErrors ? 'red' : 'blue'}
+                    variant="light"
+                    icon={<IconBarbell size={18} />}
                 >
-                    <option value="">Select activity level</option>
-                    <option value="SEDENTARY">Sedentary</option>
-                    <option value="LIGHTLY_ACTIVE">Lightly active</option>
-                    <option value="MODERATELY_ACTIVE">Moderately active</option>
-                    <option value="VERY_ACTIVE">Very active</option>
-                </select>
-                {errors.activityLevel && (
-                    <div className="field-error">
-                        * {errors.activityLevel}
-                    </div>
-                )}
-            </div>
+                    Tell us about your training experience and activity level.
+                </Alert>
 
-            <div className="form-field vertical-gap-md">
-                <label>Describe your current exercise routine</label>
-                <textarea
+                <Paper
+                    p="md"
+                    radius="md"
+                    withBorder
+                    style={{
+                        borderColor: errors.previousTrainer
+                            ? 'var(--mantine-color-red-6)'
+                            : undefined,
+                    }}
+                >
+                    <Stack gap="sm">
+
+                        <Text fw={500}>
+                            Have you worked with a personal trainer before?
+                        </Text>
+
+                        <SegmentedControl
+                            color="blue"
+                            value={
+                                form.previousTrainer === null
+                                    ? ''
+                                    : String(form.previousTrainer)
+                            }
+                            onChange={(value) =>
+                                updateTrainer(value === 'true')
+                            }
+                            data={[
+                                { label: 'Yes', value: 'true' },
+                                { label: 'No', value: 'false' },
+                            ]}
+                            fullWidth
+                        />
+
+                        {errors.previousTrainer && (
+                            <Text c="red" size="sm">
+                                {errors.previousTrainer}
+                            </Text>
+                        )}
+
+                        {form.previousTrainer && (
+                            <>
+                                <Divider />
+
+                                <Textarea
+                                    label="Describe your experience"
+                                    name="previousTrainerExperience"
+                                    rows={3}
+                                    placeholder="Optional"
+                                    value={form.previousTrainerExperience}
+                                    onChange={onChange}
+                                />
+                            </>
+                        )}
+
+                    </Stack>
+                </Paper>
+
+                <Select
+                    label="Current level of physical activity"
+                    name="activityLevel"
+                    placeholder="Select activity level"
+                    value={form.activityLevel}
+                    onChange={(value) =>
+                        onChange({
+                            target: {
+                                name: 'activityLevel',
+                                value: value || '',
+                            },
+                        })
+                    }
+                    error={errors.activityLevel}
+                    data={[
+                        { value: 'SEDENTARY', label: 'Sedentary' },
+                        { value: 'LIGHTLY_ACTIVE', label: 'Lightly active' },
+                        { value: 'MODERATELY_ACTIVE', label: 'Moderately active' },
+                        { value: 'VERY_ACTIVE', label: 'Very active' },
+                    ]}
+                    required
+                />
+
+                <Textarea
+                    label="Describe your current exercise routine"
                     name="currentRoutine"
-                    rows="3"
+                    rows={4}
                     placeholder="Optional"
                     value={form.currentRoutine}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-actions">
-                <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={onBack}
-                >
-                    Go Back
-                </button>
+                <StepNavigation
+                    onBack={onBack}
+                />
 
-                <button type="submit">
-                    Save & Continue
-                </button>
-            </div>
+            </Stack>
         </form>
     );
 }

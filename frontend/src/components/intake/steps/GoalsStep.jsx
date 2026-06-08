@@ -1,3 +1,16 @@
+import {
+    Alert,
+    Checkbox,
+    Group,
+    SimpleGrid,
+    Stack,
+    Text,
+    Textarea,
+    Divider,
+} from '@mantine/core';
+import {IconTargetArrow} from '@tabler/icons-react';
+import StepNavigation from "../StepNavigation.jsx";
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants
 // ------------------------------------------------------------------------------------------------------------------------
@@ -11,7 +24,7 @@ const GOAL_OPTIONS = [
     ['IMPROVE_HEALTH', 'Improve overall health'],
     ['SPORT_PERFORMANCE', 'Improve sports performance'],
     ['INCREASE_CONFIDENCE', 'Increase confidence in the gym'],
-    ['OTHER', 'Other']
+    ['OTHER', 'Other'],
 ];
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -22,7 +35,7 @@ export function createEmptyGoalsForm() {
     return {
         objectives: [],
         otherGoal: '',
-        successDescription: ''
+        successDescription: '',
     };
 }
 
@@ -45,74 +58,87 @@ export function validateGoalsForm(form) {
 // ------------------------------------------------------------------------------------------------------------------------
 
 function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}) {
-
     return (
         <form onSubmit={onContinue}>
-            <div className="form-field">
-                <label>What are your fitness objectives? Select all that apply.</label>
+            <Stack gap="md">
+                <Alert
+                    color={errors.objectives ? 'red' : 'blue'}
+                    variant="light"
+                    icon={<IconTargetArrow size={18}/>}
+                >
+                    Select one or more goals.
+                </Alert>
 
-                <div className={`multi-option-grid ${errors.objectives ? 'error' : ''}`}>
-                    {GOAL_OPTIONS.map(([value, label]) => (
-                        <button
-                            key={value}
-                            type="button"
-                            className={`multi-option ${form.objectives.includes(value) ? 'selected' : ''}`}
-                            onClick={() => updateObjective(value)}
-                        >
-                            {label}
-                        </button>
-                    ))}
-                </div>
-                {errors.objectives && (
-                    <div className="field-error vertical-gap-sm">
-                        * {errors.objectives}
-                    </div>
-                )}
-            </div>
+                <Stack gap="xs">
+                    <Stack gap={0}>
+                        <Text size="sm" fw={600}>
+                            What are your primary fitness objectives?
+                        </Text>
+                        <Text size="sm" c="dimmed" fw={400}>
+                            Select all that apply.
+                        </Text>
+                    </Stack>
 
-            {form.objectives.includes('OTHER') && (
-                <div className="form-field vertical-gap-md">
-                    <label>Describe your other goal(s):</label>
-                    <textarea
-                        className={errors.otherGoal ? 'input-error' : ''}
+                    <SimpleGrid cols={{base: 1, sm: 2}}>
+                        {GOAL_OPTIONS.map(([value, label]) => {
+                            const checked = form.objectives.includes(value);
+
+                            return (
+                                <Checkbox.Card
+                                    key={value}
+                                    radius="md"
+                                    checked={checked}
+                                    onClick={() => updateObjective(value)}
+                                    style={{
+                                        border: 'none'
+                                    }}
+                                >
+                                    <Group wrap="nowrap" align="center">
+                                        <Checkbox.Indicator/>
+
+                                        <Text size="sm" fw={500}>
+                                            {label}
+                                        </Text>
+                                    </Group>
+                                </Checkbox.Card>
+                            );
+                        })}
+                    </SimpleGrid>
+
+                    {errors.objectives && (
+                        <Text c="red" size="sm">
+                            {errors.objectives}
+                        </Text>
+                    )}
+                </Stack>
+
+                {form.objectives.includes('OTHER') && (
+                    <Textarea
+                        label="Describe your other goals"
                         name="otherGoal"
-                        rows="3"
+                        required
+                        rows={3}
                         value={form.otherGoal}
                         onChange={onChange}
+                        error={errors.otherGoal}
                     />
-                    {errors.otherGoal && (
-                        <div className="field-error">
-                            * {errors.otherGoal}
-                        </div>
-                    )}
-                </div>
-            )}
+                )}
 
-            <div className="section-divider spaced" />
-            <div className="form-field">
-                <label>What would success look like to you?</label>
-                <textarea
+                <Divider />
+
+                <Textarea
+                    label="What would success look like to you?"
                     name="successDescription"
-                    rows="3"
+                    rows={3}
                     placeholder="Optional"
                     value={form.successDescription}
                     onChange={onChange}
                 />
-            </div>
 
-            <div className="form-actions">
-                <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={onBack}
-                >
-                    Go Back
-                </button>
-
-                <button type="submit">
-                    Save & Continue
-                </button>
-            </div>
+                <StepNavigation
+                    onBack={onBack}
+                />
+            </Stack>
         </form>
     );
 }
