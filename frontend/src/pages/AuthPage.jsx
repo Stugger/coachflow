@@ -11,6 +11,7 @@ import {
     Text,
     TextInput,
     Title,
+    Divider,
     ActionIcon
 } from '@mantine/core';
 import {IconMoon, IconSun, IconAlertCircle} from '@tabler/icons-react';
@@ -249,34 +250,60 @@ function AuthPage({onAuthSuccess}) {
             <>
                 <Stack gap="xs" ta="center">
                     <Title order={3}>Create your coach account</Title>
-                    <Text c="dimmed" size="sm">
-                        Create your CoachFlow account to start managing clients.
+                    <Text c="dimmed" size="sm" style={{
+                        paddingLeft: '1.5rem',
+                        paddingRight: '1.5rem',
+                    }}>
+                        Create your CoachFlow account to start managing your clients.
                     </Text>
+                    <Divider my="xs" labelPosition="center" visibleFrom="xs"/>
                 </Stack>
 
                 {renderMessageAlert()}
 
                 <form onSubmit={register}>
                     <Stack>
-                        <TextInput
-                            name="firstName"
-                            label="First name"
-                            placeholder="First name"
-                            required
-                            value={registerForm.firstName}
-                            onChange={updateRegisterForm}
-                            error={errors.firstName}
-                        />
+                        <Stack hiddenFrom="xs">
+                            <TextInput
+                                name="firstName"
+                                label="First name"
+                                placeholder="First name"
+                                required
+                                value={registerForm.firstName}
+                                onChange={updateRegisterForm}
+                                error={errors.firstName}
+                            />
+                            <TextInput
+                                name="lastName"
+                                label="Last name"
+                                placeholder="Last name"
+                                required
+                                value={registerForm.lastName}
+                                onChange={updateRegisterForm}
+                                error={errors.lastName}
+                            />
+                        </Stack>
+                        <Group visibleFrom="xs" wrap={"nowrap"}>
+                            <TextInput
+                                name="firstName"
+                                label="First name"
+                                placeholder="First name"
+                                required
+                                value={registerForm.firstName}
+                                onChange={updateRegisterForm}
+                                error={errors.firstName}
+                            />
 
-                        <TextInput
-                            name="lastName"
-                            label="Last name"
-                            placeholder="Last name"
-                            required
-                            value={registerForm.lastName}
-                            onChange={updateRegisterForm}
-                            error={errors.lastName}
-                        />
+                            <TextInput
+                                name="lastName"
+                                label="Last name"
+                                placeholder="Last name"
+                                required
+                                value={registerForm.lastName}
+                                onChange={updateRegisterForm}
+                                error={errors.lastName}
+                            />
+                        </Group>
 
                         <TextInput
                             name="email"
@@ -338,7 +365,7 @@ function AuthPage({onAuthSuccess}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <Container size={420}
+        <Container size={460}
            px="xl"
            py="xl"
            style={{
@@ -358,7 +385,7 @@ function AuthPage({onAuthSuccess}) {
                 }}
             >
                 <ActionIcon
-                    variant="subtle"
+                    variant="default"
                     size="lg"
                     color="gray"
                     onClick={() => toggleColorScheme()}
