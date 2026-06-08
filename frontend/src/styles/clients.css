@@ -1,11 +1,19 @@
-.clients-page {
-    display: grid;
-    grid-template-columns: minmax(280px, 380px) 1fr;
-    gap: 20px;
-    align-items: start;
+.client-card {
+    cursor: 'pointer';
+    transition:
+            transform 150ms ease,
+            box-shadow 150ms ease,
+            border-color 150ms ease;
 }
 
-.client-list-panel,
+.client-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mantine-shadow-md);
+    border-color: var(--mantine-primary-color-filled);
+}
+
+/* TODO - BELOW TO BE REMOVED WITH MANTINE MIGRATION */
+
 .client-profile-panel,
 .client-form-panel,
 .profile-card {
@@ -16,7 +24,6 @@
     scroll-margin-top: 84px;
 }
 
-.page-header,
 .client-profile-header {
     display: flex;
     justify-content: space-between;
@@ -24,17 +31,11 @@
     gap: 16px;
 }
 
-.page-header {
-    margin-bottom: 16px;
-}
-
 .client-profile-header {
     margin-bottom: 8px;
 }
 
-.page-header p,
 .client-profile-header p,
-.empty-state p,
 .profile-card p {
     color: var(--color-text-muted);
 }
@@ -57,87 +58,10 @@
     border-color: var(--color-warning-border);
 }
 
-.client-form-panel {
-    padding: 16px;
-    margin-bottom: 16px;
-}
-
 .client-profile-content {
     display: flex;
     flex-direction: column;
     gap: 16px;
-}
-
-.client-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.client-list-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-    width: 100%;
-    text-align: left;
-
-    background: var(--color-surface-hover) !important;
-    border: 1px solid var(--color-border-light) !important;
-    color: var(--color-text);
-
-    padding: 12px 14px;
-    border-radius: 8px;
-
-    transition:
-            background-color 0.2s ease,
-            border-color 0.2s ease,
-            transform 0.08s ease;
-}
-
-.client-list-item:hover {
-    background: var(--color-surface-active) !important;
-    border-color: var(--color-border-hover) !important;
-}
-
-.client-list-item:active {
-    transform: scale(0.99);
-}
-
-.client-list-item.selected {
-    border-color: var(--color-primary) !important;
-    background: var(--color-primary-surface) !important;
-    color: var(--color-text-inverse) !important;
-}
-
-.client-list-item.selected:hover {
-    background: var(--color-primary-surface-hover) !important;
-}
-
-.client-list-name {
-    min-width: 0;
-}
-
-.client-review-pill {
-    flex-shrink: 0;
-    padding: 3px 8px;
-    border: 1px solid var(--color-primary-border);
-    border-radius: 999px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.2px;
-}
-
-.client-review-pill.intake {
-    background: var(--color-danger-surface);
-    border-color: var(--color-danger-border);
-    color: var(--color-danger-text);
-}
-
-.client-review-pill.assess {
-    background: var(--color-warning-surface);
-    border-color: var(--color-warning-border-strong);
-    color: var(--color-warning-text);
 }
 
 .client-contact-info {
@@ -152,11 +76,6 @@
 }
 
 @media (max-width: 768px) {
-
-    .clients-page {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
 
     .profile-card-grid {
         grid-template-columns: 1fr;

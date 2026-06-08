@@ -1,7 +1,23 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {
+    Badge,
+    Button,
+    Group,
+    LoadingOverlay,
+    Paper,
+    SegmentedControl,
+    SimpleGrid,
+    Stack,
+    Table,
+    Text,
+    Title,
+    Box,
+} from '@mantine/core';
 import {ROUTES} from '../constants/routes';
-import * as TextUtils from '../utils/text-utils';
+import ClientCard from '../components/clients/ClientCard';
+import ClientMobileRow from '../components/clients/ClientMobileRow';
+import ClientTableRow from '../components/clients/ClientTableRow';
 
 function ClientsPage({trainerId}) {
 
@@ -17,6 +33,23 @@ function ClientsPage({trainerId}) {
 
     const [clients, setClients] = useState([]);
     const [intakes, setIntakes] = useState([]);
+
+    const [clientsLoaded, setClientsLoaded] = useState(false);
+    const [intakesLoaded, setIntakesLoaded] = useState(false);
+
+    const loading = !clientsLoaded || !intakesLoaded;
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Stored state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const [viewMode, setViewMode] = useState(() => {
+        return localStorage.getItem('clients_view_mode') || 'cards';
+    });
+
+    const [clientFilter, setClientFilter] = useState(() => {
+        return localStorage.getItem('clients_filter') || 'active';
+    });
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived clients
@@ -37,6 +70,17 @@ function ClientsPage({trainerId}) {
         return getPriority(aStatus) - getPriority(bStatus);
     });
 
+    const visibleClients = sortedClients.filter(client => {
+        if (clientFilter === 'archived') {
+            return client.archived;
+        }
+
+        return !client.archived;
+    });
+
+    const activeClientCount = clients.filter(client => !client.archived).length;
+    const archivedClientCount = clients.filter(client => client.archived).length;
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
     // ------------------------------------------------------------------------------------------------------------------------
@@ -51,6 +95,7 @@ function ClientsPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function loadClients() {
+        setClientsLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
@@ -65,10 +110,14 @@ function ClientsPage({trainerId}) {
             .catch(error => {
                 console.error('Error loading clients:', error);
                 setClients([]);
+            })
+            .finally(() => {
+                setClientsLoaded(true);
             });
     }
 
     function loadIntakes() {
+        setIntakesLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
@@ -83,6 +132,9 @@ function ClientsPage({trainerId}) {
             .catch(error => {
                 console.error('Error loading intake drafts:', error);
                 setIntakes([]);
+            })
+            .finally(() => {
+                setIntakesLoaded(true);
             });
     }
 
@@ -92,6 +144,20 @@ function ClientsPage({trainerId}) {
 
     function selectClient(client) {
         navigate(ROUTES.clientProfile(client.id));
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function changeViewMode(value) {
+        setViewMode(value);
+        localStorage.setItem('clients_view_mode', value);
+    }
+
+    function changeClientFilter(value) {
+        setClientFilter(value);
+        localStorage.setItem('clients_filter', value);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -132,32 +198,102 @@ function ClientsPage({trainerId}) {
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function renderClientListItem(client) {
-        const reviewStatus = getClientReviewStatus(client.id);
+    function renderEmptyState() {
         return (
-            <button
-                key={client.id}
-                className={'client-list-item'}
-                onClick={() => selectClient(client)}
-            >
-                <span className="client-list-name">
-                    {client.firstName} {client.lastName}
-                    {client.preferredName ? ` (${client.preferredName})` : ''}
-                </span>
+            <Paper withBorder radius="md" p="xl">
+                <Stack align="center" gap="xs">
+                    <Title order={4}>No clients found</Title>
+                    <Text c="dimmed" ta="center">
+                        {clientFilter === 'archived'
+                            ? 'Archived clients will appear here.'
+                            : 'Create your first client to get started.'}
+                    </Text>
 
-                {reviewStatus === 'INTAKE' && (
-                    <span className="client-review-pill intake">
-                        INTAKE
-                    </span>
-                )}
-
-                {reviewStatus === 'ASSESS' && (
-                    <span className="client-review-pill assess">
-                        ASSESS
-                    </span>
-                )}
-            </button>
+                    {clientFilter === 'active' && (
+                        <Button onClick={() => navigate(ROUTES.INTAKE_NEW)}>
+                            + New Client
+                        </Button>
+                    )}
+                </Stack>
+            </Paper>
         );
+    }
+
+    function renderClientCards() {
+        return (
+                <SimpleGrid cols={{base: 1, sm: 2, lg: 3, xl: 4}}>
+                {visibleClients.map(client => (
+                    <ClientCard
+                        key={client.id}
+                        client={client}
+                        reviewStatus={getClientReviewStatus(client.id)}
+                        onClick={() => selectClient(client)}
+                    />
+                ))}
+            </SimpleGrid>
+        );
+    }
+
+    function renderClientList() {
+        return (
+            <>
+                {/* Mobile */}
+                <Box hiddenFrom="sm">
+                    <Table verticalSpacing="sm" highlightOnHover stickyHeader>
+                        <Table.Tbody>
+                            {visibleClients.map(client => (
+                                <ClientMobileRow
+                                    key={client.id}
+                                    client={client}
+                                    reviewStatus={getClientReviewStatus(client.id)}
+                                    onClick={() => selectClient(client)}
+                                />
+                            ))}
+                        </Table.Tbody>
+                    </Table>
+                </Box>
+
+                {/* Desktop */}
+                <Box visibleFrom="sm">
+                    <Table.ScrollContainer minWidth={"48rem"}>
+                        <Table verticalSpacing="sm" highlightOnHover stickyHeader>
+                            <Table.Thead>
+                                <Table.Tr>
+                                    <Table.Th w={"30%"}>Client</Table.Th>
+                                    <Table.Th>Status</Table.Th>
+                                    <Table.Th>Phone</Table.Th>
+                                    <Table.Th>Email</Table.Th>
+                                    <Table.Th w={"5%"}/>
+                                </Table.Tr>
+                            </Table.Thead>
+
+                            <Table.Tbody>
+                                {visibleClients.map(client => (
+                                    <ClientTableRow
+                                        key={client.id}
+                                        client={client}
+                                        reviewStatus={getClientReviewStatus(client.id)}
+                                        onClick={() => selectClient(client)}
+                                    />
+                                ))}
+                            </Table.Tbody>
+                        </Table>
+                    </Table.ScrollContainer>
+                </Box>
+            </>
+        );
+    }
+
+    function renderReviewBadge(reviewStatus) {
+        if (reviewStatus === 'INTAKE') {
+            return <Badge color="red" variant="light">Intake</Badge>;
+        }
+
+        if (reviewStatus === 'ASSESS') {
+            return <Badge color="yellow" variant="light">Assess</Badge>;
+        }
+
+        return <Badge color="gray" variant="light">Ready</Badge>;
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -165,31 +301,51 @@ function ClientsPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <div className="clients-page">
-            <section className="client-list-panel">
-                <div className="page-header">
-                    <div>
-                        <h2>Clients</h2>
-                        <p>Manage your clients.</p>
-                    </div>
-
-                    <button onClick={() => navigate(ROUTES.INTAKE_NEW)}>
+        <Paper pos="relative" p="md" radius="md" withBorder>
+            <LoadingOverlay
+                visible={loading}
+                overlayProps={{blur: 2}}
+            />
+            <Stack>
+                <Group justify="space-between">
+                    <Stack gap={8}>
+                        <Title order={2}>Clients</Title>
+                        <Text size="sm" c="dimmed">
+                            Select a client to view their profile.
+                        </Text>
+                    </Stack>
+                    <Group gap={6}>
+                        <SegmentedControl
+                            radius="xl"
+                            size="xs"
+                            data={[
+                                {label: `Active (${activeClientCount})`, value: 'active'},
+                                {label: `Archived (${archivedClientCount})`, value: 'archived'},
+                            ]}
+                            value={clientFilter}
+                            onChange={changeClientFilter}
+                        />
+                    </Group>
+                    <Button
+                        radius="xl"
+                        h="xl"
+                        onClick={() => navigate(ROUTES.INTAKE_NEW)}>
                         + New Client
-                    </button>
-                </div>
-                <div className="client-list">
-                    {sortedClients.map(client =>
-                        renderClientListItem(client)
-                    )}
-                </div>
-            </section>
-            <section className="client-profile-panel">
-                <div className="empty-state">
-                    <h2>Select a client</h2>
-                    <p>Choose a client from the list to view their profile.</p>
-                </div>
-            </section>
-        </div>
+                    </Button>
+                </Group>
+                <SegmentedControl
+                    value={viewMode}
+                    onChange={changeViewMode}
+                    data={[
+                        {label: 'Cards', value: 'cards'},
+                        {label: 'List', value: 'list'},
+                    ]}
+                />
+                {!loading && visibleClients.length === 0 && renderEmptyState()}
+                {!loading && visibleClients.length > 0 && viewMode === 'cards' && renderClientCards()}
+                {!loading && visibleClients.length > 0 && viewMode === 'list' && renderClientList()}
+            </Stack>
+        </Paper>
     );
 }
 
