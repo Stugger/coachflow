@@ -2,7 +2,8 @@ import {useEffect, useRef, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {ROUTES} from '../constants/routes';
 import {IntakeSteps} from '../constants/layout';
-import * as PhoneUtils from '../utils/phone-utils';
+import ClientDetailsForm from '../components/clients/ClientDetailsForm';
+import * as ClientDetailsFormUtils from '../utils/client-form-utils';
 import * as TextUtils from '../utils/text-utils';
 
 function ClientIntakePage({trainerId}) {
@@ -22,7 +23,10 @@ function ClientIntakePage({trainerId}) {
     const [clientId, setClientId] = useState(null);
     const [intakeId, setIntakeId] = useState(null);
 
-    const [basicInfoForm, setBasicInfoForm] = useState(createEmptyBasicInfoForm());
+    const [basicInfoForm, setBasicInfoForm] = useState({
+        trainerId,
+        ...ClientDetailsFormUtils.createEmptyClientDetailsForm(),
+    });
     const [parqForm, setParqForm] = useState(createEmptyParqForm());
     const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
     const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
@@ -117,13 +121,7 @@ function ClientIntakePage({trainerId}) {
             .then(client => {
                 setBasicInfoForm({
                     trainerId,
-                    firstName: client.firstName || '',
-                    lastName: client.lastName || '',
-                    preferredName: client.preferredName || '',
-                    email: client.email || '',
-                    phone: client.phone || '',
-                    birthDate: client.birthDate || '',
-                    gender: client.gender || '',
+                    ...ClientDetailsFormUtils.createClientDetailsFormFromClient(client),
                 });
             })
             .catch(error => {
@@ -139,7 +137,7 @@ function ClientIntakePage({trainerId}) {
     function createClient(event) {
         event.preventDefault();
 
-        const updatedErrors = validateBasicInfoForm(basicInfoForm);
+        const updatedErrors = ClientDetailsFormUtils.validateClientDetailsForm(basicInfoForm);
 
         if (Object.keys(updatedErrors).length > 0) {
             setBasicInfoErrors(updatedErrors);
@@ -151,7 +149,7 @@ function ClientIntakePage({trainerId}) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(normalizeBasicInfoForm(basicInfoForm))
+            body: JSON.stringify(ClientDetailsFormUtils.normalizeClientDetailsForm(basicInfoForm))
         })
             .then(async response => {
                 if (!response.ok) {
@@ -196,7 +194,7 @@ function ClientIntakePage({trainerId}) {
     function updateClient(event) {
         event.preventDefault();
 
-        const updatedErrors = validateBasicInfoForm(basicInfoForm);
+        const updatedErrors = ClientDetailsFormUtils.validateClientDetailsForm(basicInfoForm);
 
         if (Object.keys(updatedErrors).length > 0) {
             setBasicInfoErrors(updatedErrors);
@@ -208,7 +206,7 @@ function ClientIntakePage({trainerId}) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(normalizeBasicInfoForm(basicInfoForm))
+            body: JSON.stringify(ClientDetailsFormUtils.normalizeClientDetailsForm(basicInfoForm))
         })
             .then(async response => {
                 if (!response.ok) {
@@ -330,16 +328,25 @@ function ClientIntakePage({trainerId}) {
 
     function updateBasicInfoForm(event) {
         const {name, value} = event.target;
+        ClientDetailsFormUtils.updateFormField(
+            basicInfoForm,
+            basicInfoErrors,
+            setBasicInfoForm,
+            setBasicInfoErrors,
+            name,
+            value
+        );
+    }
 
-        setBasicInfoForm({
-            ...basicInfoForm,
-            [name]: value
-        });
-        if (basicInfoErrors[name]) {
-            const updatedErrors = {...basicInfoErrors};
-            delete updatedErrors[name];
-            setBasicInfoErrors(updatedErrors);
-        }
+    function updateBasicInfoPhone(value) {
+        ClientDetailsFormUtils.updateFormField(
+            basicInfoForm,
+            basicInfoErrors,
+            setBasicInfoForm,
+            setBasicInfoErrors,
+            'phone',
+            value
+        );
     }
 
     /*
@@ -713,103 +720,14 @@ function ClientIntakePage({trainerId}) {
         return (
             <>
                 {renderIntakeHeader('Step 1 of 8 · Basic Information')}
-
-                <form onSubmit={saveBasicInfo} className="client-form">
-                    {basicInfoErrors.trainerId && <div className="field-error"> * {basicInfoErrors.trainerId}</div>}
-                    <div className="form-field">
-                        <label>First Name</label>
-                        <input name="firstName"
-                               className={basicInfoErrors.firstName ? 'input-error' : ''}
-                               value={basicInfoForm.firstName}
-                               onChange={updateBasicInfoForm}
-                        />
-                    </div>
-                    {basicInfoErrors.firstName && <div className="field-error"> * {basicInfoErrors.firstName}</div>}
-                    <div className="form-field">
-                        <label>Last Name</label>
-                        <input name="lastName"
-                               className={basicInfoErrors.lastName ? 'input-error' : ''}
-                               value={basicInfoForm.lastName}
-                               onChange={updateBasicInfoForm}
-                        />
-                        {basicInfoErrors.lastName && <div className="field-error"> * {basicInfoErrors.lastName}</div>}
-                    </div>
-                    <div className="form-field">
-                        <label>Preferred Name</label>
-                        <input name="preferredName"
-                               placeholder={"Optional"}
-                               value={basicInfoForm.preferredName}
-                               onChange={updateBasicInfoForm}
-                        />
-                    </div>
-
-                    <div className="section-divider spaced" />
-
-                    <div className="form-field">
-                        <label>Phone</label>
-                        <input
-                            name="phone"
-                            inputMode="tel"
-                            placeholder="Digits only"
-                            className={basicInfoErrors.phone ? 'input-error' : ''}
-                            value={basicInfoForm.phone}
-                            onChange={(event) => {
-                                setBasicInfoForm({
-                                    ...basicInfoForm,
-                                    phone: PhoneUtils.formatPhoneFromDigits(event.target.value)
-                                });
-                                if (basicInfoErrors.phone) {
-                                    const updatedErrors = {...basicInfoErrors};
-                                    delete updatedErrors.phone;
-                                    setBasicInfoErrors(updatedErrors);
-                                }
-                            }}
-                        />
-                        {basicInfoErrors.phone && <div className="field-error">* {basicInfoErrors.phone}</div>}
-                    </div>
-                    <div className="form-field">
-                        <label>Email</label>
-                        <input name="email"
-                               className={basicInfoErrors.email ? 'input-error' : ''}
-                               value={basicInfoForm.email}
-                               onChange={updateBasicInfoForm}
-                        />
-                        {basicInfoErrors.email && <div className="field-error"> * {basicInfoErrors.email}</div>}
-                    </div>
-
-                    <div className="section-divider spaced" />
-
-                    <div className="form-field">
-                        <label>Birth Date</label>
-                        <input name="birthDate"
-                               className={basicInfoErrors.birthDate ? 'input-error' : ''}
-                               type="date"
-                               value={basicInfoForm.birthDate}
-                               onChange={updateBasicInfoForm}
-                        />
-                        {basicInfoErrors.birthDate && <div className="field-error"> * {basicInfoErrors.birthDate}</div>}
-                    </div>
-                    <div className="form-field">
-                        <label>Gender</label>
-                        <select
-                            name="gender"
-                            value={basicInfoForm.gender}
-                            onChange={updateBasicInfoForm}
-                        >
-                            <option value="">Select gender</option>
-                            <option value="MALE">Male</option>
-                            <option value="FEMALE">Female</option>
-                            <option value="NON_BINARY">Non-binary</option>
-                            <option value="UNDISCLOSED">Prefer not to say</option>
-                            <option value="OTHER">Other</option>
-                        </select>
-                    </div>
-                    <div className="form-actions">
-                        <button type="submit">
-                            Save & Continue
-                        </button>
-                    </div>
-                </form>
+                <ClientDetailsForm
+                    form={basicInfoForm}
+                    errors={basicInfoErrors}
+                    onChange={updateBasicInfoForm}
+                    onPhoneChange={updateBasicInfoPhone}
+                    onSubmit={saveBasicInfo}
+                    submitLabel={"Save & Continue"}
+                />
             </>
         );
     }
@@ -1464,29 +1382,6 @@ function ClientIntakePage({trainerId}) {
     // Validation
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function validateBasicInfoForm(form) {
-        const updatedErrors = {};
-        if (!form.firstName.trim()) {
-            updatedErrors.firstName = 'First name is required';
-        }
-        if (!form.lastName.trim()) {
-            updatedErrors.lastName = 'Last name is required';
-        }
-        if (!form.birthDate) {
-            updatedErrors.birthDate = 'Birth date is required';
-        }
-        if (!form.phone.trim()) {
-            updatedErrors.phone = 'Phone number is required';
-        } else {
-            const phone = PhoneUtils.splitPhone(form.phone);
-
-            if (PhoneUtils.isPartialPhone(phone.area, phone.prefix, phone.line)) {
-                updatedErrors.phone = 'Phone number must be complete';
-            }
-        }
-        return updatedErrors;
-    }
-
     function validateParqForm() {
         const errors = {};
 
@@ -1570,31 +1465,6 @@ function ClientIntakePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
     // Form helpers
     // ------------------------------------------------------------------------------------------------------------------------
-
-    function createEmptyBasicInfoForm(form) {
-        return {
-            trainerId: trainerId,
-            firstName: '',
-            lastName: '',
-            preferredName: '',
-            email: '',
-            phone: '',
-            birthDate: '',
-            gender: '',
-        };
-    }
-
-    function normalizeBasicInfoForm(form) {
-        return {
-            ...form,
-            firstName: TextUtils.normalizeName(form.firstName),
-            lastName: TextUtils.normalizeName(form.lastName),
-            preferredName: TextUtils.normalizeName(form.preferredName),
-            email: TextUtils.normalizeEmail(form.email),
-            phone: form.phone.trim(),
-            gender: form.gender || null,
-        };
-    }
 
     function createEmptyParqForm() {
         return {
