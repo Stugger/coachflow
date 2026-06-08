@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
@@ -7,21 +8,19 @@ import './index.css'
 
 createRoot(document.getElementById('root')).render(
     <BrowserRouter>
-        <MantineProvider defaultColorScheme="dark"
+        <MantineProvider defaultColorScheme="light"
              theme={{
                  components: {
-                     TextInput: {
-                         defaultProps: {
-                             size: 'md',
-                         },
-                     },
-                     PasswordInput: {
-                         defaultProps: {
-                             size: 'md',
+                     Input: {
+                         styles: {
+                             input: {
+                                 fontSize: '1rem',
+                             },
                          },
                      },
                  },
-             }}>
+             }}
+        >
             <App />
         </MantineProvider>
     </BrowserRouter>
