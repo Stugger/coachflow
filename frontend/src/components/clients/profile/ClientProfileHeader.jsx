@@ -110,7 +110,7 @@ function ClientProfileHeader({client, reviewStatus, onEditDetails, onArchiveClie
                     left: 0,
                     right: 0,
                     height: '1rem',
-                    background: (client.archived ? 'var(--mantine-color-gray-4)' : 'var(--mantine-primary-color-filled)'),
+                    background: (client.archived ? 'var(--mantine-color-gray-6)' : 'var(--mantine-primary-color-filled)'),
                 }}
             />
             <Menu shadow="md" width={180} position="bottom-end">

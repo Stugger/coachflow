@@ -20,7 +20,7 @@ function ClientReviewAction({client, reviewStatus, openIntake, openAssessment = 
                     radius="md"
                     p="lg"
                     style={{
-                        borderLeft: '6px solid var(--mantine-color-red-3)',
+                        borderLeft: '6px solid var(--mantine-color-red-6)',
                     }}
                 >
                     <Group justify="space-between" align="center" wrap="wrap">
@@ -49,7 +49,7 @@ function ClientReviewAction({client, reviewStatus, openIntake, openAssessment = 
                     radius="md"
                     p="lg"
                     style={{
-                        borderLeft: '6px solid var(--mantine-color-yellow-3)',
+                        borderLeft: '6px solid var(--mantine-color-yellow-6)',
                     }}
                 >
                     <Group justify="space-between" align="center" wrap="wrap">
