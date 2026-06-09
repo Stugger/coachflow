@@ -1,7 +1,20 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {ROUTES} from '../constants/routes';
+import {
+    Alert,
+    Button,
+    LoadingOverlay,
+    Modal,
+    Paper,
+    Stack,
+    Text,
+    Group,
+} from '@mantine/core';
+import ClientProfileHeader from '../components/clients/profile/ClientProfileHeader';
 import ClientDetailsForm from "../components/clients/ClientDetailsForm.jsx";
+import ClientProfileTabs from '../components/clients/profile/ClientProfileTabs';
+import ClientReviewAction from '../components/clients/profile/ClientReviewAction';
+import {ROUTES} from '../constants/routes';
 import * as ClientDetailsFormUtils from '../utils/client-form-utils';
 import * as TextUtils from '../utils/text-utils';
 
@@ -20,6 +33,11 @@ function ClientProfilePage({trainerId}) {
 
     const [client, setClient] = useState();
     const [intake, setIntake] = useState();
+
+    const [clientLoaded, setClientLoaded] = useState(false);
+    const [intakeLoaded, setIntakeLoaded] = useState(false);
+
+    const loading = !clientLoaded || !intakeLoaded;
 
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
@@ -40,6 +58,7 @@ function ClientProfilePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function loadClient() {
+        setClientLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${clientId}`)
             .then(async response => {
                 if (!response.ok) {
@@ -55,10 +74,14 @@ function ClientProfilePage({trainerId}) {
             })
             .catch(error => {
                 console.error('Error loading client:', error);
+            })
+            .finally(() => {
+                setClientLoaded(true);
             });
     }
 
     function loadIntake() {
+        setIntakeLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/client/${clientId}`)
             .then(async response => {
                 if (!response.ok) {
@@ -72,6 +95,9 @@ function ClientProfilePage({trainerId}) {
             })
             .catch(error => {
                 console.error('Error loading intake:', error);
+            })
+            .finally(() => {
+                setIntakeLoaded(true);
             });
     }
 
@@ -179,8 +205,16 @@ function ClientProfilePage({trainerId}) {
     // Utility
     // ------------------------------------------------------------------------------------------------------------------------
 
+    function getActiveTab() {
+        if (location.pathname.endsWith('/programs')) return 'programs';
+        if (location.pathname.endsWith('/records')) return 'records';
+        if (location.pathname.endsWith('/habits')) return 'habits';
+        if (location.pathname.endsWith('/measurements')) return 'measurements';
+        return 'history';
+    }
+
     function getClientReviewStatus() {
-        if (intake.status !== "COMPLETED") {
+        if (!intake || intake.status !== 'COMPLETED') {
             return 'INTAKE';
         }
         if (intake.status === "COMPLETED") { //TODO would need to check if initial assessment is not completed
@@ -193,20 +227,66 @@ function ClientProfilePage({trainerId}) {
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function renderEditDetailsClient() {
+    function renderActiveTabContent() {
+        //TODO temp content, will be replaced with their own components
         return (
-            <div className="profile-card">
-                <h3>Edit Details</h3>
+            <>
+                {getActiveTab() === 'history' && (
+                    <Stack gap="sm">
+                        <Text fw={700}>
+                            History
+                        </Text>
 
-                <ClientDetailsForm
-                    form={editForm}
-                    errors={editErrors}
-                    onChange={updateEditForm}
-                    onPhoneChange={updateEditFormPhone}
-                    onSubmit={updateClient}
-                    submitLabel={"Save Changes"}
-                />
-            </div>
+                        <Text size="sm" c="dimmed">
+                            Client history, notes, sessions, and timeline activity will appear here.
+                        </Text>
+                    </Stack>
+                )}
+                {getActiveTab() === 'programs' && (
+                    <Stack gap="sm">
+                        <Text fw={700}>
+                            Programs
+                        </Text>
+
+                        <Text size="sm" c="dimmed">
+                            Client assigned programs will appear here where they may also be edited.
+                        </Text>
+                    </Stack>
+                )}
+                {getActiveTab() === 'records' && (
+                    <Stack gap="sm">
+                        <Text fw={700}>
+                            Records
+                        </Text>
+
+                        <Text size="sm" c="dimmed">
+                            Client intake, assessments, records will appear here.
+                        </Text>
+                    </Stack>
+                )}
+                {getActiveTab() === 'habits' && (
+                    <Stack gap="sm">
+                        <Text fw={700}>
+                            Habits
+                        </Text>
+
+                        <Text size="sm" c="dimmed">
+                            Client habits will appear here.
+                        </Text>
+                    </Stack>
+                )}
+                {getActiveTab() === 'measurements' && (
+                    <Stack gap="sm">
+                        <Text fw={700}>
+                            Measurements
+                        </Text>
+
+                        <Text size="sm" c="dimmed">
+                            Client measurements will appear here.
+                        </Text>
+                    </Stack>
+                )}
+            </>
         );
     }
 
@@ -215,81 +295,62 @@ function ClientProfilePage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     if (!client || !editForm || !intake) {
-        return <div>Loading client...</div>;
+        return (
+            <Stack pos="relative" mih={300}>
+                <LoadingOverlay visible overlayProps={{blur: 2}}/>
+            </Stack>
+        );
     }
 
     return (
-        <div>
-            <section className="client-profile-panel">
-                <>
-                    <button
-                        className="link-button"
-                        onClick={() => navigate(ROUTES.CLIENTS)}
-                    >
-                        {'< Go back'}
-                    </button>
-                    <div className="client-profile-header">
-                        <div>
-                            <h2>
-                                {client.firstName} {client.lastName}
-                                {client.preferredName ? ` (${client.preferredName})` : ''}
-                            </h2>
-                            <p className="client-contact-info">
-                                <span>{client.phone || 'No phone'}</span>
-                                <span>{client.email || 'No email'}</span>
-                            </p>
-                        </div>
+        <Stack pos="relative" gap="sm">
+            <LoadingOverlay
+                visible={loading}
+                overlayProps={{blur: 2}}
+            />
 
-                        <button
-                            className="edit-details-button"
-                            onClick={() => setEditingDetails(!editingDetails)}
-                        >
-                            {editingDetails ? 'Cancel' : 'Edit Details'}
-                        </button>
-                    </div>
-                    <div className="client-profile-content">
-                        {editingDetails && (
-                           renderEditDetailsClient()
-                        )}
-                        {getClientReviewStatus() === 'INTAKE' && (
-                            <div className="profile-card review-action urgent">
-                                <h3>Incomplete Intake</h3>
-                                <p>{client.firstName} has not completed their intake.</p>
-                                <button
-                                    onClick={() =>  openIncompleteIntake()}
-                                >
-                                    Resume Intake
-                                </button>
-                            </div>
-                        )}
-                        {getClientReviewStatus() === 'ASSESS' && (
-                            <div className="profile-card review-action warning">
-                                <h3>Initial Assessment Needed</h3>
-                                <p>{client.firstName} has completed intake and is ready for an initial assessment.</p>
-                                <button disabled>Start Assessment (Coming Soon)</button>
-                            </div>
-                        )}
-                        <div className="profile-card-grid">
-                            <div className="profile-card">
-                                <h3>Upcoming Sessions</h3>
-                                <p>No sessions scheduled yet.</p>
-                                <button disabled>+ Schedule Session (Coming Soon)</button>
-                            </div>
-                            <div className="profile-card">
-                                <h3>Recent Notes</h3>
-                                <p>No notes yet.</p>
-                                <button disabled>+ Add Note (Coming Soon)</button>
-                            </div>
-                        </div>
-                        <div className="profile-card">
-                            <h3>Current Workout Plan</h3>
-                            <p>No workout plan assigned yet.</p>
-                            <button disabled>+ Create Workout Plan (Coming Soon)</button>
-                        </div>
-                    </div>
-                </>
-            </section>
-        </div>
+            <Button
+                variant="subtle"
+                onClick={() => navigate(ROUTES.CLIENTS)}
+                w="fit-content"
+            >
+                ← Back to clients
+            </Button>
+
+            <ClientProfileHeader
+                client={client}
+                reviewStatus={getClientReviewStatus()}
+                onEditDetails={() => setEditingDetails(true)}
+                onArchiveClient={() => console.log('Toggle archive client coming soon')}
+            />
+
+            <ClientReviewAction
+                client={client}
+                reviewStatus={getClientReviewStatus()}
+                openIntake={openIncompleteIntake}
+            />
+
+            <ClientProfileTabs />
+
+            {renderActiveTabContent()}
+
+            <Modal
+                opened={editingDetails}
+                onClose={() => setEditingDetails(false)}
+                title="Edit Client Details"
+                centered
+                size="lg"
+            >
+                <ClientDetailsForm
+                    form={editForm}
+                    errors={editErrors}
+                    onChange={updateEditForm}
+                    onPhoneChange={updateEditFormPhone}
+                    onSubmit={updateClient}
+                    submitLabel="Save Changes"
+                />
+            </Modal>
+        </Stack>
     );
 }
 

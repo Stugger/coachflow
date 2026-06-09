@@ -14,7 +14,6 @@
 
 /* TODO - BELOW TO BE REMOVED WITH MANTINE MIGRATION */
 
-.client-profile-panel,
 .profile-card {
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -23,84 +22,6 @@
     scroll-margin-top: 84px;
 }
 
-.client-profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-}
-
-.client-profile-header {
-    margin-bottom: 8px;
-}
-
-.client-profile-header p,
 .profile-card p {
     color: var(--color-text-muted);
-}
-
-.profile-card-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-}
-
-.profile-card.review-action.urgent {
-    background: var(--color-danger-surface-faint);
-    border: 2px solid var(--color-border);
-    border-color: var(--color-danger-border-strong);
-}
-
-.profile-card.review-action.warning {
-    background: var(--color-warning-surface-faint);
-    border: 2px solid var(--color-border);
-    border-color: var(--color-warning-border);
-}
-
-.client-profile-content {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.client-contact-info {
-    display: flex;
-    gap: 6px;
-    color: var(--color-text-muted);
-}
-
-.client-contact-info span:not(:last-child)::after {
-    content: '·';
-    margin-left: 6px;
-}
-
-@media (max-width: 768px) {
-
-    .profile-card-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .client-profile-header {
-        margin-bottom: 0px;
-    }
-
-    .client-profile-panel {
-        scroll-margin-top: 78px;
-    }
-
-    .client-contact-info {
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .client-contact-info span::after {
-        content: none !important;
-    }
-
-    .edit-details-button {
-        min-width: 96px;
-        max-width: 96px;
-        flex-shrink: 0;
-    }
 }
