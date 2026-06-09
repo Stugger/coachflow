@@ -1,5 +1,30 @@
 import {useEffect, useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
+import {
+    Badge,
+    Button,
+    Group,
+    LoadingOverlay,
+    Modal,
+    Paper,
+    Select,
+    SimpleGrid,
+    Stack,
+    Text,
+    Textarea,
+    TextInput,
+    Title,
+} from '@mantine/core';
+import { DateInput, DatePickerInput, TimeInput } from '@mantine/dates';
+import {
+    IconCalendar,
+    IconCalendarEvent,
+    IconClock,
+    IconHistory,
+    IconPlus,
+    IconTrash,
+    IconAlertTriangle,
+} from '@tabler/icons-react';
 import * as TimeUtils from '../utils/time-utils';
 
 function AppointmentsPage({trainerId}) {
@@ -21,6 +46,21 @@ function AppointmentsPage({trainerId}) {
     const DEFAULT_DAYS_TO_SHOW = 7;
     const MAX_DAYS_TO_SHOW = 28;
 
+    const DURATION_OPTIONS = [
+        {value: '30', label: '30 minutes'},
+        {value: '45', label: '45 minutes'},
+        {value: '60', label: '1 hour'},
+        {value: '90', label: '1.5 hours'},
+        {value: '120', label: '2 hours'},
+    ];
+
+    const STATUS_OPTIONS = [
+        {value: 'SCHEDULED', label: 'Scheduled'},
+        {value: 'COMPLETED', label: 'Completed'},
+        {value: 'MISSED', label: 'Missed'},
+        {value: 'CANCELLED', label: 'Cancelled'},
+    ];
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived route values
     // ------------------------------------------------------------------------------------------------------------------------
@@ -37,6 +77,11 @@ function AppointmentsPage({trainerId}) {
 
     const [appointments, setAppointments] = useState([]);
     const [clients, setClients] = useState([]);
+
+    const [appointmentsLoaded, setAppointmentsLoaded] = useState(false);
+    const [clientsLoaded, setClientsLoaded] = useState(false);
+
+    const loading = !appointmentsLoaded || !clientsLoaded;
 
     const [showCreateForm, setShowCreateForm] = useState(false);
 
@@ -65,6 +110,9 @@ function AppointmentsPage({trainerId}) {
     const [createErrors, setCreateErrors] = useState({});
     const [editErrors, setEditErrors] = useState({});
 
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [deleteAppointmentId, setDeleteAppointmentId] = useState(null);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived appointment lists
     // ------------------------------------------------------------------------------------------------------------------------
@@ -88,6 +136,11 @@ function AppointmentsPage({trainerId}) {
         .sort((a, b) =>
             new Date(b.startTime) - new Date(a.startTime)
         );
+
+    const clientOptions = clients.map(client => ({
+        value: String(client.id),
+        label: `${client.firstName} ${client.lastName}`,
+    }));
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -125,6 +178,7 @@ function AppointmentsPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function loadAppointments() {
+        setAppointmentsLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
@@ -139,10 +193,14 @@ function AppointmentsPage({trainerId}) {
             .catch(error => {
                 console.error('Error loading appointments:', error);
                 setAppointments([]);
+            })
+            .finally(() => {
+                setAppointmentsLoaded(true);
             });
     }
 
     function loadClients() {
+        setClientsLoaded(false);
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
@@ -157,6 +215,9 @@ function AppointmentsPage({trainerId}) {
             .catch(error => {
                 console.error('Error loading clients:', error);
                 setClients([]);
+            })
+            .finally(() => {
+                setClientsLoaded(true);
             });
     }
 
@@ -238,6 +299,19 @@ function AppointmentsPage({trainerId}) {
             const updatedErrors = {...editErrors};
             delete updatedErrors[name];
             setEditErrors(updatedErrors);
+        }
+    }
+
+    function updateSelectForm(setForm, form, setErrors, errors, name, value) {
+        setForm({
+            ...form,
+            [name]: value || '',
+        });
+
+        if (errors[name]) {
+            const updatedErrors = {...errors};
+            delete updatedErrors[name];
+            setErrors(updatedErrors);
         }
     }
 
@@ -374,14 +448,22 @@ function AppointmentsPage({trainerId}) {
             });
     }
 
-    function deleteAppointment(appointmentId) {
-        const confirmed = window.confirm('Delete this appointment?\n\nThis cannot be undone.');
+    function openDeleteModal(appointmentId) {
+        setDeleteAppointmentId(appointmentId);
+        setDeleteModalOpen(true);
+    }
 
-        if (!confirmed) {
+    function closeDeleteModal() {
+        setDeleteAppointmentId(null);
+        setDeleteModalOpen(false);
+    }
+
+    function deleteAppointment() {
+        if (!deleteAppointmentId) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/${appointmentId}`, {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/${deleteAppointmentId}`, {
             method: 'DELETE'
         })
             .then(response => {
@@ -389,6 +471,7 @@ function AppointmentsPage({trainerId}) {
                     throw new Error('Failed to delete appointment');
                 }
 
+                closeDeleteModal();
                 clearSelectedAppointment();
                 loadAppointments();
             })
@@ -452,164 +535,247 @@ function AppointmentsPage({trainerId}) {
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
+    function getStatusColor(status) {
+        if (status === 'COMPLETED') {
+            return 'green';
+        }
+        if (status === 'MISSED') {
+            return 'yellow';
+        }
+        if (status === 'CANCELLED') {
+            return 'red';
+        }
+        return 'blue';
+    }
+
+    function renderAppointmentForm({form, errors, onChange, onSubmit, includeStatus = false, submitLabel, onCancel, onDelete}) {
+        return (
+            <form onSubmit={onSubmit} onClick={(event) => event.stopPropagation()}>
+                <Stack gap="md">
+                    {includeStatus && (
+                        <Select
+                            label="Status"
+                            value={form.status}
+                            error={errors.status}
+                            data={STATUS_OPTIONS}
+                            onChange={(value) => updateSelectForm(
+                                setEditForm,
+                                editForm,
+                                setEditErrors,
+                                editErrors,
+                                'status',
+                                value
+                            )}
+                            required
+                        />
+                    )}
+
+                    <Select
+                        label="Client"
+                        placeholder="Select client"
+                        value={form.clientId}
+                        error={errors.clientId}
+                        data={clientOptions}
+                        searchable
+                        onChange={(value) => {
+                            if (includeStatus) {
+                                updateSelectForm(setEditForm, editForm, setEditErrors, editErrors, 'clientId', value);
+                            } else {
+                                updateSelectForm(setCreateForm, createForm, setCreateErrors, createErrors, 'clientId', value);
+                            }
+                        }}
+                        required
+                    />
+
+                    <TextInput
+                        label="Title"
+                        name="title"
+                        placeholder="e.g. Strength Session"
+                        value={form.title}
+                        onChange={onChange}
+                    />
+
+                    <SimpleGrid cols={{base: 1, sm: 3}}>
+                        <DateInput
+                            visibleFrom="sm"
+                            label="Date"
+                            name="date"
+                            valueFormat="MM/DD/YYYY"
+                            value={form.date || null}
+                            error={errors.date}
+                            maxDate={undefined}
+                            rightSection={<IconCalendar size={18} stroke={1.8}/>}
+                            onChange={(value) =>
+                                onChange({
+                                    target: {
+                                        name: 'date',
+                                        value: value || '',
+                                    },
+                                })
+                            }
+                            required
+                        />
+                        <DatePickerInput
+                            hiddenFrom="sm"
+                            label="Date"
+                            name="date"
+                            valueFormat="MM/DD/YYYY"
+                            value={form.date || null}
+                            error={errors.date}
+                            required
+                            dropdownType="modal"
+                            rightSection={<IconCalendar size={18} stroke={1.8}/>}
+                            onChange={(value) =>
+                                onChange({
+                                    target: {
+                                        name: 'date',
+                                        value: value || '',
+                                    },
+                                })
+                            }
+                        />
+
+                        <TimeInput
+                            label="Start Time"
+                            name="startTime"
+                            value={form.startTime}
+                            error={errors.startTime}
+                            rightSection={<IconClock size={18} stroke={1.8}/>}
+                            onChange={onChange}
+                            required
+                        />
+
+                        <Select
+                            label="Duration"
+                            value={form.durationMinutes}
+                            data={DURATION_OPTIONS}
+                            onChange={(value) => {
+                                if (includeStatus) {
+                                    updateSelectForm(setEditForm, editForm, setEditErrors, editErrors, 'durationMinutes', value);
+                                } else {
+                                    updateSelectForm(setCreateForm, createForm, setCreateErrors, createErrors, 'durationMinutes', value);
+                                }
+                            }}
+                        />
+                    </SimpleGrid>
+
+                    <Textarea
+                        label="Notes"
+                        name="notes"
+                        value={form.notes}
+                        onChange={onChange}
+                    />
+
+                    <Group justify="space-between" wrap="nowrap" gap={5}>
+                        <Group wrap="nowrap" gap={5}>
+                            <Button
+                                size="xs"
+                                type="submit"
+                            >
+                                {submitLabel}
+                            </Button>
+
+                            <Button
+                                size="xs"
+                                type="button"
+                                variant="default"
+                                onClick={onCancel}
+                            >
+                                Cancel
+                            </Button>
+                        </Group>
+
+                        {onDelete && (
+                            <Button
+                                size="xs"
+                                type="button"
+                                color="red"
+                                variant="light"
+                                leftSection={<IconTrash size={16}/>}
+                                onClick={onDelete}
+                            >
+                                Delete
+                            </Button>
+                        )}
+                    </Group>
+                </Stack>
+            </form>
+        );
+    }
+
     function renderAppointmentCard(appointment, review) {
         const isEditing = String(editingAppointmentId) === String(appointment.id);
 
         return (
-            <div
+            <Paper
                 key={appointment.id}
-                className={`appointment-list-item ${isEditing ? 'editing' : ''}`}
+                withBorder
+                radius="md"
+                p="md"
+                shadow={isEditing ? 'sm' : undefined}
+                style={{cursor: isEditing ? 'default' : 'pointer'}}
                 onClick={() => {
                     if (!isEditing) {
                         selectAppointment(appointment, review);
                     }
                 }}
             >
-                <div className="appointment-list-header">
-                    <strong>{appointment.title || appointment.clientName}</strong>
-                    <span className={`appointment-status appointment-status-${appointment.status.toLowerCase()}`}>
-                        {appointment.status}
-                    </span>
-                </div>
+                <Stack gap="xs">
+                    <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Stack gap={2}>
+                            <Text fw={700} lineClamp={1}>
+                                {appointment.title || appointment.clientName}
+                            </Text>
 
-                {appointment.title && <p>{appointment.clientName}</p>}
+                            {appointment.title && (
+                                <Text size="sm" c="dimmed">
+                                    {appointment.clientName}
+                                </Text>
+                            )}
+                        </Stack>
 
-                <p>
-                    {review && (
-                        <>
-                            {TimeUtils.formatDisplayDate(appointment.startTime)} ·{' '}
-                        </>
+                        <Badge color={getStatusColor(appointment.status)} variant="light">
+                            {appointment.status}
+                        </Badge>
+                    </Group>
+
+                    <Group gap={6} wrap="nowrap">
+                        <IconClock size={15} stroke={1.8}/>
+                        <Text size="sm" c="dimmed">
+                            {review && (
+                                <>
+                                    {TimeUtils.formatDisplayDate(appointment.startTime)} ·{' '}
+                                </>
+                            )}
+
+                            {TimeUtils.formatDisplayTime(appointment.startTime)}
+                            {' - '}
+                            {TimeUtils.formatDisplayTime(appointment.endTime)}
+                        </Text>
+                    </Group>
+
+                    {appointment.notes && (
+                        <Text size="sm" c="dimmed">
+                            {appointment.notes}
+                        </Text>
                     )}
 
-                    {TimeUtils.formatDisplayTime(appointment.startTime)}
-                    {' - '}
-                    {TimeUtils.formatDisplayTime(appointment.endTime)}
-                </p>
-
-                {appointment.notes && <p>{appointment.notes}</p>}
-
-                {isEditing && (
-                    <form
-                        className="client-form section-divider spaced"
-                        onSubmit={updateAppointment}
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <div className="form-field">
-                            <label>Status</label>
-                            <select
-                                name="status"
-                                value={editForm.status}
-                                onChange={updateEditForm}
-                            >
-                                <option value="SCHEDULED">Scheduled</option>
-                                <option value="COMPLETED">Completed</option>
-                                <option value="MISSED">Missed</option>
-                                <option value="CANCELLED">Cancelled</option>
-                            </select>
-                        </div>
-
-                        <div className="section-divider spaced" />
-
-                        <div className="form-field">
-                            <label>Client</label>
-                            <select
-                                name="clientId"
-                                className={editErrors.clientId ? 'input-error' : ''}
-                                value={editForm.clientId}
-                                onChange={updateEditForm}
-                            >
-                                <option value="">Select client</option>
-                                {clients.map(client => (
-                                    <option key={client.id} value={client.id}>
-                                        {client.firstName} {client.lastName}
-                                    </option>
-                                ))}
-                            </select>
-                            {editErrors.clientId && <div className="field-error">* {editErrors.clientId}</div>}
-                        </div>
-
-                        <div className="form-field">
-                            <label>Title</label>
-                            <input
-                                name="title"
-                                placeholder="e.g. Strength Session"
-                                value={editForm.title}
-                                onChange={updateEditForm}
-                            />
-                        </div>
-
-                        <div className="form-field">
-                            <label>Date</label>
-                            <input
-                                name="date"
-                                type="date"
-                                className={editErrors.date ? 'input-error' : ''}
-                                value={editForm.date}
-                                onChange={updateEditForm}
-                            />
-                            {editErrors.date && <div className="field-error">* {editErrors.date}</div>}
-                        </div>
-
-                        <div className="form-field">
-                            <label>Start Time</label>
-                            <input
-                                name="startTime"
-                                type="time"
-                                className={editErrors.startTime ? 'input-error' : ''}
-                                value={editForm.startTime}
-                                onChange={updateEditForm}
-                            />
-                            {editErrors.startTime && <div className="field-error">* {editErrors.startTime}</div>}
-                        </div>
-
-                        <div className="form-field">
-                            <label>Duration</label>
-                            <select
-                                name="durationMinutes"
-                                value={editForm.durationMinutes}
-                                onChange={updateEditForm}
-                            >
-                                <option value="30">30 minutes</option>
-                                <option value="45">45 minutes</option>
-                                <option value="60">1 hour</option>
-                                <option value="90">1.5 hours</option>
-                                <option value="120">2 hours</option>
-                            </select>
-                        </div>
-
-                        <div className="form-field">
-                            <label>Notes</label>
-                            <textarea
-                                name="notes"
-                                value={editForm.notes}
-                                onChange={updateEditForm}
-                            />
-                        </div>
-
-                        <div className="form-actions">
-                            <button type="submit">
-                                Save
-                            </button>
-
-                            <button
-                                type="button"
-                                className="secondary-button"
-                                onClick={() => clearSelectedAppointment()}
-                            >
-                                Cancel
-                            </button>
-
-                            <button
-                                type="button"
-                                className="danger-button"
-                                onClick={() => deleteAppointment(appointment.id)}
-                            >
-                                Delete
-                            </button>
-                        </div>
-                    </form>
-                )}
-            </div>
+                    {isEditing && (
+                        <Paper withBorder radius="md" p="md" mt="sm">
+                            {renderAppointmentForm({
+                                form: editForm,
+                                errors: editErrors,
+                                onChange: updateEditForm,
+                                onSubmit: updateAppointment,
+                                includeStatus: true,
+                                submitLabel: 'Save',
+                                onCancel: clearSelectedAppointment,
+                                onDelete: () => openDeleteModal(appointment.id),
+                            })}
+                        </Paper>
+                    )}
+                </Stack>
+            </Paper>
         );
     }
 
@@ -618,188 +784,173 @@ function AppointmentsPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <div className="appointments-page">
-            <div className="appointments-left-column">
-                <section className="profile-card">
-                    <h3>Schedule Appointment</h3>
+        <Stack pos="relative" gap="lg">
+            <LoadingOverlay visible={loading} overlayProps={{blur: 2}}/>
 
-                    {!showCreateForm && (
-                        <>
-                            <p>Schedule an upcoming appointment.</p>
+            <Modal
+                opened={deleteModalOpen}
+                onClose={closeDeleteModal}
+                title="Delete appointment?"
+                centered
+            >
+                <Stack gap="md">
+                    <Text c="dimmed">
+                        This appointment will be permanently deleted. This cannot be undone.
+                    </Text>
 
-                            <button onClick={() => setShowCreateForm(true)}>
-                                + Schedule Appointment
-                            </button>
-                        </>
-                    )}
+                    <Group justify="flex-end">
+                        <Button variant="default" onClick={closeDeleteModal}>
+                            Cancel
+                        </Button>
 
-                    {showCreateForm && (
-                        <form className="client-form" onSubmit={createAppointment}>
-                            <div className="form-field">
-                                <label>Client</label>
-                                <select
-                                    name="clientId"
-                                    className={createErrors.clientId ? 'input-error' : ''}
-                                    value={createForm.clientId}
-                                    onChange={updateForm}
-                                >
-                                    <option value="">Select client</option>
-                                    {clients.map(client => (
-                                        <option key={client.id} value={client.id}>
-                                            {client.firstName} {client.lastName}
-                                        </option>
-                                    ))}
-                                </select>
-                                {createErrors.clientId && <div className="field-error">* {createErrors.clientId}</div>}
-                            </div>
+                        <Button color="red" onClick={deleteAppointment}>
+                            Delete Appointment
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
 
-                            <div className="form-field">
-                                <label>Title</label>
-                                <input
-                                    name="title"
-                                    placeholder="e.g. Strength Session"
-                                    value={createForm.title}
-                                    onChange={updateForm}
-                                />
-                            </div>
+            <SimpleGrid cols={{base: 1, lg: 2}} spacing="lg">
+                <Stack gap="lg">
+                    <Paper withBorder radius="md" p="lg">
+                        <Stack gap="md">
+                            <Group justify="space-between" align="flex-start">
+                                <Stack gap={4}>
+                                    <Title order={3}>Schedule Appointment</Title>
+                                    <Text size="sm" c="dimmed">
+                                        Schedule an upcoming appointment.
+                                    </Text>
+                                </Stack>
 
-                            <div className="form-field">
-                                <label>Date</label>
-                                <input
-                                    name="date"
-                                    type="date"
-                                    className={createErrors.date ? 'input-error' : ''}
-                                    value={createForm.date}
-                                    onChange={updateForm}
-                                />
-                                {createErrors.date && <div className="field-error">* {createErrors.date}</div>}
-                            </div>
-
-                            <div className="form-field">
-                                <label>Start Time</label>
-                                <input
-                                    name="startTime"
-                                    type="time"
-                                    className={createErrors.startTime ? 'input-error' : ''}
-                                    value={createForm.startTime}
-                                    onChange={updateForm}
-                                />
-                                {createErrors.startTime && <div className="field-error">* {createErrors.startTime}</div>}
-                            </div>
-
-                            <div className="form-field">
-                                <label>Duration</label>
-                                <select
-                                    name="durationMinutes"
-                                    value={createForm.durationMinutes}
-                                    onChange={updateForm}
-                                >
-                                    <option value="30">30 minutes</option>
-                                    <option value="45">45 minutes</option>
-                                    <option value="60">1 hour</option>
-                                    <option value="90">1.5 hours</option>
-                                    <option value="120">2 hours</option>
-                                </select>
-                            </div>
-
-                            <div className="form-field">
-                                <label>Notes</label>
-                                <textarea
-                                    name="notes"
-                                    value={createForm.notes}
-                                    onChange={updateForm}
-                                />
-                            </div>
-
-                            <div className="form-actions">
-                                <button type="submit">
-                                    Add Appointment
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="secondary-button"
-                                    onClick={() => setShowCreateForm(false)}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
-                    )}
-                </section>
-
-                {needsReviewAppointments.length > 0 && (
-                    <section className="profile-card">
-                        <h3>Needs Review</h3>
-                        <p>These appointments have passed but are still marked as scheduled.</p>
-
-                        {needsReviewAppointments.map(appointment =>
-                            renderAppointmentCard(appointment, true)
-                        )}
-                    </section>
-                )}
-            </div>
-
-            <div className="appointments-right-column">
-                <section className="profile-card">
-                    <h3>Upcoming Appointments</h3>
-
-                    {upcomingAppointments.length === 0 ? (
-                        <p>No upcoming appointments scheduled.</p>
-                    ) : (
-                        <>
-                            <small>Total appointments: {upcomingAppointments.length}</small>
-                            <p>Below are your upcoming appointments for the next {daysToShow} days.</p>
-                        </>
-                    )}
-
-                    <div className="section-divider" />
-
-                    {getVisibleDays().map(day => {
-                        const dayAppointments = getUpcomingAppointmentsForDay(day);
-
-                        return (
-                            <div key={TimeUtils.getDateKeyFromDate(day)} className="appointment-day-group">
-                                <h4>{TimeUtils.formatDayHeading(day)}</h4>
-
-                                {dayAppointments.length === 0 && (
-                                    <div className="appointment-list-empty">
-                                        <p>No appointments.</p>
-                                    </div>
+                                {!showCreateForm && (
+                                    <Button
+                                        leftSection={<IconPlus size={16}/>}
+                                        onClick={() => setShowCreateForm(true)}
+                                    >
+                                        Schedule
+                                    </Button>
                                 )}
+                            </Group>
 
-                                {dayAppointments.map(appointment =>
-                                    renderAppointmentCard(appointment, false)
+                            {showCreateForm && renderAppointmentForm({
+                                form: createForm,
+                                errors: createErrors,
+                                onChange: updateForm,
+                                onSubmit: createAppointment,
+                                submitLabel: 'Add Appointment',
+                                onCancel: () => setShowCreateForm(false),
+                            })}
+                        </Stack>
+                    </Paper>
+
+                    {needsReviewAppointments.length > 0 && (
+                        <Paper withBorder radius="md" p="lg">
+                            <Stack gap="md">
+                                <Group gap="xs">
+                                    <IconAlertTriangle size={18} />
+                                    <Title order={3}>Needs Review</Title>
+                                </Group>
+
+                                <Text size="sm" c="dimmed">
+                                    These appointments have passed but are still marked as scheduled.
+                                </Text>
+
+                                {needsReviewAppointments.map(appointment =>
+                                    renderAppointmentCard(appointment, true)
                                 )}
-                            </div>
-                        );
-                    })}
-
-                    {daysToShow < MAX_DAYS_TO_SHOW && (
-                        <button
-                            className="appointments-load-more-button secondary-button"
-                            onClick={() => setVisibleDays(daysToShow + 7)}
-                        >
-                            Load 7 More Days
-                        </button>
+                            </Stack>
+                        </Paper>
                     )}
-                </section>
+                </Stack>
 
-                <section className="profile-card">
-                    <h3>Appointment History</h3>
+                <Stack gap="lg">
+                    <Paper withBorder radius="md" p="lg">
+                        <Stack gap="md">
+                            <Group justify="space-between" align="flex-start">
+                                <Stack gap={4}>
+                                    <Group gap="xs">
+                                        <IconCalendarEvent size={20}/>
+                                        <Title order={3}>Upcoming Appointments</Title>
+                                    </Group>
 
-                    {historyAppointments.length === 0 ? (
-                        <p>No appointment history yet.</p>
-                    ) : (
-                        <p>Below are your past appointments.</p>
-                    )}
+                                    {upcomingAppointments.length === 0 ? (
+                                        <Text size="sm" c="dimmed">
+                                            No upcoming appointments scheduled.
+                                        </Text>
+                                    ) : (
+                                        <>
+                                            <Text size="sm" c="dimmed">
+                                                Total appointments: {upcomingAppointments.length}
+                                            </Text>
 
-                    {historyAppointments.map(appointment =>
-                        renderAppointmentCard(appointment, true)
-                    )}
-                </section>
-            </div>
-        </div>
+                                            <Text size="sm" c="dimmed">
+                                                Showing upcoming appointments for the next {daysToShow} days.
+                                            </Text>
+                                        </>
+                                    )}
+                                </Stack>
+                            </Group>
+
+                            {getVisibleDays().map(day => {
+                                const dayAppointments = getUpcomingAppointmentsForDay(day);
+
+                                return (
+                                    <Stack key={TimeUtils.getDateKeyFromDate(day)} gap="xs">
+                                        <Text fw={700}>
+                                            {TimeUtils.formatDayHeading(day)}
+                                        </Text>
+
+                                        {dayAppointments.length === 0 && (
+                                            <Paper withBorder radius="md" p="md">
+                                                <Text size="sm" c="dimmed">
+                                                    No appointments.
+                                                </Text>
+                                            </Paper>
+                                        )}
+
+                                        {dayAppointments.map(appointment =>
+                                            renderAppointmentCard(appointment, false)
+                                        )}
+                                    </Stack>
+                                );
+                            })}
+
+                            {daysToShow < MAX_DAYS_TO_SHOW && (
+                                <Button
+                                    variant="default"
+                                    onClick={() => setVisibleDays(daysToShow + 7)}
+                                >
+                                    Load 7 More Days
+                                </Button>
+                            )}
+                        </Stack>
+                    </Paper>
+
+                    <Paper withBorder radius="md" p="lg">
+                        <Stack gap="md">
+                            <Group gap="xs">
+                                <IconHistory size={20}/>
+                                <Title order={3}>Appointment History</Title>
+                            </Group>
+
+                            {historyAppointments.length === 0 ? (
+                                <Text size="sm" c="dimmed">
+                                    No appointment history yet.
+                                </Text>
+                            ) : (
+                                <Text size="sm" c="dimmed">
+                                    Below are your past appointments.
+                                </Text>
+                            )}
+
+                            {historyAppointments.map(appointment =>
+                                renderAppointmentCard(appointment, true)
+                            )}
+                        </Stack>
+                    </Paper>
+                </Stack>
+            </SimpleGrid>
+        </Stack>
     );
 }
 

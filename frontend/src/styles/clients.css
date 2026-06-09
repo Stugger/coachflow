@@ -11,17 +11,3 @@
     box-shadow: var(--mantine-shadow-md);
     border-color: var(--mantine-primary-color-filled);
 }
-
-/* TODO - BELOW TO BE REMOVED WITH MANTINE MIGRATION */
-
-.profile-card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    padding: 16px;
-    scroll-margin-top: 84px;
-}
-
-.profile-card p {
-    color: var(--color-text-muted);
-}
