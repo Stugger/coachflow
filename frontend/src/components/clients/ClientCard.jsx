@@ -27,7 +27,7 @@ function ClientCard({client, reviewStatus, onClick}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function renderReviewBadge() {
-        if (client.archived === true) {
+        if (client.archived) {
             return (
                 <Badge color="gray" variant="light">
                     Archived
@@ -48,7 +48,11 @@ function ClientCard({client, reviewStatus, onClick}) {
                 </Badge>
             );
         }
-        return null;
+        return (
+            <Badge color="green" variant="light">
+                Active
+            </Badge>
+        );
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -74,7 +78,17 @@ function ClientCard({client, reviewStatus, onClick}) {
                 e.currentTarget.style.transform = 'translateY(0)';
             }}
         >
-            <Stack gap="sm">
+            <div
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '0.5rem',
+                    background: (client.archived ? 'var(--mantine-color-gray-6)' : 'var(--mantine-primary-color-filled)'),
+                }}
+            />
+            <Stack gap="sm" pt="0.3rem">
                 <Group justify="space-between" align="flex-start" wrap="nowrap">
                     <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
                         <Avatar color="blue" radius="xl">

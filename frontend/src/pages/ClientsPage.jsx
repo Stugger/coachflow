@@ -284,18 +284,6 @@ function ClientsPage({trainerId}) {
         );
     }
 
-    function renderReviewBadge(reviewStatus) {
-        if (reviewStatus === 'INTAKE') {
-            return <Badge color="red" variant="light">Intake</Badge>;
-        }
-
-        if (reviewStatus === 'ASSESS') {
-            return <Badge color="yellow" variant="light">Assess</Badge>;
-        }
-
-        return <Badge color="gray" variant="light">Ready</Badge>;
-    }
-
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------

@@ -324,11 +324,13 @@ function ClientProfilePage({trainerId}) {
                 onArchiveClient={() => console.log('Toggle archive client coming soon')}
             />
 
-            <ClientReviewAction
-                client={client}
-                reviewStatus={getClientReviewStatus()}
-                openIntake={openIncompleteIntake}
-            />
+            {!client.archived && (
+                <ClientReviewAction
+                    client={client}
+                    reviewStatus={getClientReviewStatus()}
+                    openIntake={openIncompleteIntake}
+                />
+            )}
 
             <ClientProfileTabs />
 

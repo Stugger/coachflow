@@ -1,4 +1,4 @@
-import {ScrollArea, Paper, Tabs} from '@mantine/core';
+import {Scroller, Paper, Tabs} from '@mantine/core';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {ROUTES} from '../../../constants/routes';
 
@@ -42,14 +42,14 @@ function ClientProfileTabs() {
     }
 
     return (
-        <Paper withBorder radius="md" p="sm">
+        <Paper withBorder radius="md" p="sm" style={{ borderRadius: '1rem 1rem 0 0' }}>
             <Tabs
                 value={getActiveTab()}
                 onChange={changeTab}
                 variant="default"
                 radius="md"
             >
-                <ScrollArea type="never" offsetScrollbars>
+                <Scroller scrollAmount={120}>
                     <Tabs.List pt="xs" style={{ flexWrap: 'nowrap' }}>
                         <Tabs.Tab value="history">History</Tabs.Tab>
                         <Tabs.Tab value="programs">Programs</Tabs.Tab>
@@ -57,7 +57,7 @@ function ClientProfileTabs() {
                         <Tabs.Tab value="habits">Habits</Tabs.Tab>
                         <Tabs.Tab value="measurements">Measurements</Tabs.Tab>
                     </Tabs.List>
-                </ScrollArea>
+                </Scroller>
             </Tabs>
         </Paper>
     );
