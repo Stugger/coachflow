@@ -18,6 +18,9 @@ public record CreateExerciseRequest(
 
         String details,
 
+        String thumbnailUrl,
+        String demoVideoUrl,
+
         String metadataJson
 ) {
 }

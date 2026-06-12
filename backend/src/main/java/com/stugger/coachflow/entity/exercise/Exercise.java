@@ -41,6 +41,12 @@ public class Exercise {
     @Column(columnDefinition = "TEXT")
     private String details;
 
+    @Column(name = "thumbnail_url", columnDefinition = "TEXT")
+    private String thumbnailUrl;
+
+    @Column(name = "demo_video_url", columnDefinition = "TEXT")
+    private String demoVideoUrl;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata_json", columnDefinition = "jsonb")
     private String metadataJson;

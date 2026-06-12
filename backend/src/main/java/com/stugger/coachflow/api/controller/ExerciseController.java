@@ -1,10 +1,8 @@
 package com.stugger.coachflow.api.controller;
 
 import com.stugger.coachflow.api.dto.request.exercise.CopyExerciseRequest;
-import com.stugger.coachflow.api.dto.request.exercise.CreateExerciseMediaRequest;
 import com.stugger.coachflow.api.dto.request.exercise.CreateExerciseRequest;
 import com.stugger.coachflow.api.dto.request.exercise.UpdateExerciseRequest;
-import com.stugger.coachflow.api.dto.response.exercise.ExerciseMediaResponse;
 import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
 import com.stugger.coachflow.service.ExerciseService;
 import jakarta.validation.Valid;
@@ -51,13 +49,4 @@ public class ExerciseController {
         exerciseService.archiveExercise(exerciseId, trainerId);
     }
 
-    @GetMapping("/{exerciseId}/media")
-    public List<ExerciseMediaResponse> getExerciseMedia(@PathVariable Long exerciseId, @RequestParam Long trainerId) {
-        return exerciseService.getExerciseMedia(exerciseId, trainerId);
-    }
-
-    @PostMapping("/{exerciseId}/media")
-    public ExerciseMediaResponse addExerciseMedia(@PathVariable Long exerciseId, @Valid @RequestBody CreateExerciseMediaRequest request) {
-        return exerciseService.addExerciseMedia(exerciseId, request);
-    }
 }

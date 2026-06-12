@@ -18,6 +18,9 @@ public record UpdateExerciseRequest(
 
         String details,
 
+        String thumbnailUrl,
+        String demoVideoUrl,
+
         String metadataJson
 ) {
 }
