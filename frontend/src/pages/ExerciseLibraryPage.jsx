@@ -566,7 +566,7 @@ function ExerciseLibraryPage({trainerId}) {
 
     return (
         <Stack gap="md" pos="relative">
-            <LoadingOverlay visible={!loaded && exercises.length === 0}/>
+            <LoadingOverlay visible={!loaded && exercises.length === 0} overlayProps={{blur: 2}}/>
 
             <Group justify="space-between" align="flex-start">
                 <Stack gap={2}>

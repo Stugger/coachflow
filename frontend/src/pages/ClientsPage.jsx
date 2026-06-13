@@ -14,6 +14,10 @@ import {
     Title,
     Box,
 } from '@mantine/core';
+import {
+    IconPlus,
+} from '@tabler/icons-react';
+
 import {ROUTES} from '../constants/routes';
 import ClientCard from '../components/clients/ClientCard';
 import ClientMobileRow from '../components/clients/ClientMobileRow';
@@ -210,8 +214,8 @@ function ClientsPage({trainerId}) {
                     </Text>
 
                     {clientFilter === 'active' && (
-                        <Button onClick={() => navigate(ROUTES.INTAKE_NEW)}>
-                            + New Client
+                        <Button leftSection={<IconPlus size={16}/>} onClick={() => navigate(ROUTES.INTAKE_NEW)}>
+                            New Client
                         </Button>
                     )}
                 </Stack>
@@ -221,7 +225,7 @@ function ClientsPage({trainerId}) {
 
     function renderClientCards() {
         return (
-                <SimpleGrid cols={{base: 1, sm: 2, lg: 3, xl: 4}}>
+            <SimpleGrid cols={{base: 1, sm: 2, lg: 3, xl: 4}}>
                 {visibleClients.map(client => (
                     <ClientCard
                         key={client.id}
@@ -289,51 +293,51 @@ function ClientsPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <Paper pos="relative" p="md" radius="md" withBorder>
-            <LoadingOverlay
-                visible={loading}
-                overlayProps={{blur: 2}}
-            />
-            <Stack>
-                <Group justify="space-between">
-                    <Stack gap={8}>
-                        <Title order={2}>Clients</Title>
-                        <Text size="sm" c="dimmed">
-                            Select a client to view their profile.
-                        </Text>
-                    </Stack>
-                    <Group gap={6}>
-                        <SegmentedControl
-                            radius="xl"
-                            size="xs"
-                            data={[
-                                {label: `Active (${activeClientCount})`, value: 'active'},
-                                {label: `Archived (${archivedClientCount})`, value: 'archived'},
-                            ]}
-                            value={clientFilter}
-                            onChange={changeClientFilter}
-                        />
-                    </Group>
-                    <Button
-                        radius="xl"
-                        h="xl"
-                        onClick={() => navigate(ROUTES.INTAKE_NEW)}>
-                        + New Client
+        <Stack gap="md" pos="relative">
+            <LoadingOverlay visible={loading} overlayProps={{blur: 2}}/>
+
+            <Stack gap={2}>
+                <Group justify="space-between" align="flex-start">
+                    <Title order={1}>Clients</Title>
+                    <Button leftSection={<IconPlus size={16}/>} onClick={() => navigate(ROUTES.INTAKE_NEW)}>
+                        New Client
                     </Button>
                 </Group>
-                <SegmentedControl
-                    value={viewMode}
-                    onChange={changeViewMode}
-                    data={[
-                        {label: 'Cards', value: 'cards'},
-                        {label: 'List', value: 'list'},
-                    ]}
-                />
-                {!loading && visibleClients.length === 0 && renderEmptyState()}
-                {!loading && visibleClients.length > 0 && viewMode === 'cards' && renderClientCards()}
-                {!loading && visibleClients.length > 0 && viewMode === 'list' && renderClientList()}
+                <Text c="dimmed" size="sm">
+                    Manage your clients. Select a client to view their profile.
+                </Text>
             </Stack>
-        </Paper>
+
+            <Paper pos="relative" p="md" radius="md" withBorder>
+                <Stack>
+                    <Stack gap="sm">
+                        <Group>
+                            <SegmentedControl
+                                radius="lg"
+                                size="xs"
+                                data={[
+                                    {label: `Active (${activeClientCount})`, value: 'active'},
+                                    {label: `Archived (${archivedClientCount})`, value: 'archived'},
+                                ]}
+                                value={clientFilter}
+                                onChange={changeClientFilter}
+                            />
+                        </Group>
+                        <SegmentedControl
+                            data={[
+                                {label: 'Cards', value: 'cards'},
+                                {label: 'List', value: 'list'},
+                            ]}
+                            value={viewMode}
+                            onChange={changeViewMode}
+                        />
+                    </Stack>
+                    {!loading && visibleClients.length === 0 && renderEmptyState()}
+                    {!loading && visibleClients.length > 0 && viewMode === 'cards' && renderClientCards()}
+                    {!loading && visibleClients.length > 0 && viewMode === 'list' && renderClientList()}
+                </Stack>
+            </Paper>
+        </Stack>
     );
 }
 
