@@ -1,6 +1,5 @@
 package com.stugger.coachflow.api.controller;
 
-import com.stugger.coachflow.api.dto.request.exercise.CopyExerciseRequest;
 import com.stugger.coachflow.api.dto.request.exercise.CreateExerciseRequest;
 import com.stugger.coachflow.api.dto.request.exercise.UpdateExerciseRequest;
 import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
@@ -37,11 +36,6 @@ public class ExerciseController {
     @PutMapping("/{exerciseId}")
     public ExerciseResponse updateTrainerExercise(@PathVariable Long exerciseId, @Valid @RequestBody UpdateExerciseRequest request) {
         return exerciseService.updateTrainerExercise(exerciseId, request);
-    }
-
-    @PostMapping("/{exerciseId}/copy")
-    public ExerciseResponse copyExercise(@PathVariable Long exerciseId, @Valid @RequestBody CopyExerciseRequest request) {
-        return exerciseService.copyExercise(exerciseId, request);
     }
 
     @DeleteMapping("/{exerciseId}")

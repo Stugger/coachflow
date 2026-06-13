@@ -1,6 +1,5 @@
 package com.stugger.coachflow.service;
 
-import com.stugger.coachflow.api.dto.request.exercise.CopyExerciseRequest;
 import com.stugger.coachflow.api.dto.request.exercise.CreateExerciseRequest;
 import com.stugger.coachflow.api.dto.request.exercise.UpdateExerciseRequest;
 import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
@@ -71,30 +70,6 @@ public class ExerciseService {
         exercise.setUpdatedAt(LocalDateTime.now());
 
         return new ExerciseResponse(exerciseRepository.save(exercise));
-    }
-
-    public ExerciseResponse copyExercise(Long exerciseId, @Valid CopyExerciseRequest request) {
-        Trainer trainer = getTrainerOrThrow(request.trainerId());
-        Exercise source = getExerciseOrThrow(exerciseId);
-
-        if (Boolean.TRUE.equals(source.getArchived())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archived exercises cannot be copied.");
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-        Exercise copy = new Exercise();
-        copy.setTrainer(trainer);
-        copy.setVisibility(ExerciseVisibility.TRAINER);
-        copy.setName(source.getName());
-        copy.setDetails(source.getDetails());
-        copy.setThumbnailUrl(source.getThumbnailUrl());
-        copy.setDemoVideoUrl(source.getDemoVideoUrl());
-        copy.setMetadataJson(source.getMetadataJson());
-        copy.setArchived(false);
-        copy.setCreatedAt(now);
-        copy.setUpdatedAt(now);
-
-        return new ExerciseResponse(exerciseRepository.save(copy));
     }
 
     public void archiveExercise(Long exerciseId, Long trainerId) {
