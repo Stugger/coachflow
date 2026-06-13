@@ -26,6 +26,8 @@ import ExerciseViewer from '../components/exercises/ExerciseViewer';
 import ExerciseFilters from '../components/exercises/ExerciseFilters';
 import ExerciseListRow from '../components/exercises/ExerciseListRow';
 
+import * as ExerciseMetadataUtils from '../utils/exercise-metadata-utils';
+
 import {
     EQUIPMENT_OPTIONS,
     EXERCISE_DIFFICULTY_OPTIONS,
@@ -33,20 +35,13 @@ import {
     MUSCLE_OPTIONS,
 } from '../constants/exercises';
 
-const emptyMetadata = {
-    equipment: [],
-    primaryMuscles: [],
-    secondaryMuscles: [],
-    difficulty: '',
-    tags: [],
-};
 
 const emptyForm = {
     name: '',
     details: '',
     thumbnailUrl: '',
     demoVideoUrl: '',
-    ...emptyMetadata,
+    ...ExerciseMetadataUtils.emptyExerciseMetadata,
 };
 
 const emptyFilters = {
@@ -55,12 +50,6 @@ const emptyFilters = {
     tags: [],
     difficulty: '',
 };
-
-const scopeOptions = [
-    {value: 'ALL', label: 'All'},
-    {value: 'MINE', label: 'Mine'},
-    {value: 'GLOBAL', label: 'Global'},
-];
 
 const FORM_MODE = {
     CREATE: 'CREATE',
@@ -244,7 +233,7 @@ function ExerciseLibraryPage({trainerId}) {
             return true;
         }
 
-        const metadata = parseMetadataJson(exercise.metadataJson);
+        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
 
         const searchableValues = [
             exercise.name,
@@ -263,7 +252,7 @@ function ExerciseLibraryPage({trainerId}) {
     }
 
     function matchesFilters(exercise) {
-        const metadata = parseMetadataJson(exercise.metadataJson);
+        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
 
         if (filters.equipment.length > 0 && !filters.equipment.some(value => metadata.equipment.includes(value))) {
             return false;
@@ -300,7 +289,7 @@ function ExerciseLibraryPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function buildFormFromExercise(exercise) {
-        const metadata = parseMetadataJson(exercise.metadataJson);
+        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
 
         return {
             name: exercise.name || '',
@@ -407,27 +396,6 @@ function ExerciseLibraryPage({trainerId}) {
         return hasMetadata ? JSON.stringify(metadata) : null;
     }
 
-    function parseMetadataJson(metadataJson) {
-        if (!metadataJson) {
-            return emptyMetadata;
-        }
-
-        try {
-            const metadata = JSON.parse(metadataJson);
-
-            return {
-                equipment: Array.isArray(metadata.equipment) ? metadata.equipment : [],
-                primaryMuscles: Array.isArray(metadata.primaryMuscles) ? metadata.primaryMuscles : [],
-                secondaryMuscles: Array.isArray(metadata.secondaryMuscles) ? metadata.secondaryMuscles : [],
-                difficulty: metadata.difficulty || '',
-                tags: Array.isArray(metadata.tags) ? metadata.tags : [],
-            };
-        } catch (error) {
-            console.error('Error parsing exercise metadata:', error);
-            return emptyMetadata;
-        }
-    }
-
     function handleBadResponse(errorBody) {
         if (errorBody.fieldErrors) {
             setErrors(errorBody.fieldErrors);
@@ -468,7 +436,7 @@ function ExerciseLibraryPage({trainerId}) {
                 key={exercise.id}
                 exercise={exercise}
                 detailedView={detailedView}
-                metadata={parseMetadataJson(exercise.metadataJson)}
+                metadata={ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson)}
                 isMobile={isMobile}
                 onView={openViewExercise}
                 onCopy={openCopyModal}
@@ -630,7 +598,11 @@ function ExerciseLibraryPage({trainerId}) {
                         <SegmentedControl
                             value={scope}
                             onChange={setScope}
-                            data={scopeOptions}
+                            data={[
+                                {value: 'ALL', label: 'All'},
+                                {value: 'MINE', label: 'Mine'},
+                                {value: 'GLOBAL', label: 'Global'},
+                            ]}
                         />
                     </Group>
 

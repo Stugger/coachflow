@@ -23,6 +23,8 @@ import {
 
 import ExerciseVideoPreview from './ExerciseVideoPreview.jsx';
 
+import * as ExerciseMetadataUtils from '../../utils/exercise-metadata-utils';
+
 import {
     EQUIPMENT_OPTIONS,
     EXERCISE_DIFFICULTY_OPTIONS,
@@ -30,40 +32,11 @@ import {
     MUSCLE_OPTIONS,
 } from '../../constants/exercises.js';
 
-const emptyMetadata = {
-    equipment: [],
-    primaryMuscles: [],
-    secondaryMuscles: [],
-    difficulty: '',
-    tags: [],
-};
-
 function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, onEdit, onArchive}) {
 
-    const metadata = parseMetadataJson(exercise?.metadataJson);
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise?.metadataJson);
     const isGlobal = exercise?.visibility === 'GLOBAL';
     const isTrainerOwned = exercise?.visibility === 'TRAINER';
-
-    function parseMetadataJson(metadataJson) {
-        if (!metadataJson) {
-            return emptyMetadata;
-        }
-
-        try {
-            const parsedMetadata = JSON.parse(metadataJson);
-
-            return {
-                equipment: Array.isArray(parsedMetadata.equipment) ? parsedMetadata.equipment : [],
-                primaryMuscles: Array.isArray(parsedMetadata.primaryMuscles) ? parsedMetadata.primaryMuscles : [],
-                secondaryMuscles: Array.isArray(parsedMetadata.secondaryMuscles) ? parsedMetadata.secondaryMuscles : [],
-                difficulty: parsedMetadata.difficulty || '',
-                tags: Array.isArray(parsedMetadata.tags) ? parsedMetadata.tags : [],
-            };
-        } catch (error) {
-            console.error('Error parsing exercise metadata:', error);
-            return emptyMetadata;
-        }
-    }
 
     function findOptionLabel(options, value) {
         return options.find(option => option.value === value)?.label || value;

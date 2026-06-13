@@ -54,6 +54,7 @@ function ExerciseFilters({filters, filtersOpen, hasActiveFilters, onToggleFilter
                 <Collapse expanded={filtersOpen}>
                     <SimpleGrid cols={{base: 1, sm: 2, lg: 4}}>
                         <MultiSelect
+                            className="lossy-placeholder"
                             label="Equipment"
                             placeholder="Any equipment"
                             data={EQUIPMENT_OPTIONS}
@@ -65,6 +66,7 @@ function ExerciseFilters({filters, filtersOpen, hasActiveFilters, onToggleFilter
                         />
 
                         <MultiSelect
+                            className="lossy-placeholder"
                             label="Primary muscles"
                             placeholder="Any muscle"
                             data={MUSCLE_OPTIONS}
@@ -87,6 +89,7 @@ function ExerciseFilters({filters, filtersOpen, hasActiveFilters, onToggleFilter
                         />
 
                         <MultiSelect
+                            className="lossy-placeholder"
                             label="Tags"
                             placeholder="Any tags"
                             data={EXERCISE_TAG_OPTIONS}

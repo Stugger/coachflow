@@ -3,3 +3,9 @@
         font-size: 0.75rem;
     }
 }
+
+.lossy-placeholder .mantine-MultiSelect-inputField {
+    &:not(:only-child)::placeholder {
+        color: transparent;
+    }
+}
