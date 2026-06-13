@@ -45,7 +45,7 @@ function ExerciseFilters({filters, filtersOpen, hasActiveFilters, onToggleFilter
                     </Group>
 
                     {hasActiveFilters && (
-                        <Button size="xs" variant="subtle" onClick={onClearFilters}>
+                        <Button size="compact-xs" variant="subtle" onClick={onClearFilters}>
                             Clear filters
                         </Button>
                     )}

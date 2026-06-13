@@ -48,7 +48,14 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
     function renderExerciseThumbnail() {
         if (!exercise.thumbnailUrl) {
             return (
-                <Avatar size={56} radius="md" variant="light">
+                <Avatar size={56}
+                        radius="md"
+                        variant="light"
+                        onClick={() => onView(exercise)}
+                        style={{
+                            cursor: 'pointer',
+                        }}
+                >
                     <IconPhoto size={24}/>
                 </Avatar>
             );
@@ -60,7 +67,35 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                 alt={exercise.name}
                 size={56}
                 radius="md"
+                onClick={() => onView(exercise)}
+                style={{
+                    cursor: 'pointer',
+                }}
             />
+        );
+    }
+
+    function renderExerciseName() {
+        return (
+            <Text
+                fw={700}
+                lineClamp={1}
+                role="button"
+                tabIndex={0}
+                onClick={() => onView(exercise)}
+                onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        onView(exercise);
+                    }
+                }}
+                style={{
+                    cursor: 'pointer',
+                    width: 'fit-content',
+                }}
+            >
+                {exercise.name}
+            </Text>
         );
     }
 
@@ -107,11 +142,11 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                     <Stack gap={detailedView ? 6 : 2} style={{flex: 1, minWidth: 0}}>
                         {isMobile ? (
                             <Stack gap={0}>
-                                <Text fw={700} lineClamp={1}>
-                                    {exercise.name}
-                                </Text>
+                                {renderExerciseName()}
+
                                 <Group gap={6}>
                                     {exercise.demoVideoUrl && (<IconVideo size={16}/>)}
+
                                     <Badge size="sm" color={isGlobal ? 'blue' : 'green'} variant="light">
                                         {isGlobal ? 'Global' : 'Mine'}
                                     </Badge>
@@ -121,9 +156,7 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                             </Stack>
                         ) : (
                             <Group gap="xs" wrap="wrap">
-                                <Text fw={700} lineClamp={1}>
-                                    {exercise.name}
-                                </Text>
+                                {renderExerciseName()}
 
                                 {exercise.demoVideoUrl && (<IconVideo size={16}/>)}
 
