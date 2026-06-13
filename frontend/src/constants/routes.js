@@ -26,6 +26,10 @@ export const ROUTES = {
     clientHabits: (clientId) => `/clients/${clientId}/habits`,
     clientMeasurements: (clientId) => `/clients/${clientId}/measurements`,
 
+    /* Exercise Library */
+
+    EXERCISES: "/exercises",
+
     /* Appointment */
 
     APPOINTMENTS: "/appointments",

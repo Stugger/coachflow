@@ -12,6 +12,7 @@ import ClientIntakePage from './pages/ClientIntakePage';
 import ClientsPage from './pages/ClientsPage';
 import ClientProfilePage from './pages/ClientProfilePage';
 import AppointmentsPage from './pages/AppointmentsPage';
+import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
 
 import AppShell from './components/AppShell';
 
@@ -93,6 +94,7 @@ function App() {
                 <Route path={ROUTES.CLIENT_HABITS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
                 <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
 
+                <Route path={ROUTES.EXERCISES} element={<ExerciseLibraryPage trainerId={auth.trainer.id}/>}/>
                 <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage trainerId={auth.trainer.id}/>}/>
 
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>

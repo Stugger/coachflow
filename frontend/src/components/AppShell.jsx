@@ -16,6 +16,7 @@ import {
     IconMoon,
     IconSun,
     IconCalendar,
+    IconBarbell,
     IconHome,
     IconLogout,
     IconUsers,
@@ -185,6 +186,7 @@ function AppShell({auth, onLogout}) {
                     <Stack gap={4} style={{flex: 1}}>
                         {renderNavLink(ROUTES.HOME, IconHome, 'Dashboard')}
                         {renderNavLink(ROUTES.CLIENTS, IconUsers, 'Clients')}
+                        {renderNavLink(ROUTES.EXERCISES, IconBarbell, 'Exercises')}
                         {renderNavLink(ROUTES.APPOINTMENTS, IconCalendar, 'Appointments')}
                     </Stack>
 
