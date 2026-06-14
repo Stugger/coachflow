@@ -98,10 +98,9 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
 
         return (
             <Group justify="flex-end">
-
-                    <Button type="button" variant="light" leftSection={<IconCopy size={16}/>} onClick={onCopy}>
-                        {isGlobal ? 'Copy to mine' : 'Copy'}
-                    </Button>
+                <Button type="button" variant="light" leftSection={<IconCopy size={16}/>} onClick={onCopy}>
+                    {isGlobal ? 'Copy to mine' : 'Copy'}
+                </Button>
 
                 {isTrainerOwned && (
                     <>

@@ -8,6 +8,7 @@ import {
     SimpleGrid,
     Stack,
     Text,
+    Tooltip,
 } from '@mantine/core';
 import {
     IconVideo,
@@ -205,12 +206,13 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                         )}
                     </Stack>
                 </Group>
-
                 <Menu shadow="md" width={160} position="bottom-end">
                     <Menu.Target>
-                        <ActionIcon variant="subtle" size="lg">
-                            <IconDotsVertical size={18}/>
-                        </ActionIcon>
+                        <Tooltip label="Options" position="top-end">
+                            <ActionIcon variant="default" size="md">
+                                <IconDotsVertical size={16}/>
+                            </ActionIcon>
+                        </Tooltip>
                     </Menu.Target>
 
                     <Menu.Dropdown>
@@ -225,7 +227,7 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                             leftSection={<IconCopy size={16}/>}
                             onClick={() => onCopy(exercise)}
                         >
-                            Copy
+                            {isGlobal ? 'Copy to mine' : 'Copy'}
                         </Menu.Item>
 
                         {isTrainerOwned && (

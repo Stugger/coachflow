@@ -9,15 +9,16 @@ import {
     Stack,
     Text,
     Title,
+    Tooltip,
 } from '@mantine/core';
 import {
     IconArchive,
-    IconDotsVertical,
     IconRestore,
     IconEdit,
     IconMail,
     IconPhone,
     IconUser,
+    IconUserCog,
 } from '@tabler/icons-react';
 
 function ClientProfileHeader({client, reviewStatus, onEditDetails, onArchiveClient}) {
@@ -115,18 +116,20 @@ function ClientProfileHeader({client, reviewStatus, onEditDetails, onArchiveClie
             />
             <Menu shadow="md" width={180} position="bottom-end">
                 <Menu.Target>
-                    <ActionIcon
-                        variant="default"
-                        size="lg"
-                        style={{
-                            position: 'absolute',
-                            top: '1.75rem',
-                            right: '0.75rem',
-                            zIndex: 1,
-                        }}
-                    >
-                        <IconDotsVertical size={18} stroke={1.8}/>
-                    </ActionIcon>
+                    <Tooltip label="Options" position="top-end">
+                        <ActionIcon
+                            variant="default"
+                            size="lg"
+                            style={{
+                                position: 'absolute',
+                                top: '1.75rem',
+                                right: '0.75rem',
+                                zIndex: 1,
+                            }}
+                        >
+                            <IconUserCog size={20} stroke={1.6}/>
+                        </ActionIcon>
+                    </Tooltip>
                 </Menu.Target>
 
                 <Menu.Dropdown>

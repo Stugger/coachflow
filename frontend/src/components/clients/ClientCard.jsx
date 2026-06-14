@@ -18,7 +18,6 @@ function ClientCard({client, reviewStatus, onClick}) {
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const fullName = `${client.firstName} ${client.lastName}`;
     const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
     const hasBadge = client.archived || reviewStatus === 'INTAKE' || reviewStatus === 'ASSESS';
 
@@ -102,9 +101,22 @@ function ClientCard({client, reviewStatus, onClick}) {
                                 minWidth: 0,
                             }}
                         >
-                            <Text fw={700} lineClamp={1}>
-                                {fullName}
-                            </Text>
+                            <Group gap={4} wrap="nowrap" style={{minWidth: 0}}>
+                                <Text fw={700} style={{flexShrink: 0}}>
+                                    {client.firstName}
+                                </Text>
+
+                                <Text
+                                    fw={700}
+                                    truncate="end"
+                                    style={{
+                                        minWidth: 0,
+                                        flex: 1,
+                                    }}
+                                >
+                                    {client.lastName}
+                                </Text>
+                            </Group>
 
                             {client.preferredName && (
                                 <Text size="sm" c="dimmed" lineClamp={1}>

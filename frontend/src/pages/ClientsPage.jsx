@@ -13,6 +13,7 @@ import {
     Text,
     Title,
     Box,
+    Tooltip,
 } from '@mantine/core';
 import {
     IconPlus,
@@ -243,7 +244,7 @@ function ClientsPage({trainerId}) {
             <>
                 {/* Mobile */}
                 <Box hiddenFrom="sm">
-                    <Table verticalSpacing="sm" highlightOnHover stickyHeader>
+                    <Table verticalSpacing="sm" highlightOnHover stickyHeader style={{tableLayout: 'fixed', width: '100%'}}>
                         <Table.Tbody>
                             {visibleClients.map(client => (
                                 <ClientMobileRow
@@ -315,9 +316,24 @@ function ClientsPage({trainerId}) {
                             <SegmentedControl
                                 radius="lg"
                                 size="xs"
+                                w={200}
                                 data={[
-                                    {label: `Active (${activeClientCount})`, value: 'active'},
-                                    {label: `Archived (${archivedClientCount})`, value: 'archived'},
+                                    {
+                                        value: 'active',
+                                        label: (
+                                            <Tooltip label="Show active clients" position="top" withArrow arrowSize={6}>
+                                                <Text size="xs" fw={600}>Active ({activeClientCount})</Text>
+                                            </Tooltip>
+                                        ),
+                                    },
+                                    {
+                                        value: 'archived',
+                                        label: (
+                                            <Tooltip label="Show archived clients" position="top" withArrow arrowSize={6}>
+                                                <Text size="xs" fw={600}>Archived ({archivedClientCount})</Text>
+                                            </Tooltip>
+                                        ),
+                                    },
                                 ]}
                                 value={clientFilter}
                                 onChange={changeClientFilter}

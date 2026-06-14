@@ -13,6 +13,7 @@ import {
     Text,
     TextInput,
     Title,
+    Tooltip,
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
@@ -599,9 +600,30 @@ function ExerciseLibraryPage({trainerId}) {
                             value={scope}
                             onChange={setScope}
                             data={[
-                                {value: 'ALL', label: 'All'},
-                                {value: 'MINE', label: 'Mine'},
-                                {value: 'GLOBAL', label: 'Global'},
+                                {
+                                    value: 'ALL',
+                                    label: (
+                                        <Tooltip label="Show all exercises" position="top" withArrow arrowSize={6}>
+                                            <Text size="sm" fw={600}>All</Text>
+                                        </Tooltip>
+                                    ),
+                                },
+                                {
+                                    value: 'MINE',
+                                    label: (
+                                        <Tooltip label="Show my exercises" position="top" withArrow arrowSize={6}>
+                                            <Text size="sm" fw={600}>Mine</Text>
+                                        </Tooltip>
+                                    ),
+                                },
+                                {
+                                    value: 'GLOBAL',
+                                    label: (
+                                        <Tooltip label="Show global exercises" position="top" withArrow arrowSize={6}>
+                                            <Text size="sm" fw={600}>Global</Text>
+                                        </Tooltip>
+                                    ),
+                                },
                             ]}
                         />
                     </Group>

@@ -14,8 +14,6 @@ import {
 
 function ClientMobileRow({client, reviewStatus, onClick}) {
 
-    const lastInitial = client.lastName ? `${client.lastName.charAt(0)}.` : '';
-    const fullName = `${client.firstName} ${lastInitial}`.trim();
     const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
 
     function renderReviewBadge() {
@@ -42,30 +40,23 @@ function ClientMobileRow({client, reviewStatus, onClick}) {
         }
         return (
             <Badge size="xs" color="green" variant="light">
-                Ready
+                Active
             </Badge>
         );
     }
 
     return (
         <Table.Tr style={{cursor: 'pointer'}} onClick={onClick}>
-            <Table.Td>
-                <Group gap="sm" align="flex-start" wrap="nowrap">
+            <Table.Td style={{position: 'relative', paddingRight: 88}}>
+                <Group gap="sm" align="flex-start" wrap="nowrap" style={{minWidth: 0}}>
                     <Avatar color="blue" radius="xl">
                         {initials || <IconUser size={18}/>}
                     </Avatar>
 
                     <div style={{flex: 1, minWidth: 0}}>
-                        <Group justify="space-between" align="flex-start" wrap="nowrap">
-                            <Text fw={600} lineClamp={1}>
-                                {fullName}
-                            </Text>
-
-                            <Group gap="xs" wrap="nowrap">
-                                {renderReviewBadge()}
-                                <IconChevronRight size={16}/>
-                            </Group>
-                        </Group>
+                        <Text fw={600} truncate="end">
+                            {client.firstName || ''} {client.lastName || ''}
+                        </Text>
 
                         {client.preferredName && (
                             <Text c="dimmed" size="sm" fw={500} mb={4} lineClamp={1}>
@@ -91,6 +82,20 @@ function ClientMobileRow({client, reviewStatus, onClick}) {
                             </Group>
                         )}
                     </div>
+                </Group>
+
+                <Group
+                    gap={6}
+                    wrap="nowrap"
+                    style={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 0,
+                        zIndex: 1
+                    }}
+                >
+                    {renderReviewBadge()}
+                    <IconChevronRight size={16}/>
                 </Group>
             </Table.Td>
         </Table.Tr>
