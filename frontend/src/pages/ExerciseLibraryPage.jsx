@@ -49,7 +49,7 @@ const emptyFilters = {
     equipment: [],
     primaryMuscles: [],
     tags: [],
-    difficulty: '',
+    difficulty: [],
 };
 
 const FORM_MODE = {
@@ -102,7 +102,7 @@ function ExerciseLibraryPage({trainerId}) {
         filters.equipment.length > 0 ||
         filters.primaryMuscles.length > 0 ||
         filters.tags.length > 0 ||
-        Boolean(filters.difficulty);
+        filters.difficulty.length > 0;
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -267,7 +267,7 @@ function ExerciseLibraryPage({trainerId}) {
             return false;
         }
 
-        if (filters.difficulty && metadata.difficulty !== filters.difficulty) {
+        if (filters.difficulty.length > 0 && !filters.difficulty.some(value => metadata.difficulty === value)) {
             return false;
         }
 

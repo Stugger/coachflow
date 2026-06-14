@@ -5,7 +5,6 @@ import {
     Group,
     MultiSelect,
     Paper,
-    Select,
     SimpleGrid,
     Stack,
 } from '@mantine/core';
@@ -77,7 +76,8 @@ function ExerciseFilters({filters, filtersOpen, hasActiveFilters, onToggleFilter
                             nothingFoundMessage="No muscles found"
                         />
 
-                        <Select
+                        <MultiSelect
+                            className="lossy-placeholder"
                             label="Difficulty"
                             placeholder="Any difficulty"
                             data={EXERCISE_DIFFICULTY_OPTIONS}
