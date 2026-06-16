@@ -10,13 +10,16 @@ import {
     Avatar,
     Stack,
     Button,
-    Box
+    Box,
+    Divider,
 } from '@mantine/core';
 import {
     IconMoon,
     IconSun,
     IconCalendar,
     IconBarbell,
+    IconBooks,
+    IconClipboardList,
     IconHome,
     IconLogout,
     IconUsers,
@@ -186,8 +189,19 @@ function AppShell({auth, onLogout}) {
                     <Stack gap={4} style={{flex: 1}}>
                         {renderNavLink(ROUTES.HOME, IconHome, 'Dashboard')}
                         {renderNavLink(ROUTES.CLIENTS, IconUsers, 'Clients')}
-                        {renderNavLink(ROUTES.EXERCISES, IconBarbell, 'Exercises')}
                         {renderNavLink(ROUTES.APPOINTMENTS, IconCalendar, 'Appointments')}
+                        <Divider
+                            my="xs"
+                            labelPosition="left"
+                            label={
+                                <Box style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <IconBooks size={16} />
+                                    <span>Libraries</span>
+                                </Box>
+                            }
+                        />
+                        {renderNavLink(ROUTES.EXERCISES, IconBarbell, 'Exercises')}
+                        {renderNavLink(ROUTES.WORKOUT_TEMPLATES, IconClipboardList, 'Workouts')}
                     </Stack>
 
                     <Box>

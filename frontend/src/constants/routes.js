@@ -30,6 +30,15 @@ export const ROUTES = {
 
     EXERCISES: "/exercises",
 
+    /* Workout Library */
+
+    WORKOUT_TEMPLATES: "/workout-templates",
+    WORKOUT_TEMPLATE_NEW: "/workout-templates/new",
+    WORKOUT_TEMPLATE_EDIT: "/workout-templates/:templateId/edit",
+
+    workoutTemplateEdit: (templateId) => `/workout-templates/${templateId}/edit`,
+    workoutTemplateCopy: (templateId) => `/workout-templates/new?copyFrom=${templateId}`,
+
     /* Appointment */
 
     APPOINTMENTS: "/appointments",
