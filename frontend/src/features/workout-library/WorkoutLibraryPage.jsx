@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useSearchParams} from 'react-router-dom';
 import {ROUTES} from '../../constants/routes';
 import {
     Alert,
@@ -16,6 +16,7 @@ import {
 import {IconAlertCircle, IconPlus, IconSearch} from '@tabler/icons-react';
 
 import WorkoutTemplateListRow from './WorkoutTemplateListRow';
+import WorkoutEditorModal from './WorkoutEditorModal';
 
 import {
     archiveWorkoutTemplate,
@@ -29,6 +30,10 @@ function WorkoutLibraryPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    const editorMode = searchParams.get('editor');
+    const editorTemplateId = searchParams.get('templateId');
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -42,6 +47,8 @@ function WorkoutLibraryPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
+
+    const editorOpened = ['new', 'edit', 'copy'].includes(editorMode);
 
     const filteredTemplates = useMemo(() => {
         const search = searchText.trim().toLowerCase();
@@ -77,22 +84,35 @@ function WorkoutLibraryPage({trainerId}) {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
+    // Editor route helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function openNewEditor() {
+        setMessage('');
+        navigate(ROUTES.workoutLibraryNew());
+    }
+
+    function openEditEditor(template) {
+        setMessage('');
+        navigate(ROUTES.workoutLibraryEdit(template.id));
+    }
+
+    function openCopyEditor(template) {
+        setMessage('');
+        navigate(ROUTES.workoutLibraryCopy(template.id));
+    }
+
+    function closeEditor() {
+        setSearchParams({});
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function newTemplate() {
-        setMessage('');
-        navigate(ROUTES.WORKOUT_TEMPLATE_NEW);
-    }
-
-    function editTemplate(template) {
-        setMessage('');
-        navigate(ROUTES.workoutTemplateEdit(template.id));
-    }
-
-    function copyTemplate(template) {
-        setMessage('');
-        navigate(ROUTES.workoutTemplateCopy(template.id));
+    function handleEditorSaved() {
+        closeEditor();
+        loadData();
     }
 
     function archiveTemplate(template) {
@@ -119,6 +139,17 @@ function WorkoutLibraryPage({trainerId}) {
         <Stack gap="md" pos="relative">
             <LoadingOverlay visible={!loaded}/>
 
+            {editorOpened && (
+                <WorkoutEditorModal
+                    opened={editorOpened}
+                    mode={editorMode}
+                    templateId={editorTemplateId}
+                    trainerId={trainerId}
+                    onClose={closeEditor}
+                    onSaved={handleEditorSaved}
+                />
+            )}
+
             <Group justify="space-between" align="flex-start">
                 <Stack gap={2}>
                     <Title order={1}>Workout Library</Title>
@@ -127,7 +158,7 @@ function WorkoutLibraryPage({trainerId}) {
                     </Text>
                 </Stack>
 
-                <Button leftSection={<IconPlus size={16}/>} onClick={newTemplate}>
+                <Button leftSection={<IconPlus size={16}/>} onClick={openNewEditor}>
                     New Workout
                 </Button>
             </Group>
@@ -158,14 +189,14 @@ function WorkoutLibraryPage({trainerId}) {
                                 <WorkoutTemplateListRow
                                     key={template.id}
                                     template={template}
-                                    onSelect={() => editTemplate(template)}
+                                    onSelect={() => openEditEditor(template)}
                                     onEdit={event => {
                                         event?.stopPropagation?.();
-                                        editTemplate(template);
+                                        openEditEditor(template);
                                     }}
                                     onCopy={event => {
                                         event?.stopPropagation?.();
-                                        copyTemplate(template);
+                                        openCopyEditor(template);
                                     }}
                                     onArchive={event => {
                                         event?.stopPropagation?.();

@@ -13,3 +13,8 @@ export function normalizeName(value) {
 export function normalizeEmail(value) {
     return value ? value.trim().toLowerCase() : '';
 }
+
+export function trimToNull(value) {
+    const trimmed = value?.trim?.();
+    return trimmed ? trimmed : null;
+}

@@ -1,0 +1,163 @@
+import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE} from './workout-builder-constants';
+import {trimToNull} from '../../utils/text-utils';
+
+import {
+    createDraftId,
+    createEmptyWorkoutDraft,
+    createEmptyWorkoutConfig,
+    stringifyWorkoutConfig,
+} from './workout-draft-factory';
+
+export function normalizeTemplateForDraft(template, trainerId) {
+    if (!template) {
+        return createEmptyWorkoutDraft(trainerId);
+    }
+
+    return {
+        id: template.id ?? null,
+        trainerId: template.trainerId ?? template.trainer?.id ?? trainerId,
+        name: template.name ?? '',
+        description: template.description ?? '',
+        coverImageUrl: template.coverImageUrl ?? '',
+        sections: normalizePositions(template.sections ?? []).map((section, sectionIndex) => ({
+            id: section.id ?? null,
+            draftId: createDraftId('section'),
+            position: sectionIndex + 1,
+            name: section.name ?? '',
+            sectionType: section.sectionType ?? WORKOUT_SECTION_TYPE.WORKOUT,
+            notes: section.notes ?? '',
+            items: normalizePositions(section.items ?? []).map((item, itemIndex) => normalizeItemForDraft(item, itemIndex)),
+        })),
+    };
+}
+
+export function normalizeTemplateForCopy(template, trainerId) {
+    const draft = normalizeTemplateForDraft(template, trainerId);
+
+    return stripIdsFromDraft({
+        ...draft,
+        id: null,
+        name: draft.name ? `Copy of ${draft.name}` : '',
+    });
+}
+
+function normalizeItemForDraft(item, itemIndex) {
+    const itemType = item.itemType ?? WORKOUT_ITEM_TYPE.EXERCISE;
+
+    return {
+        id: item.id ?? null,
+        draftId: createDraftId('item'),
+        position: itemIndex + 1,
+        itemType,
+        exercise: item.exercise ?? null,
+        exerciseId: item.exercise?.id ?? item.exerciseId ?? null,
+        name: item.name ?? '',
+        rounds: item.rounds ?? null,
+        notes: item.notes ?? '',
+        configJson: normalizeConfigJson(item.configJson),
+        itemExercises: normalizePositions(item.itemExercises ?? []).map((itemExercise, itemExerciseIndex) => ({
+            id: itemExercise.id ?? null,
+            draftId: createDraftId('item-exercise'),
+            position: itemExerciseIndex + 1,
+            exercise: itemExercise.exercise ?? null,
+            exerciseId: itemExercise.exercise?.id ?? itemExercise.exerciseId ?? null,
+            notes: itemExercise.notes ?? '',
+            configJson: normalizeConfigJson(itemExercise.configJson),
+        })),
+    };
+}
+
+function normalizeConfigJson(configJson) {
+    if (configJson) {
+        return configJson;
+    }
+
+    return stringifyWorkoutConfig(createEmptyWorkoutConfig());
+}
+
+export function buildTemplatePayload(draft, trainerId) {
+    return {
+        trainerId,
+        name: trimToNull(draft.name) ?? '',
+        description: trimToNull(draft.description),
+        coverImageUrl: trimToNull(draft.coverImageUrl),
+        sections: normalizePositions(draft.sections ?? []).map((section, sectionIndex) => ({
+            id: section.id ?? null,
+            position: sectionIndex + 1,
+            name: trimToNull(section.name),
+            sectionType: section.sectionType || WORKOUT_SECTION_TYPE.WORKOUT,
+            notes: trimToNull(section.notes),
+            items: normalizePositions(section.items ?? []).map((item, itemIndex) => buildItemPayload(item, itemIndex)),
+        })),
+    };
+}
+
+function buildItemPayload(item, itemIndex) {
+    const itemType = item.itemType || WORKOUT_ITEM_TYPE.EXERCISE;
+    const isExercise = itemType === WORKOUT_ITEM_TYPE.EXERCISE;
+
+    return {
+        id: item.id ?? null,
+        position: itemIndex + 1,
+        itemType,
+        exerciseId: isExercise ? getExerciseId(item) : null,
+        name: trimToNull(item.name),
+        rounds: isExercise ? null : toPositiveNumberOrNull(item.rounds),
+        notes: trimToNull(item.notes),
+        configJson: isExercise ? normalizeConfigJson(item.configJson) : null,
+        itemExercises: isExercise
+            ? []
+            : normalizePositions(item.itemExercises ?? []).map((itemExercise, itemExerciseIndex) => ({
+                id: itemExercise.id ?? null,
+                exerciseId: getExerciseId(itemExercise),
+                position: itemExerciseIndex + 1,
+                notes: trimToNull(itemExercise.notes),
+                configJson: normalizeConfigJson(itemExercise.configJson),
+            })),
+    };
+}
+
+export function stripIdsFromDraft(draft) {
+    return {
+        ...draft,
+        id: null,
+        sections: (draft.sections ?? []).map(section => ({
+            ...section,
+            id: null,
+            draftId: createDraftId('section'),
+            items: (section.items ?? []).map(item => ({
+                ...item,
+                id: null,
+                draftId: createDraftId('item'),
+                itemExercises: (item.itemExercises ?? []).map(itemExercise => ({
+                    ...itemExercise,
+                    id: null,
+                    draftId: createDraftId('item-exercise'),
+                })),
+            })),
+        })),
+    };
+}
+
+export function normalizePositions(items) {
+    return [...items]
+        .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+        .map((item, index) => ({
+            ...item,
+            position: index + 1,
+        }));
+}
+
+export function getExerciseId(item) {
+    return item.exerciseId ?? item.exercise?.id ?? null;
+}
+
+function toPositiveNumberOrNull(value) {
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return null;
+    }
+
+    return parsed;
+}
