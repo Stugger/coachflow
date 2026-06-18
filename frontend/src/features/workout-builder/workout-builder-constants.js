@@ -1,5 +1,5 @@
 export const WORKOUT_SECTION_TYPE = {
-    WORKOUT: 'WORKOUT',
+    REGULAR: 'REGULAR',
     WARMUP: 'WARMUP',
     STRENGTH: 'STRENGTH',
     CARDIO: 'CARDIO',
@@ -8,6 +8,17 @@ export const WORKOUT_SECTION_TYPE = {
     COOLDOWN: 'COOLDOWN',
     OTHER: 'OTHER',
 };
+
+export const WORKOUT_SECTION_TYPE_OPTIONS = [
+    {value: WORKOUT_SECTION_TYPE.REGULAR, label: 'Regular'},
+    {value: WORKOUT_SECTION_TYPE.WARMUP, label: 'Warm Up'},
+    {value: WORKOUT_SECTION_TYPE.STRENGTH, label: 'Strength'},
+    {value: WORKOUT_SECTION_TYPE.CARDIO, label: 'Cardio'},
+    {value: WORKOUT_SECTION_TYPE.MOBILITY, label: 'Mobility'},
+    {value: WORKOUT_SECTION_TYPE.STABILITY, label: 'Stability'},
+    {value: WORKOUT_SECTION_TYPE.COOLDOWN, label: 'Cooldown'},
+    {value: WORKOUT_SECTION_TYPE.OTHER, label: 'Other'},
+];
 
 export const WORKOUT_ITEM_TYPE = {
     EXERCISE: 'EXERCISE',

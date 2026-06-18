@@ -36,7 +36,7 @@ CREATE TABLE workout_template_sections (
     CONSTRAINT uq_workout_template_sections_position UNIQUE (workout_template_id, position),
     CONSTRAINT chk_workout_template_sections_position_positive CHECK (position > 0),
     CONSTRAINT chk_workout_template_sections_type CHECK (
-       section_type IN ('WORKOUT', 'WARMUP', 'STRENGTH', 'CARDIO', 'MOBILITY', 'STABILITY', 'COOLDOWN', 'OTHER')
+       section_type IN ('REGULAR', 'WARMUP', 'STRENGTH', 'CARDIO', 'MOBILITY', 'STABILITY', 'COOLDOWN', 'OTHER')
     )
 );
 

@@ -5,7 +5,7 @@ package com.stugger.coachflow.entity.workout;
  * @since June 15th, 2026
  */
 public enum WorkoutTemplateSectionType {
-    WORKOUT,
+    REGULAR,
     WARMUP,
     STRENGTH,
     CARDIO,

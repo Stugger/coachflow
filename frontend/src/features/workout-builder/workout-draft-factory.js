@@ -24,7 +24,7 @@ export function createWorkoutSection(position = 1) {
         draftId: createDraftId('section'),
         position,
         name: '',
-        sectionType: WORKOUT_SECTION_TYPE.WORKOUT,
+        sectionType: WORKOUT_SECTION_TYPE.REGULAR,
         notes: '',
         items: [],
     };
