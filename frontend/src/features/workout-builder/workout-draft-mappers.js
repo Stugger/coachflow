@@ -148,6 +148,13 @@ export function normalizePositions(items) {
         }));
 }
 
+export function reindexPositions(items) {
+    return items.map((item, index) => ({
+        ...item,
+        position: index + 1,
+    }));
+}
+
 export function getExerciseId(item) {
     return item.exerciseId ?? item.exercise?.id ?? null;
 }

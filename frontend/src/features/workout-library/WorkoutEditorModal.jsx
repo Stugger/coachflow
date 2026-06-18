@@ -307,7 +307,6 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         request
             .then(savedTemplate => {
                 clearSavedDraft();
-                setSavedSnapshot(currentSnapshot);
 
                 if (onSaved) {
                     onSaved(savedTemplate);
@@ -344,8 +343,6 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     function renderEditorContent() {
         return (
             <Stack gap="md" pos="relative">
-                <LoadingOverlay visible={!loaded || saving}/>
-
                 {draftRecovered && (
                     <Alert color="blue"
                            icon={<IconAlertCircle size={16}/>}
@@ -426,7 +423,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                     flexShrink: 0,
                 }}
             >
-                <Group justify="space-between">
+                <Group justify={!statusLabel ? "flex-end" : "space-between"}>
                     {statusLabel === 'Saved' && (
                         <Group gap={3}>
                             <IconCircleCheck size={16} stroke={2.4} color='green'/>
@@ -455,6 +452,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                             leftSection={<IconDeviceFloppy size={16}/>}
                             onClick={saveWorkout}
                             loading={saving}
+                            disabled={!loaded}
                         >
                             Save & Close
                         </Button>
@@ -489,6 +487,9 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                         overflow: 'hidden',
                     }}
                 >
+
+                    <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
+
                     <Drawer.Header
                         style={{
                             flexShrink: 0,
@@ -544,6 +545,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                     overflow: 'hidden',
                 }}
             >
+                <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
+
                 <Modal.Header
                     style={{
                         flexShrink: 0,

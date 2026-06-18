@@ -12,6 +12,8 @@ import {
     Text,
     TextInput,
     Title,
+    Box,
+    Loader,
 } from '@mantine/core';
 import {IconAlertCircle, IconPlus, IconSearch} from '@tabler/icons-react';
 
@@ -44,6 +46,8 @@ function WorkoutLibraryPage({trainerId}) {
     const [message, setMessage] = useState('');
     const [searchText, setSearchText] = useState('');
 
+    const [refreshingAfterSave, setRefreshingAfterSave] = useState(false);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
@@ -70,8 +74,10 @@ function WorkoutLibraryPage({trainerId}) {
     // API loading
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function loadData() {
-        setLoaded(false);
+    function loadData(refresh = false) {
+        if (!refresh) {
+            setLoaded(false);
+        }
         setMessage('');
 
         getWorkoutTemplates(trainerId)
@@ -80,7 +86,13 @@ function WorkoutLibraryPage({trainerId}) {
                 console.error('Failed to load workout library:', error);
                 setMessage(error.message || 'Failed to load workout library.');
             })
-            .finally(() => setLoaded(true));
+            .finally(() => {
+                if (refresh) {
+                    setRefreshingAfterSave(false);
+                } else {
+                    setLoaded(true);
+                }
+            });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -112,7 +124,10 @@ function WorkoutLibraryPage({trainerId}) {
 
     function handleEditorSaved() {
         closeEditor();
-        loadData();
+        setRefreshingAfterSave(true);
+        setTimeout(() => {
+            loadData(true);
+        }, 150);
     }
 
     function archiveTemplate(template) {
@@ -136,85 +151,103 @@ function WorkoutLibraryPage({trainerId}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <Stack gap="md" pos="relative">
-            <LoadingOverlay visible={!loaded}/>
-
-            {editorOpened && (
-                <WorkoutEditorModal
-                    opened={editorOpened}
-                    mode={editorMode}
-                    templateId={editorTemplateId}
-                    trainerId={trainerId}
-                    onClose={closeEditor}
-                    onSaved={handleEditorSaved}
-                />
+        <>
+            {refreshingAfterSave && (
+                <Box
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        zIndex: 3000,
+                        backgroundColor: 'rgba(0, 0, 0, 0.18)',
+                        backdropFilter: 'blur(2px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Loader size="md"/>
+                </Box>
             )}
+            <Stack gap="md" pos="relative">
+                <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
 
-            <Group justify="space-between" align="flex-start">
-                <Stack gap={2}>
-                    <Title order={1}>Workout Library</Title>
-                    <Text c="dimmed" size="sm">
-                        Build and manage reusable workouts with sections, exercises, and vertical stacks.
-                    </Text>
-                </Stack>
-
-                <Button leftSection={<IconPlus size={16}/>} onClick={openNewEditor}>
-                    New Workout
-                </Button>
-            </Group>
-
-            {message && (
-                <Alert color="red" icon={<IconAlertCircle size={16}/>} onClose={() => setMessage('')} withCloseButton>
-                    {message}
-                </Alert>
-            )}
-
-            <Paper withBorder radius="md" p="md">
-                <Stack gap="md">
-                    <Group justify="space-between">
-                        <Text fw={800}>Workouts</Text>
-                        <Text size="sm" c="dimmed">{filteredTemplates.length} shown</Text>
-                    </Group>
-
-                    <TextInput
-                        placeholder="Search workouts"
-                        leftSection={<IconSearch size={16}/>}
-                        value={searchText}
-                        onChange={event => setSearchText(event.currentTarget.value)}
+                {editorOpened && (
+                    <WorkoutEditorModal
+                        opened={editorOpened}
+                        mode={editorMode}
+                        templateId={editorTemplateId}
+                        trainerId={trainerId}
+                        onClose={closeEditor}
+                        onSaved={handleEditorSaved}
                     />
+                )}
 
-                    <ScrollArea h={{base: 340, lg: 640}} type="auto">
-                        <Stack gap="xs">
-                            {filteredTemplates.map(template => (
-                                <WorkoutTemplateListRow
-                                    key={template.id}
-                                    template={template}
-                                    onSelect={() => openEditEditor(template)}
-                                    onEdit={event => {
-                                        event?.stopPropagation?.();
-                                        openEditEditor(template);
-                                    }}
-                                    onCopy={event => {
-                                        event?.stopPropagation?.();
-                                        openCopyEditor(template);
-                                    }}
-                                    onArchive={event => {
-                                        event?.stopPropagation?.();
-                                        archiveTemplate(template);
-                                    }}
-                                />
-                            ))}
+                <Group justify="space-between" align="flex-start">
+                    <Stack gap={2}>
+                        <Title order={1}>Workout Library</Title>
+                        <Text c="dimmed" size="sm">
+                            Build and manage reusable workouts with sections, exercises, and vertical stacks.
+                        </Text>
+                    </Stack>
 
-                            {filteredTemplates.length === 0 && (
-                                <Text size="sm" c="dimmed" ta="center" py="xl">
-                                    No workouts found.
-                                </Text>
-                            )}
-                        </Stack>
-                    </ScrollArea>
-                </Stack>
-            </Paper>
-        </Stack>
+                    <Button leftSection={<IconPlus size={16}/>} onClick={openNewEditor}>
+                        New Workout
+                    </Button>
+                </Group>
+
+                {message && (
+                    <Alert color="red" icon={<IconAlertCircle size={16}/>} onClose={() => setMessage('')} withCloseButton>
+                        {message}
+                    </Alert>
+                )}
+
+                <Paper withBorder radius="md" p="md">
+                    <Stack gap="md">
+                        <Group justify="space-between">
+                            <Text fw={800}>Workouts</Text>
+                            <Text size="sm" c="dimmed">{filteredTemplates.length} shown</Text>
+                        </Group>
+
+                        <TextInput
+                            placeholder="Search workouts"
+                            leftSection={<IconSearch size={16}/>}
+                            value={searchText}
+                            onChange={event => setSearchText(event.currentTarget.value)}
+                        />
+
+                        <ScrollArea h={{base: 340, lg: 640}} type="auto">
+                            <Stack gap="xs">
+                                {filteredTemplates.map(template => (
+                                    <WorkoutTemplateListRow
+                                        key={template.id}
+                                        template={template}
+                                        onSelect={() => openEditEditor(template)}
+                                        onEdit={event => {
+                                            event?.stopPropagation?.();
+                                            openEditEditor(template);
+                                        }}
+                                        onCopy={event => {
+                                            event?.stopPropagation?.();
+                                            openCopyEditor(template);
+                                        }}
+                                        onArchive={event => {
+                                            event?.stopPropagation?.();
+                                            archiveTemplate(template);
+                                        }}
+                                    />
+                                ))}
+
+                                {filteredTemplates.length === 0 && (
+                                    <Text size="sm" c="dimmed" ta="center" py="xl">
+                                        No workouts found.
+                                    </Text>
+                                )}
+                            </Stack>
+                        </ScrollArea>
+                    </Stack>
+                </Paper>
+            </Stack>
+        </>
     );
 }
 

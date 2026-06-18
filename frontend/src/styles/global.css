@@ -9,3 +9,23 @@
         color: transparent;
     }
 }
+
+.subtleInput {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--mantine-radius-sm);
+    padding-inline: var(--mantine-spacing-xs);
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+/* outline only on mouse hover */
+.subtleInput:hover {
+    border-color: var(--mantine-color-gray-4);
+}
+
+/* full input when focused/typing */
+.subtleInput:focus,
+.subtleInput:focus-within {
+    border-color: var(--mantine-primary-color-filled);
+    background-color: var(--mantine-color-body);
+}
