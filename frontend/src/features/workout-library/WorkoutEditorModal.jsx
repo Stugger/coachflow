@@ -1,18 +1,22 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useMemo, useState, useRef} from 'react';
 import {
     useComputedColorScheme,
+    ActionIcon,
     Alert,
+    Badge,
     Button,
     Drawer,
     Group,
     LoadingOverlay,
     Modal,
+    Menu,
     Paper,
     Stack,
     Text,
     Textarea,
     TextInput,
     Title,
+    Tooltip,
     Box,
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
@@ -20,7 +24,10 @@ import {
     IconAlertCircle,
     IconCircleCheck,
     IconDeviceFloppy,
+    IconDotsVertical,
+    IconDumbbell,
     IconSketching,
+    IconTrash,
     IconX,
 } from '@tabler/icons-react';
 
@@ -39,6 +46,7 @@ import {
     buildTemplatePayload,
     normalizeTemplateForCopy,
     normalizeTemplateForDraft,
+    getWorkoutEquipment,
 } from '../workout-builder/workout-draft-mappers';
 
 import {validateWorkoutDraft} from '../workout-builder/workout-draft-validation';
@@ -51,6 +59,9 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
     const isMobile = useMediaQuery('(max-width: 48em)');
     const computedColorScheme = useComputedColorScheme('light');
+
+    const inputRef = useRef(null);
+    const hasFocusedNameRef = useRef(false);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -86,6 +97,10 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
         return 'New Workout';
     }, [isEditing, isCopying]);
+
+    const workoutEquipment = useMemo(() => {
+        return getWorkoutEquipment(draft);
+    }, [draft]);
 
     const draftKey = useMemo(() => {
         if (isEditing && templateId) {
@@ -135,6 +150,25 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
         loadEditorData();
     }, [opened, mode, templateId, trainerId]);
+
+    useEffect(() => {
+        if (!opened) {
+            hasFocusedNameRef.current = false;
+            return;
+        }
+
+        if (isEditing || !loaded || !draft || hasFocusedNameRef.current) {
+            return;
+        }
+
+        hasFocusedNameRef.current = true;
+
+        const timeoutId = window.setTimeout(() => {
+            inputRef.current?.focus();
+        }, 50);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [opened, loaded, draftKey, !!draft]);
 
     useEffect(() => {
         if (!opened || !loaded || !draft) {
@@ -365,38 +399,94 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
                 {draft && (
                     <>
-                        <Paper withBorder radius="md" p="md">
-                            <Stack gap="md">
-                                <Stack gap={2}>
-                                    <Text fw={800}>Workout Details</Text>
-                                    <Text size="sm" c="dimmed">
-                                        Name and describe this workout.
-                                    </Text>
-                                </Stack>
+                        <Paper withBorder radius="md" p="md" bg={computedColorScheme === 'light' ? "var(--color-background)" : "var(--color-surface)"}>
+                            <Stack gap="sm">
+                                <Group justify="space-between" align="center" wrap="nowrap">
+                                    <TextInput
+                                        classNames={{ input: 'subtleInput' }}
+                                        ref={inputRef}
+                                        size="lg"
+                                        placeholder="Name your workout"
+                                        value={draft.name}
+                                        onChange={event => updateDraftField('name', event.currentTarget.value)}
+                                        required
+                                        style={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                        }}
+                                        styles={{
+                                            input: {
+                                                fontWeight: 'bold',
+                                                fontSize: '1.25rem',
+                                            }
+                                        }}
+                                    />
+                                    <Menu withinPortal position="bottom-end">
+                                        <Menu.Target>
+                                            <Tooltip label="Workout options" position="top-end">
+                                                <ActionIcon
+                                                    variant="subtle"
+                                                    color="gray"
+                                                    style={{flexShrink: 0}}
+                                                >
+                                                    <IconDotsVertical size={18}/>
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        </Menu.Target>
 
-                                <TextInput
-                                    label="Workout name"
-                                    placeholder="Full Body Strength A"
-                                    value={draft.name}
-                                    onChange={event => updateDraftField('name', event.currentTarget.value)}
-                                    required
-                                />
-
+                                        <Menu.Dropdown>
+                                            <Menu.Item color="red" leftSection={<IconTrash size={14}/>} onClick={() => console.log('TODO - archive this workout')} disabled={!isEditing}>
+                                                Archive workout
+                                            </Menu.Item>
+                                        </Menu.Dropdown>
+                                    </Menu>
+                                </Group>
                                 <Textarea
-                                    label="Description"
-                                    placeholder="Optional notes about when or how to use this workout"
+                                    label={
+                                        <Text size="xs" c="dimmed" fw={600} pl={10}>
+                                            DESCRIPTION
+                                        </Text>
+                                    }
+                                    pl={10}
+                                    classNames={{ input: 'subtleInput' }}
+                                    placeholder="Add a description"
                                     value={draft.description || ''}
                                     onChange={event => updateDraftField('description', event.currentTarget.value)}
                                     autosize
-                                    minRows={2}
                                 />
 
                                 <TextInput
-                                    label="Cover image URL"
-                                    placeholder="Optional image URL"
+                                    label={
+                                        <Text size="xs" c="dimmed" fw={600} pl={10}>
+                                            COVER IMAGE URL
+                                        </Text>
+                                    }
+                                    pl={10}
+                                    classNames={{ input: 'subtleInput' }}
+                                    placeholder="Add an image URL"
                                     value={draft.coverImageUrl || ''}
                                     onChange={event => updateDraftField('coverImageUrl', event.currentTarget.value)}
                                 />
+
+                                {workoutEquipment.length > 0 && (
+                                    <Stack gap="sm">
+                                        <Text size="xs" c="dimmed" fw={600} pl={20} pt={5}>
+                                            EQUIPMENT
+                                        </Text>
+                                        <Group gap="xs" pl={20}>
+                                            {workoutEquipment.map(equipment => (
+                                                <Badge
+                                                    key={equipment}
+                                                    variant="light"
+                                                    radius="sm"
+                                                    leftSection={<IconDumbbell size={14}/>}
+                                                >
+                                                    {equipment}
+                                                </Badge>
+                                            ))}
+                                        </Group>
+                                    </Stack>
+                                )}
                             </Stack>
                         </Paper>
 

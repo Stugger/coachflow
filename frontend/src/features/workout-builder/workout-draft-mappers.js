@@ -159,6 +159,41 @@ export function getExerciseId(item) {
     return item.exerciseId ?? item.exercise?.id ?? null;
 }
 
+export function getWorkoutEquipment(draft) {
+    if (!draft) {
+        return [];
+    }
+
+    const equipment = new Set();
+
+    for (const section of draft.sections ?? []) {
+        for (const item of section.items ?? []) {
+            if (item.exercise) {
+                addExerciseEquipment(equipment, item.exercise);
+            }
+
+            for (const itemExercise of item.itemExercises ?? []) {
+                if (itemExercise.exercise) {
+                    addExerciseEquipment(equipment, itemExercise.exercise);
+                }
+            }
+        }
+    }
+
+    return Array.from(equipment).sort((a, b) => a.localeCompare(b));
+}
+
+function addExerciseEquipment(equipment, exercise) {
+    const metadata = exercise.metadataJson ?? {};
+    const exerciseEquipment = metadata.equipment ?? [];
+
+    for (const value of exerciseEquipment) {
+        if (value) {
+            equipment.add(value);
+        }
+    }
+}
+
 function toPositiveNumberOrNull(value) {
     const parsed = Number(value);
 
