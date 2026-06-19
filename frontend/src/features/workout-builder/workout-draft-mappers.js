@@ -168,14 +168,10 @@ export function getWorkoutEquipment(draft) {
 
     for (const section of draft.sections ?? []) {
         for (const item of section.items ?? []) {
-            if (item.exercise) {
-                addExerciseEquipment(equipment, item.exercise);
-            }
+            addExerciseEquipment(equipment, item.exercise);
 
             for (const itemExercise of item.itemExercises ?? []) {
-                if (itemExercise.exercise) {
-                    addExerciseEquipment(equipment, itemExercise.exercise);
-                }
+                addExerciseEquipment(equipment, itemExercise.exercise);
             }
         }
     }
@@ -184,10 +180,20 @@ export function getWorkoutEquipment(draft) {
 }
 
 function addExerciseEquipment(equipment, exercise) {
-    const metadata = exercise.metadataJson ?? {};
-    const exerciseEquipment = metadata.equipment ?? [];
+    if (!exercise?.metadataJson) {
+        return;
+    }
 
-    for (const value of exerciseEquipment) {
+    let metadata = {};
+
+    try {
+        metadata = JSON.parse(exercise.metadataJson);
+    } catch (error) {
+        console.warn('Failed to parse exercise metadataJson:', error);
+        return;
+    }
+
+    for (const value of metadata.equipment ?? []) {
         if (value) {
             equipment.add(value);
         }

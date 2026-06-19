@@ -11,6 +11,7 @@ import {
     Divider,
     Group,
     Menu,
+    Modal,
     Paper,
     Select,
     Stack,
@@ -26,13 +27,14 @@ import {
     IconDotsVertical,
     IconEdit,
     IconGripVertical,
+    IconLink,
     IconNote,
     IconPlus,
     IconTrash,
     IconSeparatorHorizontal,
 } from '@tabler/icons-react';
 
-import {createWorkoutSection} from './workout-draft-factory';
+import {createWorkoutSection, createExerciseItem} from './workout-draft-factory';
 import {reindexPositions} from './workout-draft-mappers';
 import {WORKOUT_SECTION_TYPE_OPTIONS} from './workout-builder-constants';
 
@@ -50,6 +52,8 @@ function WorkoutBuilder({draft, exercises, onChange}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const [expandedSectionIds, setExpandedSectionIds] = useState(() => new Set());
+
+    const [exercisePickerSectionIndex, setExercisePickerSectionIndex] = useState(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -97,7 +101,7 @@ function WorkoutBuilder({draft, exercises, onChange}) {
 
     function deleteSection(sectionIndex) {
         const section = sections[sectionIndex];
-        const confirmed = window.confirm(`Delete "${getSectionDisplayName(section)}"?`);
+        const confirmed = !section.items?.length || window.confirm(`Delete "${getSectionDisplayName(section)}"?`);
 
         if (!confirmed) {
             return;
@@ -134,6 +138,18 @@ function WorkoutBuilder({draft, exercises, onChange}) {
 
             return next;
         });
+    }
+
+    function addExerciseToSection(sectionIndex, exercise) {
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: reindexPositions([
+                ...(section.items ?? []),
+                createExerciseItem(exercise, (section.items?.length ?? 0) + 1),
+            ]),
+        }));
+
+        setExercisePickerSectionIndex(null);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -177,47 +193,89 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                         sectionIndex={sectionIndex}
                         sectionCount={sections.length}
                         expanded={expandedSectionIds.has(getSectionKey(section))}
-                        onToggle={() => toggleSection(section)}
-                        onMoveUp={() => moveSection(sectionIndex, -1)}
-                        onMoveDown={() => moveSection(sectionIndex, 1)}
-                        onDelete={() => deleteSection(sectionIndex)}
-                        onChange={updates => updateSection(sectionIndex, currentSection => ({
-                            ...currentSection,
-                            ...updates,
-                        }))}
+                        sectionActions={{
+                            onToggle: () => toggleSection(section),
+                            onMoveUp: () => moveSection(sectionIndex, -1),
+                            onMoveDown: () => moveSection(sectionIndex, 1),
+                            onDelete: () => deleteSection(sectionIndex),
+                            onChange: updates => updateSection(sectionIndex, currentSection => ({
+                                ...currentSection,
+                                ...updates,
+                            })),
+                        }}
+                        exercisePicker={{
+                            exercises,
+                            opened: exercisePickerSectionIndex === sectionIndex,
+                            onOpen: () => setExercisePickerSectionIndex(sectionIndex),
+                            onClose: () => setExercisePickerSectionIndex(null),
+                            onAdd: exercise => addExerciseToSection(sectionIndex, exercise),
+                        }}
                     />
                 ))}
             </Stack>
         </Stack>
     );
 }
+function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionActions, exercisePicker}) {
+    const {
+        onToggle,
+        onMoveUp,
+        onMoveDown,
+        onDelete,
+        onChange,
+    } = sectionActions;
 
-function WorkoutSection({
-                            section,
-                            sectionIndex,
-                            sectionCount,
-                            expanded,
-                            onToggle,
-                            onMoveUp,
-                            onMoveDown,
-                            onDelete,
-                            onChange,
-                        }) {
+    const {
+        exercises,
+        opened: exercisePickerOpened,
+        onOpen: onOpenExercisePicker,
+        onClose: onCloseExercisePicker,
+        onAdd: onAddExercise,
+    } = exercisePicker;
 
     const isMobile = useMediaQuery('(max-width: 48em)');
-    const computedColorScheme = useComputedColorScheme('light');
     const headerGradient = getGradient({ deg: 90, from: 'blue.8', to: 'violet.7' }, useMantineTheme());
 
     const itemCount = section.items?.length ?? 0;
     const sectionName = getSectionDisplayName(section);
     const sectionTypeLabel = getSectionTypeLabel(section.sectionType);
 
+    // TODO: Replace the simple exercise picker with a full exercise library panel with search, filters, thumbnails, and drag/drop once section/item behavior is stable.
+    // Mobile will likely just feature a basic text search input that renders a list of exercise thumbnail + name.
+
     return (
         <Box>
+            <Modal
+                opened={exercisePickerOpened}
+                onClose={onCloseExercisePicker}
+                title="Add Exercise"
+                centered
+            >
+                <Stack gap="xs">
+                    {exercises.map(exercise => (
+                        <Paper
+                            key={exercise.id}
+                            withBorder
+                            radius="md"
+                            p="sm"
+                            style={{cursor: 'pointer'}}
+                            onClick={() => onAddExercise(exercise)}
+                        >
+                            <Text fw={700}>{exercise.name}</Text>
+                            {exercise.details && (
+                                <Text size="sm" c="dimmed" lineClamp={2}>
+                                    {exercise.details}
+                                </Text>
+                            )}
+                        </Paper>
+                    ))}
+                </Stack>
+            </Modal>
             <Paper
                 withBorder
                 radius="md"
                 shadow="lg"
+                bg="var(--color-background)"
                 style={{
                     overflow: 'hidden',
                 }}
@@ -327,13 +385,12 @@ function WorkoutSection({
                         value={section.notes || ''}
                         onChange={event => onChange({notes: event.currentTarget.value})}
                         autosize
-                        minRows={1}
                     />
                 </Box>
 
-                <Stack gap={0} p="md">
+                <Box p="md">
                     {itemCount === 0 && (
-                        <Paper withBorder radius="md" p="lg" bg={computedColorScheme === 'light' ? "var(--color-background)" : "var(--color-surface)"}>
+                        <Paper withBorder radius="md" p="lg">
                             <Stack gap="sm" align="center">
                                 <Text fw={700}>No exercises in this section</Text>
                                 <Text size="sm" c="dimmed" ta="center">
@@ -341,7 +398,12 @@ function WorkoutSection({
                                 </Text>
 
                                 <Group>
-                                    <Button size={isMobile ? "xs" : "sm"} variant="light" leftSection={<IconPlus size={16}/>} disabled>
+                                    <Button
+                                        size={isMobile ? "xs" : "sm"}
+                                        variant="light"
+                                        leftSection={<IconPlus size={16}/>}
+                                        onClick={onOpenExercisePicker}
+                                    >
                                         Add Exercise
                                     </Button>
                                     <Button size={isMobile ? "xs" : "sm"} variant="light" leftSection={<IconPlus size={16}/>} disabled>
@@ -353,13 +415,37 @@ function WorkoutSection({
                     )}
 
                     {itemCount > 0 && (
-                        <Stack gap="md">
-                            <Text size="sm" c="dimmed">
-                                TODO - render exercise and stack cards here.
-                            </Text>
-                        </Stack>
+                        <>
+                            <Stack>
+                                <Box mx="calc(var(--mantine-spacing-md) * -1)">
+                                    <Stack gap={0}>
+                                        {(section.items ?? []).map((item, itemIndex) => (
+                                            <ExerciseItemCard
+                                                key={item.draftId || item.id}
+                                                item={item}
+                                                itemIndex={itemIndex}
+                                                itemCount={section.items?.length ?? 0}
+                                            />
+                                        ))}
+                                    </Stack>
+                                </Box>
+                            </Stack>
+                            <Group justify={"flex-end"} pt={'md'}>
+                                <Button
+                                    size={isMobile ? "xs" : "sm"}
+                                    variant="light"
+                                    leftSection={<IconPlus size={16}/>}
+                                    onClick={onOpenExercisePicker}
+                                >
+                                    Add Exercise
+                                </Button>
+                                <Button size={isMobile ? "xs" : "sm"} variant="light" leftSection={<IconPlus size={16}/>} disabled>
+                                    Add Stack
+                                </Button>
+                            </Group>
+                        </>
                     )}
-                </Stack>
+                </Box>
             </Paper>
 
             {sectionIndex < sectionCount - 1 && (
@@ -371,10 +457,10 @@ function WorkoutSection({
 
 function SectionSeparator() {
     return (
-        <Group gap="xs" my="lg" wrap="nowrap">
+        <Group gap="xs" my="lg" mb="sm" wrap="nowrap">
             <Divider size={2} style={{flex: 1}}/>
                 <Tooltip label="Section break">
-                    <IconSeparatorHorizontal color="gray" size={20}/>
+                    <IconSeparatorHorizontal opacity={0.4} size={20}/>
                 </Tooltip>
             <Divider size={2} style={{flex: 1}}/>
         </Group>
@@ -393,4 +479,47 @@ function getSectionTypeLabel(sectionType) {
     return WORKOUT_SECTION_TYPE_OPTIONS.find(option => option.value === sectionType)?.label || 'Regular';
 }
 
+function ExerciseItemCard({item, itemIndex, itemCount}) {
+    const exercise = item.exercise;
+
+    return (
+        <>
+            <Paper
+                withBorder
+                radius="sm"
+                p="md"
+            >
+            <Stack gap="xs">
+                <Group justify="space-between" wrap="nowrap">
+                    <Stack gap={2} style={{minWidth: 0}}>
+                        <Text fw={800} truncate>
+                            {exercise?.name || 'Exercise'}
+                        </Text>
+                        {exercise?.details && (
+                            <Text size="sm" c="dimmed" lineClamp={2}>
+                                {exercise.details}
+                            </Text>
+                        )}
+                    </Stack>
+
+                    <Badge variant="light">
+                        Exercise
+                    </Badge>
+                </Group>
+
+                <Text size="sm" c="dimmed">
+                    Tracking fields and sets will go here.
+                </Text>
+            </Stack>
+        </Paper>
+            {itemIndex !== itemCount - 1 && (
+                <Group gap={0} mb={'sm'} mt={'sm'} wrap="nowrap" justify="center">
+                    <Tooltip label="Exercise break">
+                        <IconLink opacity={0.4} size={20}/>
+                    </Tooltip>
+                </Group>
+            )}
+        </>
+    );
+}
 export default WorkoutBuilder;

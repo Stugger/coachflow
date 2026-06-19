@@ -54,11 +54,23 @@ async function sendJson(url, method, payload) {
     return response.json();
 }
 
-async function buildError(response, fallbackMessage) {
+async function buildError(response) {
+    let message = `Request failed (${response.status})`;
+
     try {
-        const body = await response.json();
-        return new Error(body.message || fallbackMessage);
+        const text = await response.text();
+
+        if (text) {
+            try {
+                const json = JSON.parse(text);
+                message = json.message || json.error || text;
+            } catch {
+                message = text;
+            }
+        }
     } catch {
-        return new Error(fallbackMessage);
+        // Keep fallback message
     }
+
+    return new Error(message);
 }
