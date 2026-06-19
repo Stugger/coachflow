@@ -24,7 +24,7 @@ import {
     IconAlertCircle,
     IconCircleCheck,
     IconDeviceFloppy,
-    IconDotsVertical,
+    IconDots,
     IconDumbbell,
     IconSketching,
     IconTrash,
@@ -404,6 +404,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                 <Group justify="space-between" align="center" wrap="nowrap">
                                     <TextInput
                                         classNames={{ input: 'subtleInput' }}
+                                        variant="filled"
                                         ref={inputRef}
                                         size="lg"
                                         placeholder="Name your workout"
@@ -416,8 +417,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                         }}
                                         styles={{
                                             input: {
-                                                fontWeight: 'bold',
-                                                fontSize: '1.25rem',
+                                                fontWeight: 600,
+                                                fontSize: '1.3rem',
                                             }
                                         }}
                                     />
@@ -429,7 +430,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                                     color="gray"
                                                     style={{flexShrink: 0}}
                                                 >
-                                                    <IconDotsVertical size={18}/>
+                                                    <IconDots size={18}/>
                                                 </ActionIcon>
                                             </Tooltip>
                                         </Menu.Target>
@@ -449,6 +450,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                     }
                                     pl={10}
                                     classNames={{ input: 'subtleInput' }}
+                                    variant="unstyled"
                                     placeholder="Add a description"
                                     value={draft.description || ''}
                                     onChange={event => updateDraftField('description', event.currentTarget.value)}
@@ -463,6 +465,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                     }
                                     pl={10}
                                     classNames={{ input: 'subtleInput' }}
+                                    variant="unstyled"
                                     placeholder="Add an image URL"
                                     value={draft.coverImageUrl || ''}
                                     onChange={event => updateDraftField('coverImageUrl', event.currentTarget.value)}

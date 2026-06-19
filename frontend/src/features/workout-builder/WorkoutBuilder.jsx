@@ -4,6 +4,7 @@ import {
     useMantineTheme,
     getGradient,
     ActionIcon,
+    Avatar,
     Badge,
     Box,
     Button,
@@ -24,11 +25,12 @@ import {useMediaQuery} from '@mantine/hooks';
 import {
     IconChevronDown,
     IconChevronUp,
-    IconDotsVertical,
+    IconDots,
     IconEdit,
+    IconEye,
     IconGripVertical,
     IconLink,
-    IconNote,
+    IconPhoto,
     IconPlus,
     IconTrash,
     IconSeparatorHorizontal,
@@ -152,6 +154,33 @@ function WorkoutBuilder({draft, exercises, onChange}) {
         setExercisePickerSectionIndex(null);
     }
 
+    function deleteItemFromSection(sectionIndex, itemIndex) {
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: reindexPositions(
+                (section.items ?? []).filter((_, index) => index !== itemIndex)
+            ),
+        }));
+    }
+
+    function moveItemInSection(sectionIndex, itemIndex, direction) {
+        const section = sections[sectionIndex];
+        const targetIndex = itemIndex + direction;
+
+        if (targetIndex < 0 || targetIndex >= (section.items?.length ?? 0)) {
+            return;
+        }
+
+        const nextItems = [...section.items];
+        const [item] = nextItems.splice(itemIndex, 1);
+        nextItems.splice(targetIndex, 0, item);
+
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: reindexPositions(nextItems),
+        }));
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------
@@ -203,6 +232,11 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                                 ...updates,
                             })),
                         }}
+                        exerciseItemActions={{
+                            onDeleteExerciseItem: itemIndex => deleteItemFromSection(sectionIndex, itemIndex),
+                            onMoveExerciseItemUp: itemIndex => moveItemInSection(sectionIndex, itemIndex, -1),
+                            onMoveExerciseItemDown: itemIndex => moveItemInSection(sectionIndex, itemIndex, 1),
+                        }}
                         exercisePicker={{
                             exercises,
                             opened: exercisePickerSectionIndex === sectionIndex,
@@ -216,7 +250,8 @@ function WorkoutBuilder({draft, exercises, onChange}) {
         </Stack>
     );
 }
-function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionActions, exercisePicker}) {
+
+function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionActions, exerciseItemActions, exercisePicker}) {
     const {
         onToggle,
         onMoveUp,
@@ -224,6 +259,12 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
         onDelete,
         onChange,
     } = sectionActions;
+
+    const {
+        onDeleteExerciseItem,
+        onMoveExerciseItemUp,
+        onMoveExerciseItemDown,
+    } = exerciseItemActions;
 
     const {
         exercises,
@@ -239,6 +280,24 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
     const itemCount = section.items?.length ?? 0;
     const sectionName = getSectionDisplayName(section);
     const sectionTypeLabel = getSectionTypeLabel(section.sectionType);
+
+    function renderAddItemButtons() {
+        return (
+            <Group justify="flex-end">
+                <Button
+                    size={isMobile ? "xs" : "sm"}
+                    variant="light"
+                    leftSection={<IconPlus size={16}/>}
+                    onClick={onOpenExercisePicker}
+                >
+                    Add Exercise
+                </Button>
+                <Button size={isMobile ? "xs" : "sm"} variant="light" leftSection={<IconPlus size={16}/>} disabled>
+                    Add Stack
+                </Button>
+            </Group>
+        );
+    }
 
     // TODO: Replace the simple exercise picker with a full exercise library panel with search, filters, thumbnails, and drag/drop once section/item behavior is stable.
     // Mobile will likely just feature a basic text search input that renders a list of exercise thumbnail + name.
@@ -321,7 +380,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                             <Menu.Target>
                                 <Tooltip label="Section options" position="top-end">
                                     <ActionIcon variant="subtle" color="black">
-                                        <IconDotsVertical size={18} color="white"/>
+                                        <IconDots size={18} color="white"/>
                                     </ActionIcon>
                                 </Tooltip>
                             </Menu.Target>
@@ -381,6 +440,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                 <Box style={{padding: 'var(--mantine-spacing-md)', paddingBottom: 0}}>
                     <Textarea
                         classNames={{ input: 'subtleInput' }}
+                        variant="unstyled"
                         placeholder="Add instructions or notes for this section"
                         value={section.notes || ''}
                         onChange={event => onChange({notes: event.currentTarget.value})}
@@ -396,54 +456,30 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                 <Text size="sm" c="dimmed" ta="center">
                                     Add exercises or vertical stacks here next.
                                 </Text>
-
-                                <Group>
-                                    <Button
-                                        size={isMobile ? "xs" : "sm"}
-                                        variant="light"
-                                        leftSection={<IconPlus size={16}/>}
-                                        onClick={onOpenExercisePicker}
-                                    >
-                                        Add Exercise
-                                    </Button>
-                                    <Button size={isMobile ? "xs" : "sm"} variant="light" leftSection={<IconPlus size={16}/>} disabled>
-                                        Add Stack
-                                    </Button>
-                                </Group>
+                                {renderAddItemButtons()}
                             </Stack>
                         </Paper>
                     )}
 
                     {itemCount > 0 && (
-                        <>
-                            <Stack>
-                                <Box mx="calc(var(--mantine-spacing-md) * -1)">
-                                    <Stack gap={0}>
-                                        {(section.items ?? []).map((item, itemIndex) => (
-                                            <ExerciseItemCard
-                                                key={item.draftId || item.id}
-                                                item={item}
-                                                itemIndex={itemIndex}
-                                                itemCount={section.items?.length ?? 0}
-                                            />
-                                        ))}
-                                    </Stack>
-                                </Box>
-                            </Stack>
-                            <Group justify={"flex-end"} pt={'md'}>
-                                <Button
-                                    size={isMobile ? "xs" : "sm"}
-                                    variant="light"
-                                    leftSection={<IconPlus size={16}/>}
-                                    onClick={onOpenExercisePicker}
-                                >
-                                    Add Exercise
-                                </Button>
-                                <Button size={isMobile ? "xs" : "sm"} variant="light" leftSection={<IconPlus size={16}/>} disabled>
-                                    Add Stack
-                                </Button>
-                            </Group>
-                        </>
+                        <Stack>
+                            <Box mx="calc(var(--mantine-spacing-md) * -1)">
+                                <Stack gap={0}>
+                                    {(section.items ?? []).map((item, itemIndex) => (
+                                        <ExerciseItemCard
+                                            key={item.draftId || item.id}
+                                            item={item}
+                                            itemIndex={itemIndex}
+                                            itemCount={section.items?.length ?? 0}
+                                            onDeleteExerciseItem={() => onDeleteExerciseItem(itemIndex)}
+                                            onMoveExerciseItemUp={() => onMoveExerciseItemUp(itemIndex)}
+                                            onMoveExerciseItemDown={() => onMoveExerciseItemDown(itemIndex)}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                            {renderAddItemButtons()}
+                        </Stack>
                     )}
                 </Box>
             </Paper>
@@ -479,32 +515,104 @@ function getSectionTypeLabel(sectionType) {
     return WORKOUT_SECTION_TYPE_OPTIONS.find(option => option.value === sectionType)?.label || 'Regular';
 }
 
-function ExerciseItemCard({item, itemIndex, itemCount}) {
+function ExerciseItemCard({item, itemIndex, itemCount, onDeleteExerciseItem, onMoveExerciseItemUp, onMoveExerciseItemDown}) {
+
+    const isMobile = useMediaQuery('(max-width: 48em)');
+
     const exercise = item.exercise;
+
+    function renderExerciseThumbnail() {
+        if (!exercise.thumbnailUrl) {
+            return (
+                <Avatar size={42}
+                        radius="md"
+                        variant="light"
+                        //onClick={() => viewExerciseDetails(exercise)} //TODO open exercise details
+                        style={{
+                            cursor: 'pointer',
+                        }}
+                >
+                    <IconPhoto size={24}/>
+                </Avatar>
+            );
+        }
+
+        return (
+            <Avatar
+                src={exercise.thumbnailUrl}
+                alt={exercise.name}
+                size={42}
+                radius="md"
+                //onClick={() => viewExerciseDetails(exercise)} //TODO open exercise details
+                style={{
+                    cursor: 'pointer',
+                }}
+            />
+        );
+    }
 
     return (
         <>
             <Paper
                 withBorder
                 radius="sm"
-                p="md"
+                p={isMobile ? "md" : "lg"}
             >
-            <Stack gap="xs">
-                <Group justify="space-between" wrap="nowrap">
-                    <Stack gap={2} style={{minWidth: 0}}>
-                        <Text fw={800} truncate>
-                            {exercise?.name || 'Exercise'}
-                        </Text>
-                        {exercise?.details && (
-                            <Text size="sm" c="dimmed" lineClamp={2}>
-                                {exercise.details}
-                            </Text>
-                        )}
-                    </Stack>
+            <Stack gap={isMobile ? "sm" : "md"}>
+                <Group justify="space-between" align="center" wrap="nowrap" gap="md">
+                    {renderExerciseThumbnail()}
+                    <TextInput
+                        classNames={{ input: 'subtleInput' }}
+                        fw={600}
+                        variant="filled"
+                        placeholder="Name this exercise"
+                        value={exercise.name} //TODO set inputted name
+                        //onChange={event => updateDraftField('name', event.currentTarget.value)} //TODO and if name !== actual name then a yellow warning sign to the left of field with a tooltip
+                        required
+                        style={{
+                            flex: 1,
+                            minWidth: 0,
+                        }}
+                    />
+                    <Menu withinPortal position="bottom-end">
+                        <Menu.Target>
+                            <Tooltip label="Exercise options" position="top-end">
+                                <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    style={{flexShrink: 0}}
+                                >
+                                    <IconDots size={18}/>
+                                </ActionIcon>
+                            </Tooltip>
+                        </Menu.Target>
 
-                    <Badge variant="light">
-                        Exercise
-                    </Badge>
+                        <Menu.Dropdown>
+                            <Menu.Item
+                                leftSection={<IconEye size={14}/>}
+                                //onClick={() => viewExerciseDetails(exercise)} //TODO open exercise details
+                            >
+                                View exercise
+                            </Menu.Item>
+                            <Menu.Divider/>
+                            <Menu.Item
+                                disabled={itemIndex === 0}
+                                onClick={onMoveExerciseItemUp}
+                            >
+                                Move up
+                            </Menu.Item>
+                            <Menu.Item
+                                disabled={itemIndex === itemCount - 1}
+                                onClick={onMoveExerciseItemDown}
+                            >
+                                Move down
+                            </Menu.Item>
+                            <Menu.Divider/>
+                            <Menu.Item color="red" leftSection={<IconTrash size={14}/>} onClick={onDeleteExerciseItem}>
+                                Delete
+                            </Menu.Item>
+                        </Menu.Dropdown>
+                    </Menu>
                 </Group>
 
                 <Text size="sm" c="dimmed">
