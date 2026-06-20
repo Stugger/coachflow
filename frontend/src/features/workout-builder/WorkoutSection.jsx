@@ -26,17 +26,19 @@ import {
     IconGripVertical,
     IconLink,
     IconPlus,
+    IconStack2,
     IconTrash,
     IconSeparatorHorizontal,
 } from '@tabler/icons-react';
 
 import ExerciseItemCard from './ExerciseItemCard';
+import WorkoutStackCard from './WorkoutStackCard';
 import ExercisePickerModal from './ExercisePickerModal';
 
-import {WORKOUT_SECTION_TYPE_OPTIONS} from './workout-builder-constants';
+import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 import {getSectionDisplayName, getSectionTypeLabel} from './workout-builder-utils';
 
-function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionActions, exerciseItemActions, exercisePicker}) {
+function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionActions, exerciseItemActions, stackActions, exercisePicker}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -60,7 +62,18 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
         onDeleteExerciseItem,
         onMoveExerciseItemUp,
         onMoveExerciseItemDown,
+        onAddStack,
     } = exerciseItemActions;
+
+    const {
+        onOpenExercisePicker: onOpenExercisePickerForStack,
+        onDeleteStack,
+        onMoveStackUp,
+        onMoveStackDown,
+        onDeleteStackExercise,
+        onMoveStackExerciseUp,
+        onMoveStackExerciseDown,
+    } = stackActions;
 
     const {
         exercises,
@@ -95,9 +108,29 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                 >
                     Add Exercise
                 </Button>
-                <Button size={isMobile ? 'xs' : 'sm'} variant="light" leftSection={<IconPlus size={16}/>} disabled>
-                    Add Stack
-                </Button>
+                <Menu withinPortal position="bottom-end">
+                    <Menu.Target>
+                        <Button
+                            size={isMobile ? 'xs' : 'sm'}
+                            variant="light"
+                            leftSection={<IconStack2 size={16}/>}
+                        >
+                            Add Stack
+                        </Button>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                        {WORKOUT_STACK_OPTIONS.map(option => (
+                            <Menu.Item
+                                key={option.value}
+                                onClick={() => onAddStack(option.value)}
+                                leftSection={option.icon ? <option.icon size={16} color={`var(--mantine-color-${option.color}-6)`}/> : ""}
+                            >
+                                {option.label}
+                            </Menu.Item>
+                        ))}
+                    </Menu.Dropdown>
+                </Menu>
             </Group>
         );
     }
@@ -239,17 +272,51 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                         <Stack>
                             <Box mx="calc(var(--mantine-spacing-md) * -1)">
                                 <Stack gap={0}>
-                                    {(section.items ?? []).map((item, itemIndex) => (
-                                        <ExerciseItemCard
-                                            key={item.draftId || item.id}
-                                            item={item}
-                                            itemIndex={itemIndex}
-                                            itemCount={section.items?.length ?? 0}
-                                            onDeleteExerciseItem={() => onDeleteExerciseItem(itemIndex)}
-                                            onMoveExerciseItemUp={() => onMoveExerciseItemUp(itemIndex)}
-                                            onMoveExerciseItemDown={() => onMoveExerciseItemDown(itemIndex)}
-                                        />
-                                    ))}
+                                    {(section.items ?? []).map((item, itemIndex) => {
+                                        if (item.itemType === WORKOUT_ITEM_TYPE.EXERCISE) {
+                                            return (
+                                                <ExerciseItemCard
+                                                    key={item.draftId || item.id}
+                                                    item={item}
+                                                    itemIndex={itemIndex}
+                                                    itemCount={section.items.length}
+                                                    independent={true}
+                                                    onDelete={() => onDeleteExerciseItem(itemIndex)}
+                                                    onMoveUp={() => onMoveExerciseItemUp(itemIndex)}
+                                                    onMoveDown={() => onMoveExerciseItemDown(itemIndex)}
+                                                />
+                                            );
+                                        }
+
+                                        return (
+                                            <WorkoutStackCard
+                                                key={item.draftId || item.id}
+                                                stack={item}
+                                                itemIndex={itemIndex}
+                                                itemCount={section.items.length}
+                                                onChange={updates => onChange({
+                                                    items: section.items.map((currentItem, index) => (
+                                                        index === itemIndex
+                                                            ? {...currentItem, ...updates}
+                                                            : currentItem
+                                                    )),
+                                                })}
+                                                onAddExercise={() => onOpenExercisePickerForStack(itemIndex)}
+                                                onDeleteStack={() => onDeleteStack(itemIndex)}
+                                                onMoveStackUp={() => onMoveStackUp(itemIndex)}
+                                                onMoveStackDown={() => onMoveStackDown(itemIndex)}
+                                                onDeleteStackExercise={exerciseIndex => (
+                                                    onDeleteStackExercise(itemIndex, exerciseIndex)
+                                                )}
+                                                onMoveStackExerciseUp={exerciseIndex => (
+                                                    onMoveStackExerciseUp(itemIndex, exerciseIndex)
+                                                )}
+                                                onMoveStackExerciseDown={exerciseIndex => (
+                                                    onMoveStackExerciseDown(itemIndex, exerciseIndex)
+                                                )}
+                                            />
+                                        );
+                                    })}
                                 </Stack>
                             </Box>
 

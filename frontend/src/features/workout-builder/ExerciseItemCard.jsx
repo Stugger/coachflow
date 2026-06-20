@@ -18,7 +18,7 @@ import {
     IconTrash,
 } from '@tabler/icons-react';
 
-function ExerciseItemCard({item, itemIndex, itemCount, onDeleteExerciseItem, onMoveExerciseItemUp, onMoveExerciseItemDown}) {
+function ExerciseItemCard({item, itemIndex, itemCount, independent, onDelete, onMoveUp, onMoveDown}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -113,18 +113,23 @@ function ExerciseItemCard({item, itemIndex, itemCount, onDeleteExerciseItem, onM
                                 <Menu.Divider/>
                                 <Menu.Item
                                     disabled={itemIndex === 0}
-                                    onClick={onMoveExerciseItemUp}
+                                    onClick={onMoveUp}
                                 >
                                     Move up
                                 </Menu.Item>
+
                                 <Menu.Item
                                     disabled={itemIndex === itemCount - 1}
-                                    onClick={onMoveExerciseItemDown}
+                                    onClick={onMoveDown}
                                 >
                                     Move down
                                 </Menu.Item>
-                                <Menu.Divider/>
-                                <Menu.Item color="red" leftSection={<IconTrash size={14}/>} onClick={onDeleteExerciseItem}>
+
+                                <Menu.Item
+                                    color="red"
+                                    leftSection={<IconTrash size={14}/>}
+                                    onClick={onDelete}
+                                >
                                     Delete
                                 </Menu.Item>
                             </Menu.Dropdown>
@@ -137,11 +142,9 @@ function ExerciseItemCard({item, itemIndex, itemCount, onDeleteExerciseItem, onM
                 </Stack>
             </Paper>
 
-            {itemIndex !== itemCount - 1 && (
+            {independent && itemIndex !== itemCount - 1 && (
                 <Group gap={0} mb="sm" mt="sm" wrap="nowrap" justify="center">
-                    <Tooltip label="Exercise break">
-                        <IconLink opacity={0.4} size={20}/>
-                    </Tooltip>
+                    <IconLink opacity={0.4} size={20}/>
                 </Group>
             )}
         </>

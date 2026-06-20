@@ -11,7 +11,7 @@ import {IconPlus} from '@tabler/icons-react';
 
 import WorkoutSection from './WorkoutSection';
 
-import {createWorkoutSection, createExerciseItem} from './workout-draft-factory';
+import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem} from './workout-draft-factory';
 import {reindexPositions} from './workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName} from './workout-builder-utils';
 
@@ -28,7 +28,7 @@ function WorkoutBuilder({draft, exercises, onChange}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const [expandedSectionIds, setExpandedSectionIds] = useState(() => new Set());
-    const [exercisePickerSectionIndex, setExercisePickerSectionIndex] = useState(null);
+    const [exercisePickerTarget, setExercisePickerTarget] = useState(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -119,6 +119,24 @@ function WorkoutBuilder({draft, exercises, onChange}) {
 
     /* Section item helpers */
 
+    function addExerciseFromPicker(exercise) {
+        if (!exercisePickerTarget) {
+            return;
+        }
+
+        if (exercisePickerTarget.type === 'section') {
+            addExerciseToSection(exercisePickerTarget.sectionIndex, exercise);
+        } else if (exercisePickerTarget.type === 'stack') {
+            addExerciseToStack(
+                exercisePickerTarget.sectionIndex,
+                exercisePickerTarget.itemIndex,
+                exercise,
+            );
+        }
+
+        setExercisePickerTarget(null);
+    }
+
     function addExerciseToSection(sectionIndex, exercise) {
         updateSection(sectionIndex, section => ({
             ...section,
@@ -127,8 +145,6 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                 createExerciseItem(exercise, (section.items?.length ?? 0) + 1),
             ]),
         }));
-
-        setExercisePickerSectionIndex(null);
     }
 
     function deleteItemFromSection(sectionIndex, itemIndex) {
@@ -156,6 +172,79 @@ function WorkoutBuilder({draft, exercises, onChange}) {
             ...section,
             items: reindexPositions(nextItems),
         }));
+    }
+
+    /* Stack helpers */
+
+    function addStackToSection(sectionIndex, itemType) {
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: reindexPositions([
+                ...(section.items ?? []),
+                createStackItem(itemType, (section.items?.length ?? 0) + 1),
+            ]),
+        }));
+    }
+
+    function updateStackItem(sectionIndex, stackItemIndex, updater) {
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: section.items.map((item, itemIndex) => (
+                itemIndex === stackItemIndex
+                    ? updater(item)
+                    : item
+            )),
+        }));
+    }
+
+    function addExerciseToStack(sectionIndex, itemIndex, exercise) {
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: section.items.map((item, index) => {
+                if (index !== itemIndex) {
+                    return item;
+                }
+
+                return {
+                    ...item,
+                    itemExercises: reindexPositions([
+                        ...(item.itemExercises ?? []),
+                        createStackExercise(
+                            exercise,
+                            (item.itemExercises?.length ?? 0) + 1,
+                        ),
+                    ]),
+                };
+            }),
+        }));
+    }
+
+    function deleteExerciseFromStack(sectionIndex, stackItemIndex, exerciseIndex) {
+        updateStackItem(sectionIndex, stackItemIndex, stack => ({
+            ...stack,
+            itemExercises: reindexPositions(
+                (stack.itemExercises ?? []).filter((_, index) => index !== exerciseIndex)
+            ),
+        }));
+    }
+
+    function moveExerciseInStack(sectionIndex, stackItemIndex, exerciseIndex, direction) {
+        updateStackItem(sectionIndex, stackItemIndex, stack => {
+            const itemExercises = [...(stack.itemExercises ?? [])];
+            const targetIndex = exerciseIndex + direction;
+
+            if (targetIndex < 0 || targetIndex >= itemExercises.length) {
+                return stack;
+            }
+
+            const [exercise] = itemExercises.splice(exerciseIndex, 1);
+            itemExercises.splice(targetIndex, 0, exercise);
+
+            return {
+                ...stack,
+                itemExercises: reindexPositions(itemExercises),
+            };
+        });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -218,13 +307,36 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                             onDeleteExerciseItem: itemIndex => deleteItemFromSection(sectionIndex, itemIndex),
                             onMoveExerciseItemUp: itemIndex => moveItemInSection(sectionIndex, itemIndex, -1),
                             onMoveExerciseItemDown: itemIndex => moveItemInSection(sectionIndex, itemIndex, 1),
+                            onAddStack: itemType => addStackToSection(sectionIndex, itemType),
+                        }}
+                        stackActions={{
+                            onOpenExercisePicker: itemIndex => setExercisePickerTarget({
+                                type: 'stack',
+                                sectionIndex,
+                                itemIndex,
+                            }),
+                            onDeleteStack: itemIndex => deleteItemFromSection(sectionIndex, itemIndex),
+                            onMoveStackUp: itemIndex => moveItemInSection(sectionIndex, itemIndex, -1),
+                            onMoveStackDown: itemIndex => moveItemInSection(sectionIndex, itemIndex, 1),
+                            onDeleteStackExercise: (itemIndex, exerciseIndex) => (
+                                deleteExerciseFromStack(sectionIndex, itemIndex, exerciseIndex)
+                            ),
+                            onMoveStackExerciseUp: (itemIndex, exerciseIndex) => (
+                                moveExerciseInStack(sectionIndex, itemIndex, exerciseIndex, -1)
+                            ),
+                            onMoveStackExerciseDown: (itemIndex, exerciseIndex) => (
+                                moveExerciseInStack(sectionIndex, itemIndex, exerciseIndex, 1)
+                            ),
                         }}
                         exercisePicker={{
                             exercises,
-                            opened: exercisePickerSectionIndex === sectionIndex,
-                            onOpen: () => setExercisePickerSectionIndex(sectionIndex),
-                            onClose: () => setExercisePickerSectionIndex(null),
-                            onAdd: exercise => addExerciseToSection(sectionIndex, exercise),
+                            opened: exercisePickerTarget?.sectionIndex === sectionIndex,
+                            onOpen: () => setExercisePickerTarget({
+                                type: 'section',
+                                sectionIndex,
+                            }),
+                            onClose: () => setExercisePickerTarget(null),
+                            onAdd: addExerciseFromPicker,
                         }}
                     />
                 ))}

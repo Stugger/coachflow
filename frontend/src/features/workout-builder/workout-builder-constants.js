@@ -1,3 +1,9 @@
+import {
+    IconStack,
+    IconStack2,
+    IconStack3,
+} from '@tabler/icons-react';
+
 export const WORKOUT_SECTION_TYPE = {
     REGULAR: 'REGULAR',
     WARMUP: 'WARMUP',
@@ -26,6 +32,36 @@ export const WORKOUT_ITEM_TYPE = {
     TRISET: 'TRISET',
     CIRCUIT: 'CIRCUIT',
 };
+
+export const WORKOUT_STACK_OPTIONS = [
+    {
+        value: WORKOUT_ITEM_TYPE.SUPERSET,
+        label: 'Superset',
+        color: 'blue',
+        icon: IconStack,
+        minExercises: 2,
+        maxExercises: 2,
+        requirement: 'Requires exactly 2 exercises',
+    },
+    {
+        value: WORKOUT_ITEM_TYPE.TRISET,
+        label: 'Triset',
+        color: 'violet',
+        icon: IconStack2,
+        minExercises: 3,
+        maxExercises: 3,
+        requirement: 'Requires exactly 3 exercises',
+    },
+    {
+        value: WORKOUT_ITEM_TYPE.CIRCUIT,
+        label: 'Circuit',
+        color: 'orange',
+        icon: IconStack3,
+        minExercises: 2,
+        maxExercises: null,
+        requirement: 'Requires at least 2 exercises',
+    },
+];
 
 export const WORKOUT_SET_TYPE = {
     STANDARD: 'STANDARD',
