@@ -660,7 +660,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                         flex: 1,
                         minHeight: 0,
                         overflowY: 'auto',
-                        padding: 'var(--mantine-spacing-md)',
+                        padding: 'var(--mantine-spacing-lg)',
                     }}
                 >
                     {renderEditorContent()}

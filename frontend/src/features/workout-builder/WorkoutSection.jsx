@@ -19,6 +19,8 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconArrowDown,
+    IconArrowUp,
     IconChevronDown,
     IconChevronUp,
     IconDots,
@@ -202,18 +204,33 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                             </Menu.Target>
 
                             <Menu.Dropdown>
-                                <Menu.Item leftSection={<IconEdit size={14}/>} onClick={onToggle}>
+                                <Menu.Item
+                                    leftSection={<IconEdit size={14}/>}
+                                    onClick={onToggle}
+                                >
                                     Edit section
                                 </Menu.Item>
                                 <Menu.Divider/>
-                                <Menu.Item disabled={sectionIndex === 0} onClick={onMoveUp}>
+                                <Menu.Item
+                                    disabled={sectionIndex === 0}
+                                    leftSection={<IconArrowUp size={14}/>}
+                                    onClick={onMoveUp}
+                                >
                                     Move up
                                 </Menu.Item>
-                                <Menu.Item disabled={sectionIndex === sectionCount - 1} onClick={onMoveDown}>
+                                <Menu.Item
+                                    disabled={sectionIndex === sectionCount - 1}
+                                    leftSection={<IconArrowDown size={14}/>}
+                                    onClick={onMoveDown}
+                                >
                                     Move down
                                 </Menu.Item>
                                 <Menu.Divider/>
-                                <Menu.Item color="red" leftSection={<IconTrash size={14}/>} onClick={onDelete}>
+                                <Menu.Item
+                                    color="red"
+                                    leftSection={<IconTrash size={14}/>}
+                                    onClick={onDelete}
+                                >
                                     Delete section
                                 </Menu.Item>
                             </Menu.Dropdown>

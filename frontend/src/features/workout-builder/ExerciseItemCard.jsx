@@ -11,6 +11,8 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconArrowDown,
+    IconArrowUp,
     IconDots,
     IconEye,
     IconLink,
@@ -112,6 +114,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onDelete, on
                                 </Menu.Item>
                                 <Menu.Divider/>
                                 <Menu.Item
+                                    leftSection={<IconArrowUp size={14}/>}
                                     disabled={itemIndex === 0}
                                     onClick={onMoveUp}
                                 >
@@ -119,6 +122,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onDelete, on
                                 </Menu.Item>
 
                                 <Menu.Item
+                                    leftSection={<IconArrowDown size={14}/>}
                                     disabled={itemIndex === itemCount - 1}
                                     onClick={onMoveDown}
                                 >

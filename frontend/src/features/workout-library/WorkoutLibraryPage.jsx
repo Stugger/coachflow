@@ -169,7 +169,7 @@ function WorkoutLibraryPage({trainerId}) {
                 </Box>
             )}
             <Stack gap="md" pos="relative">
-                <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
+                <LoadingOverlay visible={!loaded && !editorOpened} overlayProps={{blur: 2}}/>
 
                 {editorOpened && (
                     <WorkoutEditorModal
