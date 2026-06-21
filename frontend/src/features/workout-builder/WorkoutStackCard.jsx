@@ -67,6 +67,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
     const complete = isStackComplete(stack);
 
     const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-background)'}, useMantineTheme());
+    const shadow = computedColorScheme === 'light' ? "var(--mantine-shadow-lg)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"
 
     const stackTypeOptions = WORKOUT_STACK_OPTIONS.map(option => ({
         value: option.value,
@@ -91,7 +92,19 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                     paddingLeft: isMobile ? 'var(--mantine-spacing-xs)' : 'var(--mantine-spacing-sm)',
                 }}
             >
-                <Paper withBorder radius="sm" style={{overflow: 'hidden', backgroundColor: 'var(--color-background)'}}>
+                <Paper
+                    withBorder
+                    radius="sm"
+                    shadow={shadow}
+                    style={{
+                        overflow: 'hidden',
+                        backgroundColor: 'var(--color-background)',
+                        border: 'none',
+                        borderTop: '1px solid var(--color-border)',
+                        borderBottom: '1px solid var(--color-border)',
+                        borderLeft: '1px solid var(--color-border)'
+                    }}
+                >
                     <Box
                         px="sm"
                         py={4}
@@ -201,7 +214,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                                 <Group gap="xs" flex={1}>
                                                     {Icon && (
                                                         <Icon
-                                                            size={16}
+                                                            size={18}
                                                             color={`var(--mantine-color-${option.color}-6)`}
                                                         />
                                                     )}

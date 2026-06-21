@@ -1,6 +1,9 @@
+import {useState} from 'react';
 import {
+    useComputedColorScheme,
     ActionIcon,
     Avatar,
+    Collapse,
     Group,
     Menu,
     Paper,
@@ -15,6 +18,7 @@ import {
     IconArrowDown,
     IconArrowUp,
     IconDots,
+    IconEdit,
     IconEye,
     IconLink,
     IconPhoto,
@@ -29,9 +33,19 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
 
     const isMobile = useMediaQuery('(max-width: 48em)');
 
+    const computedColorScheme = useComputedColorScheme('light');
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const [customizingFields, setCustomizingFields] = useState(false);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
+
+    const shadow = computedColorScheme === 'light' ? "var(--mantine-shadow-lg)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"
 
     const exercise = item.exercise;
 
@@ -75,18 +89,20 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     return (
         <>
             <Paper
-                withBorder
                 radius="sm"
                 p={isMobile ? 'md' : 'lg'}
+                shadow={shadow}
+                style={{
+                    border: '1px solid var(--color-border)'
+                }}
             >
                 <Stack gap={isMobile ? 'sm' : 'md'}>
                     <Group justify="space-between" align="center" wrap="nowrap" gap="md">
                         {renderExerciseThumbnail()}
 
                         <TextInput
-                            classNames={{input: 'subtleInput'}}
                             fw={600}
-                            variant="filled"
+                            variant={computedColorScheme === 'light' ? "filled" : "default"}
                             placeholder="Name this exercise"
                             leftSection={
                                 hasNameOverride && (
@@ -135,7 +151,16 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                                 >
                                     View exercise
                                 </Menu.Item>
+
+                                <Menu.Item
+                                    leftSection={<IconEdit size={14}/>}
+                                    onClick={() => setCustomizingFields(true)}
+                                >
+                                    Customize fields
+                                </Menu.Item>
+
                                 <Menu.Divider/>
+
                                 <Menu.Item
                                     leftSection={<IconArrowUp size={14}/>}
                                     disabled={itemIndex === 0}
@@ -163,9 +188,16 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                         </Menu>
                     </Group>
 
-                    <Text size="sm" c="dimmed">
-                        Tracking fields and sets will go here.
-                    </Text>
+                    <Collapse expanded={customizingFields}>
+                        <ExerciseTrackingConfig
+                            item={item}
+                            onClose={() => setCustomizingFields(false)}
+                            onSave={updates => {
+                                onChange(updates);
+                                setCustomizingFields(false);
+                            }}
+                        />
+                    </Collapse>
                 </Stack>
             </Paper>
 
@@ -175,6 +207,21 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                 </Group>
             )}
         </>
+    );
+}
+
+function ExerciseTrackingConfig({item, onClose, onSave}) {
+    return (
+        <Paper
+            radius="sm"
+            p="sm"
+            bg="var(--color-background)"
+            shadow="none"
+        >
+            <Text size="sm" c="dimmed">
+                Tracking field configuration goes here!
+            </Text>
+        </Paper>
     );
 }
 

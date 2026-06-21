@@ -292,7 +292,7 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                 </Paper>
             )}
 
-            <Stack gap="xs">
+            <Stack gap="1.5rem">
                 {sections.map((section, sectionIndex) => (
                     <WorkoutSection
                         key={getSectionKey(section)}

@@ -476,9 +476,17 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                             {workoutEquipment.map(equipment => (
                                                 <Badge
                                                     key={equipment}
-                                                    variant="light"
+                                                    bg="var(--color-surface)"
                                                     radius="sm"
-                                                    leftSection={<IconDumbbell size={14}/>}
+                                                    leftSection={<IconDumbbell size={14} color={computedColorScheme === 'light' ? "black" : "gray"}/>}
+                                                    styles={{
+                                                        root: {
+                                                            borderColor: computedColorScheme === 'light' ? "black" : "gray",
+                                                        },
+                                                        label: {
+                                                            color: computedColorScheme === 'light' ? "black" : "gray",
+                                                        }
+                                                    }}
                                                 >
                                                     {equipment}
                                                 </Badge>

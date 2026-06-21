@@ -21,6 +21,7 @@ import {useMediaQuery} from '@mantine/hooks';
 import {
     IconArrowDown,
     IconArrowUp,
+    IconBarbell,
     IconChevronDown,
     IconChevronUp,
     IconDots,
@@ -90,7 +91,8 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const headerGradient = getGradient({deg: 90, from: 'blue.8', to: 'violet.7'}, useMantineTheme());
+
+    const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f'}, useMantineTheme());
 
     const itemCount = section.items?.length ?? 0;
     const sectionName = getSectionDisplayName(section);
@@ -103,31 +105,31 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
     function renderAddItemButtons() {
         return (
             <Group justify="flex-end">
-                <Button
-                    size={isMobile ? 'xs' : 'sm'}
-                    variant="light"
-                    leftSection={<IconPlus size={16}/>}
-                    onClick={onOpenExercisePicker}
-                >
-                    Add Exercise
-                </Button>
                 <Menu withinPortal position="bottom-end">
                     <Menu.Target>
                         <Button
                             size={isMobile ? 'xs' : 'sm'}
                             variant="light"
-                            leftSection={<IconStackPush size={16}/>}
+                            leftSection={<IconPlus size={16}/>}
                         >
-                            Add Stack
+                            Add Item
                         </Button>
                     </Menu.Target>
 
                     <Menu.Dropdown>
+                        <Menu.Item
+                            key={'exercise'}
+                            onClick={onOpenExercisePicker}
+                            leftSection={<IconBarbell size={18}/>}
+                        >
+                            Exercise
+                        </Menu.Item>
+                        <Menu.Divider />
                         {WORKOUT_STACK_OPTIONS.map(option => (
                             <Menu.Item
                                 key={option.value}
                                 onClick={() => onAddStack(option.value)}
-                                leftSection={option.icon ? <option.icon size={16} color={`var(--mantine-color-${option.color}-6)`}/> : ""}
+                                leftSection={option.icon ? <option.icon size={18} color={`var(--mantine-color-${option.color}-6)`}/> : ""}
                             >
                                 {option.label}
                             </Menu.Item>
@@ -154,7 +156,6 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
             <Paper
                 withBorder
                 radius="md"
-                shadow="lg"
                 bg="var(--color-background)"
                 style={{overflow: 'hidden'}}
             >
@@ -358,16 +359,6 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                     )}
                 </Box>
             </Paper>
-
-            {sectionIndex < sectionCount - 1 && (
-                <Group gap="xs" my="lg" mb="sm" wrap="nowrap">
-                    <Divider size={2} style={{flex: 1}}/>
-                    <Tooltip label="Section break">
-                        <IconSeparatorHorizontal opacity={0.4} size={20}/>
-                    </Tooltip>
-                    <Divider size={2} style={{flex: 1}}/>
-                </Group>
-            )}
         </Box>
     );
 }
