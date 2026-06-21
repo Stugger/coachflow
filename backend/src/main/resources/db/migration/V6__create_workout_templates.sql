@@ -93,6 +93,8 @@ CREATE TABLE workout_template_item_exercises (
 
     position INTEGER NOT NULL,
 
+    name VARCHAR(255),
+
     notes TEXT,
     config_json JSONB,
 

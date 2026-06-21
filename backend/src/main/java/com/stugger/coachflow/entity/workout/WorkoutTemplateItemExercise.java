@@ -38,6 +38,9 @@ public class WorkoutTemplateItemExercise {
     @Column(nullable = false)
     private Integer position;
 
+    @Column
+    private String name;
+
     @Column(columnDefinition = "TEXT")
     private String notes;
 

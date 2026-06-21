@@ -66,9 +66,10 @@ export function createStackExercise(exercise, position = 1) {
     return {
         id: null,
         draftId: createDraftId('item-exercise'),
-        position,
         exercise,
         exerciseId: exercise.id,
+        position,
+        name: '',
         notes: '',
         configJson: stringifyWorkoutConfig(createEmptyWorkoutConfig()),
     };

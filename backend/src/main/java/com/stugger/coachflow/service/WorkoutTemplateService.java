@@ -189,6 +189,7 @@ public class WorkoutTemplateService {
             itemExercise.setWorkoutTemplateItem(item);
             itemExercise.setExercise(getAvailableExerciseOrThrow(itemExerciseRequest.exerciseId(), trainerId));
             itemExercise.setPosition(itemExerciseRequest.position());
+            itemExercise.setName(TextUtils.trimToNull(itemExerciseRequest.name()));
             itemExercise.setNotes(TextUtils.trimToNull(itemExerciseRequest.notes()));
             itemExercise.setConfigJson(itemExerciseRequest.configJson());
             itemExercise.setCreatedAt(now);
