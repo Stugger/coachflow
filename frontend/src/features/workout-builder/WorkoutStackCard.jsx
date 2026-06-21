@@ -41,7 +41,7 @@ import {
 } from './workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 
-function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise, onDeleteStack, onMoveStackUp, onMoveStackDown, onDeleteStackExercise, onMoveStackExerciseUp, onMoveStackExerciseDown}) {
+function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise, onDeleteStack, onMoveStackUp, onMoveStackDown, onChangeStackExercise, onDeleteStackExercise, onMoveStackExerciseUp, onMoveStackExerciseDown}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -272,6 +272,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                                 itemIndex={exerciseIndex}
                                                 itemCount={stack.itemExercises.length}
                                                 independent={false}
+                                                onChange={updates => onChangeStackExercise(exerciseIndex, updates)}
                                                 onDelete={() => onDeleteStackExercise(exerciseIndex)}
                                                 onMoveUp={() => onMoveStackExerciseUp(exerciseIndex)}
                                                 onMoveDown={() => onMoveStackExerciseDown(exerciseIndex)}

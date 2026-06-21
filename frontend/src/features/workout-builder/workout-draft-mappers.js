@@ -102,7 +102,7 @@ function buildItemPayload(item, itemIndex) {
         position: itemIndex + 1,
         itemType,
         exerciseId: isExercise ? getExerciseId(item) : null,
-        name: trimToNull(item.name),
+        name: toNameOverrideOrNull(item),
         rounds: isExercise ? null : toPositiveNumberOrNull(item.rounds),
         notes: trimToNull(item.notes),
         configJson: isExercise ? normalizeConfigJson(item.configJson) : null,
@@ -112,7 +112,7 @@ function buildItemPayload(item, itemIndex) {
                 id: itemExercise.id ?? null,
                 exerciseId: getExerciseId(itemExercise),
                 position: itemExerciseIndex + 1,
-                name: trimToNull(itemExercise.name),
+                name: toNameOverrideOrNull(itemExercise),
                 notes: trimToNull(itemExercise.notes),
                 configJson: normalizeConfigJson(itemExercise.configJson),
             })),
@@ -210,4 +210,15 @@ function toPositiveNumberOrNull(value) {
     }
 
     return parsed;
+}
+
+function toNameOverrideOrNull(item) {
+    const customName = trimToNull(item.name);
+    const exerciseName = trimToNull(item.exercise?.name);
+
+    if (!customName || customName === exerciseName) {
+        return null;
+    }
+
+    return customName;
 }

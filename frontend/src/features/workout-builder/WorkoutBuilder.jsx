@@ -117,8 +117,6 @@ function WorkoutBuilder({draft, exercises, onChange}) {
         });
     }
 
-    /* Section item helpers */
-
     function addExerciseFromPicker(exercise) {
         if (!exercisePickerTarget) {
             return;
@@ -136,6 +134,8 @@ function WorkoutBuilder({draft, exercises, onChange}) {
 
         setExercisePickerTarget(null);
     }
+
+    /* Section item helpers */
 
     function addExerciseToSection(sectionIndex, exercise) {
         updateSection(sectionIndex, section => ({
@@ -193,6 +193,17 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                 itemIndex === stackItemIndex
                     ? updater(item)
                     : item
+            )),
+        }));
+    }
+
+    function updateExerciseInStack(sectionIndex, stackItemIndex, exerciseIndex, updates) {
+        updateStackItem(sectionIndex, stackItemIndex, stack => ({
+            ...stack,
+            itemExercises: stack.itemExercises.map((itemExercise, index) => (
+                index === exerciseIndex
+                    ? {...itemExercise, ...updates}
+                    : itemExercise
             )),
         }));
     }
@@ -318,6 +329,9 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                             onDeleteStack: itemIndex => deleteItemFromSection(sectionIndex, itemIndex),
                             onMoveStackUp: itemIndex => moveItemInSection(sectionIndex, itemIndex, -1),
                             onMoveStackDown: itemIndex => moveItemInSection(sectionIndex, itemIndex, 1),
+                            onChangeStackExercise: (itemIndex, exerciseIndex, updates) => (
+                                updateExerciseInStack(sectionIndex, itemIndex, exerciseIndex, updates)
+                            ),
                             onDeleteStackExercise: (itemIndex, exerciseIndex) => (
                                 deleteExerciseFromStack(sectionIndex, itemIndex, exerciseIndex)
                             ),

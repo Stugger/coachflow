@@ -11,6 +11,7 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconPencilExclamation,
     IconArrowDown,
     IconArrowUp,
     IconDots,
@@ -20,7 +21,7 @@ import {
     IconTrash,
 } from '@tabler/icons-react';
 
-function ExerciseItemCard({item, itemIndex, itemCount, independent, onDelete, onMoveUp, onMoveDown}) {
+function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, onDelete, onMoveUp, onMoveDown}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -33,6 +34,10 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onDelete, on
     // ------------------------------------------------------------------------------------------------------------------------
 
     const exercise = item.exercise;
+
+    const hasNameOverride =
+        Boolean(item.name?.trim()) &&
+        item.name.trim() !== exercise?.name?.trim();
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers
@@ -83,12 +88,30 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onDelete, on
                             fw={600}
                             variant="filled"
                             placeholder="Name this exercise"
+                            leftSection={
+                                hasNameOverride && (
+                                    <Tooltip label="Custom exercise name" events={{ hover: true, focus: false, touch: true }}>
+                                        <IconPencilExclamation
+                                            size={18}
+                                            color="var(--mantine-color-blue-6)"
+                                            style={{flexShrink: 0}}
+                                        />
+                                    </Tooltip>
+                                )
+                            }
                             value={item.name || exercise?.name || ''}
-                            readOnly
+                            onChange={event => onChange({
+                                name: event.currentTarget.value,
+                            })}
                             required
                             style={{
                                 flex: 1,
                                 minWidth: 0,
+                            }}
+                            styles={{
+                                input: {
+                                    paddingLeft: hasNameOverride ? '2rem' : undefined,
+                                }
                             }}
                         />
 

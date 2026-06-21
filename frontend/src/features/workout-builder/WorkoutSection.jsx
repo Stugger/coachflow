@@ -72,6 +72,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
         onDeleteStack,
         onMoveStackUp,
         onMoveStackDown,
+        onChangeStackExercise,
         onDeleteStackExercise,
         onMoveStackExerciseUp,
         onMoveStackExerciseDown,
@@ -298,6 +299,13 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                                     itemIndex={itemIndex}
                                                     itemCount={section.items.length}
                                                     independent={true}
+                                                    onChange={updates => onChange({
+                                                        items: section.items.map((currentItem, index) => (
+                                                            index === itemIndex
+                                                                ? {...currentItem, ...updates}
+                                                                : currentItem
+                                                        )),
+                                                    })}
                                                     onDelete={() => onDeleteExerciseItem(itemIndex)}
                                                     onMoveUp={() => onMoveExerciseItemUp(itemIndex)}
                                                     onMoveDown={() => onMoveExerciseItemDown(itemIndex)}
@@ -322,6 +330,9 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                                 onDeleteStack={() => onDeleteStack(itemIndex)}
                                                 onMoveStackUp={() => onMoveStackUp(itemIndex)}
                                                 onMoveStackDown={() => onMoveStackDown(itemIndex)}
+                                                onChangeStackExercise={(exerciseIndex, updates) => (
+                                                    onChangeStackExercise(itemIndex, exerciseIndex, updates)
+                                                )}
                                                 onDeleteStackExercise={exerciseIndex => (
                                                     onDeleteStackExercise(itemIndex, exerciseIndex)
                                                 )}
