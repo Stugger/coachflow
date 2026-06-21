@@ -55,7 +55,7 @@ export function createStackItem(itemType, position = 1) {
         exercise: null,
         exerciseId: null,
         name: '',
-        rounds: 3,
+        rounds: 1,
         notes: '',
         configJson: null,
         itemExercises: [],

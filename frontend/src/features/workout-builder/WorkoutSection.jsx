@@ -28,7 +28,7 @@ import {
     IconGripVertical,
     IconLink,
     IconPlus,
-    IconStack2,
+    IconStackPush,
     IconTrash,
     IconSeparatorHorizontal,
 } from '@tabler/icons-react';
@@ -116,7 +116,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                         <Button
                             size={isMobile ? 'xs' : 'sm'}
                             variant="light"
-                            leftSection={<IconStack2 size={16}/>}
+                            leftSection={<IconStackPush size={16}/>}
                         >
                             Add Stack
                         </Button>
@@ -183,13 +183,18 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                     {sectionName}
                                 </Text>
 
-                                <Text opacity={0.65}>•</Text>
-
-                                <Text size="sm" opacity={0.75} truncate>
+                                <Badge size="xs" variant="outline" color="white">
                                     {sectionTypeLabel}
-                                </Text>
+                                </Badge>
 
-                                <Badge size="xs" variant="light" color="gray">
+                                <Badge size="xs" variant="dot" color="white" bg="transparent" styles={{
+                                    root: {
+                                        borderColor: "white",
+                                    },
+                                    label: {
+                                        color: "white"
+                                    }
+                                }}>
                                     {itemCount} item{itemCount === 1 ? '' : 's'}
                                 </Badge>
                             </Group>

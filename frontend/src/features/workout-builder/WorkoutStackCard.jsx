@@ -21,6 +21,7 @@ import {useMediaQuery} from '@mantine/hooks';
 import {
     IconArrowDown,
     IconArrowUp,
+    IconCheck,
     IconChevronDown,
     IconChevronUp,
     IconDots,
@@ -119,11 +120,15 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                         {option?.label?.toUpperCase() ?? 'STACK'}
                                     </Text>
 
-                                    <Badge
-                                        size="xs"
-                                        variant="light"
-                                        color="gray"
-                                    >
+                                    <Badge size="xs" variant="dot" color="white" bg="transparent" styles={{
+                                        root: {
+                                            borderColor: "white",
+                                        },
+                                        label: {
+                                            color: "white"
+                                        }
+                                    }}>
+
                                         {stack.rounds ?? 3} round{stack.rounds === 1 ? '' : 's'}
                                     </Badge>
                                 </Group>
@@ -141,7 +146,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                 <Menu.Dropdown>
                                     <Menu.Item
                                         leftSection={<IconEdit size={14}/>}
-                                        onClick={() => setExpanded(true)}
+                                        onClick={() => setExpanded(!expanded)}
                                     >
                                         Edit stack
                                     </Menu.Item>
@@ -190,10 +195,10 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                             itemType: value || stack.itemType,
                                         })}
                                         allowDeselect={false}
-                                        renderOption={({option}) => {
+                                        renderOption={({option, checked}) => {
                                             const Icon = option.icon;
                                             return (
-                                                <Group gap="xs">
+                                                <Group gap="xs" flex={1}>
                                                     {Icon && (
                                                         <Icon
                                                             size={16}
@@ -203,6 +208,9 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                                     <Text size="sm">
                                                         {option.label}
                                                     </Text>
+                                                    {checked && (
+                                                        <IconCheck size={20} color="gray" style={{ marginInlineStart: 'auto' }}/>
+                                                    )}
                                                 </Group>
                                             );
                                         }}
@@ -225,7 +233,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                         <Textarea
                             classNames={{input: 'subtleInput'}}
                             variant="unstyled"
-                            placeholder="Add stack notes"
+                            placeholder="Add notes for this stack"
                             value={stack.notes || ''}
                             onChange={event => onChange({
                                 notes: event.currentTarget.value,

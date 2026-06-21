@@ -271,10 +271,6 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                         Organize this workout into sections. Exercises and stacks will be added inside each section.
                     </Text>
                 </Stack>
-
-                <Button leftSection={<IconPlus size={16}/>} onClick={addSection}>
-                    Add Section
-                </Button>
             </Group>
 
             {sections.length === 0 && (
@@ -355,6 +351,12 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                     />
                 ))}
             </Stack>
+
+            {sections.length > 0 && (
+                <Button leftSection={<IconPlus size={16}/>} onClick={addSection}>
+                    Add Section
+                </Button>
+            )}
         </Stack>
     );
 }

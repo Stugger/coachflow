@@ -26,6 +26,7 @@ import {
     IconDeviceFloppy,
     IconDots,
     IconDumbbell,
+    IconHammer,
     IconSketching,
     IconTrash,
     IconX,
@@ -87,16 +88,11 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     const isCreating = mode === 'new';
 
     const title = useMemo(() => {
-        if (isEditing) {
-            return 'Edit Workout';
+        if (draft && draft.name) {
+            return draft.name;
         }
-
-        if (isCopying) {
-            return 'Copy Workout';
-        }
-
-        return 'New Workout';
-    }, [isEditing, isCopying]);
+        return !loaded && !isCreating ? "..." : "Unnamed";
+    }, [draft, loaded, isCreating]);
 
     const workoutEquipment = useMemo(() => {
         return getWorkoutEquipment(draft);
@@ -592,10 +588,16 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                 : 'var(--color-background)',
                         }}
                     >
-                        <Drawer.Title style={{fontSize: '1.5rem', fontWeight: 'bold'}}>
-                            {title}
+                        <Drawer.Title style={{ flex: 1, minWidth: 0 }}>
+                            <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
+                                <IconHammer size={22} style={{ flexShrink: 0 }} />
+                                <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                    {title}
+                                </Text>
+                            </Group>
                         </Drawer.Title>
-                        <Drawer.CloseButton/>
+
+                        <Drawer.CloseButton style={{ flexShrink: 0 }} />
                     </Drawer.Header>
 
                     <Drawer.Body
@@ -649,10 +651,16 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                             : 'var(--color-background)',
                     }}
                 >
-                    <Modal.Title style={{fontSize: '1.5rem', fontWeight: 'bold'}}>
-                        {title}
+                    <Modal.Title style={{ flex: 1, minWidth: 0 }}>
+                        <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
+                            <IconHammer size={22} style={{ flexShrink: 0 }} />
+                            <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                {title}
+                            </Text>
+                        </Group>
                     </Modal.Title>
-                    <Modal.CloseButton/>
+
+                    <Modal.CloseButton style={{ flexShrink: 0 }} />
                 </Modal.Header>
 
                 <Modal.Body

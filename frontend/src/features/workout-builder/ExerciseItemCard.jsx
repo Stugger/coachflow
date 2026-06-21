@@ -157,7 +157,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                                     leftSection={<IconTrash size={14}/>}
                                     onClick={onDelete}
                                 >
-                                    Delete
+                                    Delete exercise
                                 </Menu.Item>
                             </Menu.Dropdown>
                         </Menu>
