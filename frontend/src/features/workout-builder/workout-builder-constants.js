@@ -73,15 +73,7 @@ export const WORKOUT_SET_TYPE = {
 export const TRACKING_FIELD_TYPE = {
     INTEGER: 'INTEGER',
     DECIMAL: 'DECIMAL',
-    WEIGHT: 'WEIGHT',
-    DISTANCE: 'DISTANCE',
-    DURATION: 'DURATION',
-    PERCENT: 'PERCENT',
+    RANGE: 'RANGE',
+    TIME: 'TIME',
     TEXT: 'TEXT',
-};
-
-export const TRACKING_FIELD_SCOPE = {
-    EXERCISE: 'EXERCISE',
-    PER_SET: 'PER_SET',
-    PER_SIDE: 'PER_SIDE',
 };

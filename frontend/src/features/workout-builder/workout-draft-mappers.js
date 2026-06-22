@@ -157,6 +157,13 @@ export function reindexPositions(items) {
     }));
 }
 
+export function reindexTrackingFields(fields) {
+    return fields.map((field, index) => ({
+        ...field,
+        position: index + 1,
+    }));
+}
+
 export function getExerciseId(item) {
     return item.exerciseId ?? item.exercise?.id ?? null;
 }

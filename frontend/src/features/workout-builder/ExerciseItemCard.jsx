@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     ActionIcon,
@@ -8,22 +8,27 @@ import {
     Menu,
     Paper,
     Stack,
-    Text,
     TextInput,
     Tooltip,
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
-    IconPencilExclamation,
     IconArrowDown,
     IconArrowUp,
     IconDots,
     IconEdit,
     IconEye,
     IconLink,
+    IconPencilExclamation,
     IconPhoto,
     IconTrash,
 } from '@tabler/icons-react';
+
+import ExerciseTrackingConfig from './ExerciseTrackingConfig';
+import {
+    parseWorkoutConfig,
+    stringifyWorkoutConfig,
+} from './workout-draft-factory';
 
 function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, onDelete, onMoveUp, onMoveDown}) {
 
@@ -39,19 +44,64 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
+    const [configDraft, setConfigDraft] = useState(null);
     const [customizingFields, setCustomizingFields] = useState(false);
+
+    const exerciseOptionsButtonRef = useRef(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
-
-    const shadow = computedColorScheme === 'light' ? "var(--mantine-shadow-lg)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"
 
     const exercise = item.exercise;
 
     const hasNameOverride =
         Boolean(item.name?.trim()) &&
         item.name.trim() !== exercise?.name?.trim();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Draft persistence helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function saveTrackingConfig() {
+        const currentConfigJson = stringifyWorkoutConfig(
+            parseWorkoutConfig(item.configJson)
+        );
+
+        const nextConfigJson = stringifyWorkoutConfig(configDraft);
+
+        if (nextConfigJson !== currentConfigJson) {
+            onChange({
+                configJson: nextConfigJson,
+            });
+        }
+
+        closeTrackingConfig();
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function openTrackingConfig() {
+        if (customizingFields) {
+            return;
+        }
+        setConfigDraft(structuredClone(parseWorkoutConfig(item.configJson)));
+        setCustomizingFields(true);
+    }
+
+    function closeTrackingConfig() {
+        if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+        }
+
+        setCustomizingFields(false);
+
+        requestAnimationFrame(() => {
+            exerciseOptionsButtonRef.current?.focus();
+        });
+    }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers
@@ -91,7 +141,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
             <Paper
                 radius="sm"
                 p={isMobile ? 'md' : 'lg'}
-                shadow={shadow}
+                shadow={computedColorScheme === 'light' ? "var(--mantine-shadow-md)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"}
                 style={{
                     border: '1px solid var(--color-border)'
                 }}
@@ -135,6 +185,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                             <Menu.Target>
                                 <Tooltip label="Exercise options" position="top-end">
                                     <ActionIcon
+                                        ref={exerciseOptionsButtonRef}
                                         variant="subtle"
                                         color="gray"
                                         style={{flexShrink: 0}}
@@ -154,7 +205,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
 
                                 <Menu.Item
                                     leftSection={<IconEdit size={14}/>}
-                                    onClick={() => setCustomizingFields(true)}
+                                    onClick={openTrackingConfig}
                                 >
                                     Customize fields
                                 </Menu.Item>
@@ -190,12 +241,10 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
 
                     <Collapse expanded={customizingFields}>
                         <ExerciseTrackingConfig
-                            item={item}
-                            onClose={() => setCustomizingFields(false)}
-                            onSave={updates => {
-                                onChange(updates);
-                                setCustomizingFields(false);
-                            }}
+                            configDraft={configDraft}
+                            onChange={setConfigDraft}
+                            onClose={closeTrackingConfig}
+                            onSave={saveTrackingConfig}
                         />
                     </Collapse>
                 </Stack>
@@ -207,21 +256,6 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                 </Group>
             )}
         </>
-    );
-}
-
-function ExerciseTrackingConfig({item, onClose, onSave}) {
-    return (
-        <Paper
-            radius="sm"
-            p="sm"
-            bg="var(--color-background)"
-            shadow="none"
-        >
-            <Text size="sm" c="dimmed">
-                Tracking field configuration goes here!
-            </Text>
-        </Paper>
     );
 }
 

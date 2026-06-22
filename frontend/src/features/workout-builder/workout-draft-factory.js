@@ -77,8 +77,11 @@ export function createStackExercise(exercise, position = 1) {
 
 export function createEmptyWorkoutConfig() {
     return {
+        eachSide: false,
         trackingFields: [],
-        sets: [],
+        sets: [
+            createWorkoutSet(),
+        ],
     };
 }
 
@@ -92,20 +95,35 @@ export function createWorkoutSet(position = 1) {
 }
 
 export function parseWorkoutConfig(configJson) {
+    let config;
+
     if (!configJson) {
-        return createEmptyWorkoutConfig();
+        config = createEmptyWorkoutConfig();
+    } else if (typeof configJson === 'object') {
+        config = configJson;
+    } else {
+        try {
+            config = JSON.parse(configJson);
+        } catch (error) {
+            console.warn('Invalid workout config JSON:', error);
+            config = createEmptyWorkoutConfig();
+        }
     }
 
-    if (typeof configJson === 'object') {
-        return configJson;
-    }
+    const sets = config.sets?.length
+        ? config.sets.map((set, index) => ({
+            draftId: set.draftId ?? createDraftId('set'),
+            position: set.position ?? index + 1,
+            setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
+            targets: set.targets ?? {},
+        }))
+        : [createWorkoutSet()];
 
-    try {
-        return JSON.parse(configJson);
-    } catch (error) {
-        console.warn('Invalid workout config JSON:', error);
-        return createEmptyWorkoutConfig();
-    }
+    return {
+        eachSide: config.eachSide ?? false,
+        trackingFields: config.trackingFields ?? [],
+        sets,
+    };
 }
 
 export function stringifyWorkoutConfig(config) {
@@ -113,5 +131,20 @@ export function stringifyWorkoutConfig(config) {
         return null;
     }
 
-    return JSON.stringify(config);
+    return JSON.stringify({
+        eachSide: config.eachSide ?? false,
+        trackingFields: [...(config.trackingFields ?? [])]
+            .sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+            .map((field, index) => ({
+                key: field.key,
+                position: index + 1,
+                ...(field.mode ? {mode: field.mode} : {}),
+                ...(field.unit ? {unit: field.unit} : {}),
+            })),
+        sets: (config.sets ?? []).map((set, index) => ({
+            position: index + 1,
+            setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
+            targets: set.targets ?? {},
+        })),
+    });
 }
