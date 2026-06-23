@@ -3,12 +3,15 @@ import {
     useComputedColorScheme,
     ActionIcon,
     Avatar,
+    Button,
     Collapse,
     Group,
     Menu,
     Paper,
     Stack,
+    Switch,
     Text,
+    Textarea,
     TextInput,
     Tooltip,
 } from '@mantine/core';
@@ -22,12 +25,15 @@ import {
     IconLink,
     IconPencilExclamation,
     IconPhoto,
+    IconPlus,
+    IconProgressHelp,
     IconTrash,
 } from '@tabler/icons-react';
 
 import ExerciseTrackingConfig from './ExerciseTrackingConfig';
 import ExerciseSetTable from './ExerciseSetTable';
 import {
+    createWorkoutSet,
     parseWorkoutConfig,
     stringifyWorkoutConfig,
     pruneUnusedTargets,
@@ -92,6 +98,27 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                 configJson: nextConfigJson,
             });
         }
+    }
+
+    function updateEachSide(eachSide) {
+        const nextConfig = {
+            ...committedConfig,
+            eachSide,
+        };
+
+        updateExerciseConfig(nextConfig);
+    }
+
+    function addSet() {
+        const nextConfig = {
+            ...committedConfig,
+            sets: [
+                ...committedConfig.sets,
+                createWorkoutSet(committedConfig.sets.length + 1),
+            ],
+        };
+
+        updateExerciseConfig(nextConfig);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -262,6 +289,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                             onSave={saveTrackingConfig}
                         />
                     </Collapse>
+
                     <ExerciseSetTable
                         config={activeConfig}
                         disabled={customizingFields}
@@ -273,6 +301,69 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                             }
 
                             updateExerciseConfig(nextConfig);
+                        }}
+                    />
+
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                        <Switch
+                            label="Each side"
+                            size={isMobile ? "xs" : "sm"}
+                            checked={committedConfig.eachSide}
+                            onChange={event => updateEachSide(event.currentTarget.checked)}
+                            disabled={customizingFields}
+                        />
+
+                        <Tooltip
+                            label="Rounds control set count"
+                            disabled={independent}
+                            position="top-end"
+                            offset={0}
+                            withArrow
+                            arrowSize={10}
+                            arrowOffset={15}
+                            events={{ hover: true, focus: false, touch: true }}
+                        >
+                            <span>
+                                <Button
+                                    variant="subtle"
+                                    size={isMobile ? "xs" : "sm"}
+                                    leftSection={independent ? <IconPlus size={16}/> : null}
+                                    rightSection={independent ? null : <IconProgressHelp size={16}/>}
+                                    disabled={!independent || customizingFields}
+                                    onClick={addSet}
+                                    styles={{
+                                        label: {
+                                            marginLeft: independent ? -4 : 0,
+                                            marginRight: independent ? 0 : -4,
+                                        }
+                                    }}
+                                    style={{
+                                        ...(!independent || customizingFields ? {
+                                            background: 'transparent',
+                                        } : {})
+                                    }}
+                                >
+                                    Add set
+                                </Button>
+                            </span>
+                        </Tooltip>
+                    </Group>
+
+                    <Textarea
+                        classNames={{input: 'subtleInput'}}
+                        variant="filled"
+                        placeholder="Add notes for this exercise"
+                        value={item.notes ?? ''}
+                        onChange={event => onChange({
+                            notes: event.currentTarget.value,
+                        })}
+                        autosize
+                        minRows={1}
+                        maxRows={4}
+                        styles={{
+                            input: {
+                                backgroundColor: computedColorScheme === 'light' ? 'var(--color-background)' : 'var(--color-surface)',
+                            },
                         }}
                     />
                 </Stack>

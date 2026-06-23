@@ -6,7 +6,6 @@ import {
     Menu,
     Paper,
     Stack,
-    Switch,
     Text,
 } from '@mantine/core';
 import {useComputedColorScheme} from '@mantine/core';
@@ -339,15 +338,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                         ))}
                     </Group>
                 )}
-                <Group justify="space-between" align="flex-end">
-                    <Switch
-                        label="Each side"
-                        checked={configDraft?.eachSide ?? false}
-                        onChange={event => onChange({
-                            ...configDraft,
-                            eachSide: event.currentTarget.checked,
-                        })}
-                    />
+                <Group justify="flex-end">
                     <Menu withinPortal position="bottom-end" closeOnItemClick={false} style={{flexShrink: 0}}>
                         <Menu.Target>
                             <Button
