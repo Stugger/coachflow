@@ -11,7 +11,6 @@
 }
 
 .subtleInput {
-    background: transparent;
     border: 1px solid transparent;
     border-radius: var(--mantine-radius-md);
     padding-inline: var(--mantine-spacing-xs);

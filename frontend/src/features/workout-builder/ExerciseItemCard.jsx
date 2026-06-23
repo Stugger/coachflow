@@ -19,6 +19,7 @@ import {useMediaQuery} from '@mantine/hooks';
 import {
     IconArrowDown,
     IconArrowUp,
+    IconConnection,
     IconDots,
     IconEdit,
     IconEye,
@@ -369,9 +370,13 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                 </Stack>
             </Paper>
 
-            {independent && itemIndex !== itemCount - 1 && (
-                <Group gap={0} mb="sm" mt="sm" wrap="nowrap" justify="center">
-                    <IconLink opacity={0.4} size={20}/>
+            {itemIndex !== itemCount - 1 && (
+                <Group gap={0} mb="sm" mt="sm" mr={!independent ? (isMobile ? 13 : 25) : 0} wrap="nowrap" justify="center">
+                    {!independent ? (
+                        <IconConnection opacity={0.35} size={24}/>
+                    ) : (
+                        <IconLink opacity={0.4} size={24}/>
+                    )}
                 </Group>
             )}
         </>

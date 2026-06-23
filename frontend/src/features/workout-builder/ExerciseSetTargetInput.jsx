@@ -54,6 +54,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
             <NumberInput
                 disabled={disabled}
                 classNames={{input: 'subtleInput'}}
+                variant="unstyled"
                 value={value ?? ''}
                 onChange={onChange}
                 placeholder="—"
@@ -80,6 +81,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
             <NumberInput
                 disabled={disabled}
                 classNames={{input: 'subtleInput'}}
+                variant="unstyled"
                 value={value ?? ''}
                 onChange={onChange}
                 placeholder="—"
@@ -126,6 +128,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 <NumberInput
                     disabled={disabled}
                     classNames={{input: 'subtleInput'}}
+                    variant="unstyled"
                     value={rangeValue.min ?? ''}
                     onChange={nextValue => updateRange('min', nextValue)}
                     placeholder="—"
@@ -143,6 +146,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 <NumberInput
                     disabled={disabled}
                     classNames={{input: 'subtleInput'}}
+                    variant="unstyled"
                     value={rangeValue.max ?? ''}
                     onChange={nextValue => updateRange('max', nextValue)}
                     placeholder="—"
@@ -180,6 +184,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
             <TextInput
                 disabled={disabled}
                 classNames={{input: 'subtleInput'}}
+                variant="unstyled"
                 value={value ?? ''}
                 onChange={event => onChange(event.currentTarget.value)}
                 placeholder="—"
@@ -202,6 +207,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
             <Textarea
                 disabled={disabled}
                 classNames={{input: 'subtleInput'}}
+                variant="unstyled"
                 value={value ?? ''}
                 onChange={event => onChange(event.currentTarget.value)}
                 placeholder="—"

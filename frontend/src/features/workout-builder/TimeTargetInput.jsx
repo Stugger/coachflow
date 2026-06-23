@@ -66,6 +66,8 @@ function getTotalSeconds(parts) {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
+//TODO typing from left input should move caret into right input when maxed, backspacing from second input should bring caret to end of first input when empty, left/right arrows should move between inputs when no more characters left to move between
+
 function TimeTargetInput({value, disabled, onChange, inputWidth}) {
 
     // ------------------------------------------------------------------------------------------------------------------------

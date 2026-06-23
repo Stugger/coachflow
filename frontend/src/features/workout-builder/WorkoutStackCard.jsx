@@ -285,7 +285,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                         {exerciseCount > 0 && (
                             <>
                                 <Box mx="calc(var(--mantine-spacing-md) * -1)">
-                                    <Stack gap="lg">
+                                    <Stack gap={0}>
                                         {(stack.itemExercises ?? []).map((itemExercise, exerciseIndex) => (
                                             <ExerciseItemCard
                                                 key={itemExercise.draftId || itemExercise.id}
@@ -320,7 +320,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
             </Box>
             {itemIndex !== itemCount - 1 && (
                 <Group gap={0} mb="sm" mt="sm" wrap="nowrap" justify="center">
-                    <IconLink opacity={0.4} size={20}/>
+                    <IconLink opacity={0.4} size={24}/>
                 </Group>
             )}
         </>
