@@ -47,6 +47,14 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function updateTrackingField(fieldKey, updates) {
+        const currentField = trackingFields.find(
+            field => field.key === fieldKey
+        );
+
+        const modeChanged =
+            updates.mode
+            && updates.mode !== currentField?.mode;
+
         onChange({
             ...configDraft,
             trackingFields: trackingFields.map(field =>
@@ -57,6 +65,20 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                     }
                     : field
             ),
+            ...(modeChanged ? {
+                sets: configDraft.sets.map(set => {
+                    const targets = {
+                        ...set.targets,
+                    };
+
+                    delete targets[fieldKey];
+
+                    return {
+                        ...set,
+                        targets,
+                    };
+                }),
+            } : {}),
         });
     }
 
@@ -326,7 +348,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                             eachSide: event.currentTarget.checked,
                         })}
                     />
-                    <Menu withinPortal position="bottom-end" style={{flexShrink: 0}}>
+                    <Menu withinPortal position="bottom-end" closeOnItemClick={false} style={{flexShrink: 0}}>
                         <Menu.Target>
                             <Button
                                 size="sm"

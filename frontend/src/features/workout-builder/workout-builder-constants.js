@@ -76,4 +76,5 @@ export const TRACKING_FIELD_TYPE = {
     RANGE: 'RANGE',
     TIME: 'TIME',
     TEXT: 'TEXT',
+    TEXT_LONG: 'TEXT_LONG',
 };

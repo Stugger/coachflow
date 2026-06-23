@@ -8,6 +8,7 @@ import {
     Menu,
     Paper,
     Stack,
+    Text,
     TextInput,
     Tooltip,
 } from '@mantine/core';
@@ -25,9 +26,11 @@ import {
 } from '@tabler/icons-react';
 
 import ExerciseTrackingConfig from './ExerciseTrackingConfig';
+import ExerciseSetTable from './ExerciseSetTable';
 import {
     parseWorkoutConfig,
     stringifyWorkoutConfig,
+    pruneUnusedTargets,
 } from './workout-draft-factory';
 
 function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, onDelete, onMoveUp, onMoveDown}) {
@@ -53,6 +56,12 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
 
+    const committedConfig = parseWorkoutConfig(item.configJson);
+
+    const activeConfig = customizingFields && configDraft
+        ? configDraft
+        : committedConfig;
+
     const exercise = item.exercise;
 
     const hasNameOverride =
@@ -64,19 +73,25 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     // ------------------------------------------------------------------------------------------------------------------------
 
     function saveTrackingConfig() {
+        updateExerciseConfig(
+            pruneUnusedTargets(configDraft)
+        );
+
+        closeTrackingConfig();
+    }
+
+    function updateExerciseConfig(nextConfig) {
         const currentConfigJson = stringifyWorkoutConfig(
             parseWorkoutConfig(item.configJson)
         );
 
-        const nextConfigJson = stringifyWorkoutConfig(configDraft);
+        const nextConfigJson = stringifyWorkoutConfig(nextConfig);
 
         if (nextConfigJson !== currentConfigJson) {
             onChange({
                 configJson: nextConfigJson,
             });
         }
-
-        closeTrackingConfig();
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -247,6 +262,18 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                             onSave={saveTrackingConfig}
                         />
                     </Collapse>
+                    <ExerciseSetTable
+                        config={activeConfig}
+                        disabled={customizingFields}
+                        onChange={nextConfig => {
+                            if (customizingFields) {
+                                setConfigDraft(nextConfig);
+                                return;
+                            }
+
+                            updateExerciseConfig(nextConfig);
+                        }}
+                    />
                 </Stack>
             </Paper>
 

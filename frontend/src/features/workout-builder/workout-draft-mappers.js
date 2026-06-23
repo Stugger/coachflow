@@ -5,6 +5,7 @@ import {
     createDraftId,
     createEmptyWorkoutDraft,
     createEmptyWorkoutConfig,
+    parseWorkoutConfig,
     stringifyWorkoutConfig,
 } from './workout-draft-factory';
 
@@ -69,11 +70,9 @@ function normalizeItemForDraft(item, itemIndex) {
 }
 
 function normalizeConfigJson(configJson) {
-    if (configJson) {
-        return configJson;
-    }
-
-    return stringifyWorkoutConfig(createEmptyWorkoutConfig());
+    return stringifyWorkoutConfig(
+        parseWorkoutConfig(configJson)
+    );
 }
 
 export function buildTemplatePayload(draft, trainerId) {

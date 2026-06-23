@@ -17,8 +17,22 @@ export const TRACKING_FIELD_DEFINITIONS = {
     [TRACKING_FIELD_KEY.REPS]: {
         key: TRACKING_FIELD_KEY.REPS,
         label: 'Reps',
-        type: TRACKING_FIELD_TYPE.RANGE,
-        unit: null,
+        modes: [
+            {
+                value: 'INTEGER',
+                label: 'Fixed',
+                type: TRACKING_FIELD_TYPE.INTEGER,
+                minColumnWidth: '7rem',
+                inputWidth: '5rem',
+            },
+            {
+                value: 'RANGE',
+                label: 'Range',
+                type: TRACKING_FIELD_TYPE.RANGE,
+                minColumnWidth: '10rem',
+                inputWidth: '3rem',
+            },
+        ],
     },
     [TRACKING_FIELD_KEY.WEIGHT]: {
         key: TRACKING_FIELD_KEY.WEIGHT,
@@ -29,15 +43,24 @@ export const TRACKING_FIELD_DEFINITIONS = {
             {value: 'LB', label: 'lb'},
             {value: 'KG', label: 'kg'},
         ],
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
     },
     [TRACKING_FIELD_KEY.TIME]: {
         key: TRACKING_FIELD_KEY.TIME,
         label: 'Time',
         type: TRACKING_FIELD_TYPE.TIME,
-        unit: 'SECONDS',
-        units: [
-            {value: 'SECONDS', label: 'sec'},
-            {value: 'MINUTES', label: 'min'},
+        minColumnWidth: '8rem',
+        inputWidth: '6rem',
+        modes: [
+            {
+                value: 'TIMER',
+                label: 'Countdown',
+            },
+            {
+                value: 'STOPWATCH',
+                label: 'Stopwatch',
+            },
         ],
     },
     [TRACKING_FIELD_KEY.DISTANCE]: {
@@ -51,24 +74,28 @@ export const TRACKING_FIELD_DEFINITIONS = {
             {value: 'METERS', label: 'm'},
             {value: 'FEET', label: 'ft'},
         ],
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
     },
     [TRACKING_FIELD_KEY.SPEED]: {
         key: TRACKING_FIELD_KEY.SPEED,
         label: 'Speed',
         type: TRACKING_FIELD_TYPE.DECIMAL,
         unit: 'MPH',
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
     },
     [TRACKING_FIELD_KEY.INCLINE]: {
         key: TRACKING_FIELD_KEY.INCLINE,
         label: 'Incline',
         type: TRACKING_FIELD_TYPE.DECIMAL,
         unit: '%',
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
     },
     [TRACKING_FIELD_KEY.RESISTANCE]: {
         key: TRACKING_FIELD_KEY.RESISTANCE,
         label: 'Resistance',
-        type: TRACKING_FIELD_TYPE.DECIMAL,
-        unit: 'LB',
         modes: [
             {
                 value: 'LOAD',
@@ -79,12 +106,15 @@ export const TRACKING_FIELD_DEFINITIONS = {
                     {value: 'LB', label: 'lb'},
                     {value: 'KG', label: 'kg'},
                 ],
+                minColumnWidth: '7rem',
+                inputWidth: '5rem',
             },
             {
                 value: 'LEVEL',
-                label: 'Resistance level',
+                label: 'Level',
                 type: TRACKING_FIELD_TYPE.TEXT,
-                unit: null,
+                minColumnWidth: '10rem',
+                inputWidth: '8rem',
             },
         ],
     },
@@ -92,19 +122,22 @@ export const TRACKING_FIELD_DEFINITIONS = {
         key: TRACKING_FIELD_KEY.RPE,
         label: 'RPE',
         type: TRACKING_FIELD_TYPE.DECIMAL,
-        unit: null,
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
     },
     [TRACKING_FIELD_KEY.REST]: {
         key: TRACKING_FIELD_KEY.REST,
         label: 'Rest',
         type: TRACKING_FIELD_TYPE.TIME,
-        unit: 'SECONDS',
+        minColumnWidth: '8rem',
+        inputWidth: '6rem',
     },
     [TRACKING_FIELD_KEY.NOTES]: {
         key: TRACKING_FIELD_KEY.NOTES,
         label: 'Notes',
-        type: TRACKING_FIELD_TYPE.TEXT,
-        unit: null,
+        type: TRACKING_FIELD_TYPE.TEXT_LONG,
+        minColumnWidth: '14rem',
+        inputWidth: '12rem',
     },
 };
 

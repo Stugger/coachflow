@@ -148,3 +148,20 @@ export function stringifyWorkoutConfig(config) {
         })),
     });
 }
+
+export function pruneUnusedTargets(config) {
+    const trackedKeys = new Set(
+        (config.trackingFields ?? []).map(field => field.key)
+    );
+
+    return {
+        ...config,
+        sets: (config.sets ?? []).map(set => ({
+            ...set,
+            targets: Object.fromEntries(
+                Object.entries(set.targets ?? {})
+                    .filter(([fieldKey]) => trackedKeys.has(fieldKey))
+            ),
+        })),
+    };
+}

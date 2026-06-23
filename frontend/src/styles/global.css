@@ -11,14 +11,20 @@
 }
 
 .subtleInput {
+    background: transparent;
     border: 1px solid transparent;
     border-radius: var(--mantine-radius-md);
     padding-inline: var(--mantine-spacing-xs);
     transition: border-color 120ms ease, background-color 120ms ease;
 }
 
+.subtleInput:disabled {
+    background: transparent;
+    border: none;
+}
+
 /* outline only on mouse hover */
-.subtleInput:hover {
+.subtleInput:hover:not(:disabled) {
     border-color: var(--mantine-color-gray-4);
 }
 
