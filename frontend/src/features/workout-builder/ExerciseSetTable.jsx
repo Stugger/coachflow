@@ -5,10 +5,11 @@ import {
 } from '@mantine/core';
 
 import ExerciseSetTargetInput from './ExerciseSetTargetInput';
+import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
 import {TRACKING_FIELD_DEFINITIONS} from './workout-tracking-fields';
 
-const SET_COLUMN_WIDTH = '3.25rem';
+const SET_COLUMN_WIDTH = '4rem';
 
 const rowCellStyle = {
     borderBottom: '2px solid var(--color-border)',
@@ -67,6 +68,20 @@ function ExerciseSetTable({config, disabled, onChange}) {
                     targets,
                 };
             }),
+        });
+    }
+
+    function updateSetType(setPosition, setType) {
+        onChange({
+            ...config,
+            sets: sets.map(set =>
+                set.position === setPosition
+                    ? {
+                        ...set,
+                        setType,
+                    }
+                    : set
+            ),
         });
     }
 
@@ -185,9 +200,11 @@ function ExerciseSetTable({config, disabled, onChange}) {
                                         } : {}),
                                     }}
                                 >
-                                    <Text size="sm" fw={600}>
-                                        {set.position}
-                                    </Text>
+                                    <ExerciseSetTypeInput
+                                        set={set}
+                                        disabled={disabled}
+                                        onChange={setType => updateSetType(set.position, setType)}
+                                    />
                                 </Table.Td>
 
                                 {trackingFields.map((field, fieldIndex) => (

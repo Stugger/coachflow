@@ -70,6 +70,33 @@ export const WORKOUT_SET_TYPE = {
     FAILURE: 'FAILURE',
 };
 
+export const WORKOUT_SET_TYPE_OPTIONS = [
+    {
+        value: WORKOUT_SET_TYPE.STANDARD,
+        label: 'Regular',
+        color: 'yellow',
+        shortLabel: 'R',
+    },
+    {
+        value: WORKOUT_SET_TYPE.WARMUP,
+        label: 'Warm up',
+        color: 'gray',
+        shortLabel: 'W',
+    },
+    {
+        value: WORKOUT_SET_TYPE.DROP,
+        label: 'Drop set',
+        color: 'blue',
+        shortLabel: 'D',
+    },
+    {
+        value: WORKOUT_SET_TYPE.FAILURE,
+        label: 'Failure',
+        color: 'red',
+        shortLabel: 'F',
+    },
+];
+
 export const TRACKING_FIELD_TYPE = {
     INTEGER: 'INTEGER',
     DECIMAL: 'DECIMAL',
