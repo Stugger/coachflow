@@ -1,22 +1,44 @@
 import {
+    ActionIcon,
+    Menu,
     ScrollArea,
     Table,
     Text,
+    Tooltip,
 } from '@mantine/core';
+
+import {
+    IconArrowDown,
+    IconArrowUp,
+    IconCopy,
+    IconDotsVertical,
+    IconTrash,
+} from '@tabler/icons-react';
 
 import ExerciseSetTargetInput from './ExerciseSetTargetInput';
 import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
+import {reindexSets} from './workout-draft-mappers';
+import {createDraftId} from './workout-draft-factory';
 import {TRACKING_FIELD_DEFINITIONS} from './workout-tracking-fields';
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Constants
+// ------------------------------------------------------------------------------------------------------------------------
+
 const SET_COLUMN_WIDTH = '4rem';
+const ACTIONS_COLUMN_WIDTH = '3rem';
 
 const rowCellStyle = {
     borderBottom: '2px solid var(--color-border)',
     background: 'transparent',
 };
 
-function ExerciseSetTable({config, disabled, onChange}) {
+// ------------------------------------------------------------------------------------------------------------------------
+// Component
+// ------------------------------------------------------------------------------------------------------------------------
+
+function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -85,6 +107,70 @@ function ExerciseSetTable({config, disabled, onChange}) {
         });
     }
 
+    function duplicateSet(setPosition) {
+        const sourceSet = sets.find(
+            set => set.position === setPosition
+        );
+
+        if (!sourceSet) {
+            return;
+        }
+
+        const duplicatedSet = {
+            ...structuredClone(sourceSet),
+            draftId: createDraftId('set'),
+        };
+
+        onChange({
+            ...config,
+            sets: reindexSets([
+                ...sets,
+                duplicatedSet,
+            ]),
+        });
+    }
+
+    function moveSet(setPosition, direction) {
+        const currentIndex = sets.findIndex(
+            set => set.position === setPosition
+        );
+
+        const nextIndex = currentIndex + direction;
+
+        if (
+            currentIndex < 0
+            || nextIndex < 0
+            || nextIndex >= sets.length
+        ) {
+            return;
+        }
+
+        const nextSets = [...sets];
+
+        [nextSets[currentIndex], nextSets[nextIndex]] = [
+            nextSets[nextIndex],
+            nextSets[currentIndex],
+        ];
+
+        onChange({
+            ...config,
+            sets: reindexSets(nextSets),
+        });
+    }
+
+    function deleteSet(setPosition) {
+        if (sets.length <= 1) {
+            return;
+        }
+
+        onChange({
+            ...config,
+            sets: reindexSets(
+                sets.filter(set => set.position !== setPosition)
+            ),
+        });
+    }
+
     function isEmptyTarget(value) {
         return value === ''
             || value === null
@@ -118,6 +204,76 @@ function ExerciseSetTable({config, disabled, onChange}) {
         return activeMode?.minColumnWidth
             ?? TRACKING_FIELD_DEFINITIONS[field.key].minColumnWidth
             ?? '7rem';
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderSetMenu(set, setIndex) {
+        const isFirstSet = setIndex === 0;
+        const isLastSet = setIndex === sets.length - 1;
+
+        const duplicateDisabled = disabled || stackControlled;
+        const deleteDisabled =
+            disabled
+            || stackControlled
+            || sets.length <= 1;
+
+        return (
+            <Menu withinPortal position="bottom-end">
+                <Menu.Target>
+                    <Tooltip label="Set options">
+                        <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            disabled={disabled}
+                        >
+                            <IconDotsVertical size={18}/>
+                        </ActionIcon>
+                    </Tooltip>
+                </Menu.Target>
+
+                <Menu.Dropdown>
+                    <Menu.Item
+                        leftSection={<IconCopy size={14}/>}
+                        disabled={duplicateDisabled}
+                        onClick={() => duplicateSet(set.position)}
+                    >
+                        Duplicate set
+                    </Menu.Item>
+
+                    <Menu.Divider/>
+
+                    <Menu.Item
+                        leftSection={<IconArrowUp size={14}/>}
+                        disabled={disabled || isFirstSet}
+                        onClick={() => moveSet(set.position, -1)}
+                    >
+                        Move up
+                    </Menu.Item>
+
+                    <Menu.Item
+                        leftSection={<IconArrowDown size={14}/>}
+                        disabled={disabled || isLastSet}
+                        onClick={() => moveSet(set.position, 1)}
+                    >
+                        Move down
+                    </Menu.Item>
+
+                    <Menu.Divider/>
+
+                    <Menu.Item
+                        color="red"
+                        leftSection={<IconTrash size={14}/>}
+                        disabled={deleteDisabled}
+                        onClick={() => deleteSet(set.position)}
+                    >
+                        Delete set
+                    </Menu.Item>
+                </Menu.Dropdown>
+            </Menu>
+        );
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -174,6 +330,13 @@ function ExerciseSetTable({config, disabled, onChange}) {
                                 </Table.Th>
                             );
                         })}
+
+                        <Table.Th
+                            style={{
+                                width: ACTIONS_COLUMN_WIDTH,
+                                minWidth: ACTIONS_COLUMN_WIDTH,
+                            }}
+                        />
                     </Table.Tr>
                 </Table.Thead>
 
@@ -207,7 +370,7 @@ function ExerciseSetTable({config, disabled, onChange}) {
                                     />
                                 </Table.Td>
 
-                                {trackingFields.map((field, fieldIndex) => (
+                                {trackingFields.map(field => (
                                     <Table.Td
                                         key={field.key}
                                         style={{
@@ -216,15 +379,6 @@ function ExerciseSetTable({config, disabled, onChange}) {
                                             textAlign: 'center',
                                             ...(isFirstRow ? {
                                                 borderTop: '2px solid var(--color-border)',
-                                            } : {}),
-                                            ...(fieldIndex === trackingFields.length - 1 ? {
-                                                borderRight: '2px solid var(--color-border)',
-                                                ...(isFirstRow ? {
-                                                    borderTopRightRadius: 'var(--mantine-radius-md)',
-                                                } : {}),
-                                                ...(isLastRow ? {
-                                                    borderBottomRightRadius: 'var(--mantine-radius-md)',
-                                                } : {}),
                                             } : {}),
                                         }}
                                     >
@@ -236,6 +390,25 @@ function ExerciseSetTable({config, disabled, onChange}) {
                                         />
                                     </Table.Td>
                                 ))}
+
+                                <Table.Td
+                                    style={{
+                                        ...rowCellStyle,
+                                        width: ACTIONS_COLUMN_WIDTH,
+                                        minWidth: ACTIONS_COLUMN_WIDTH,
+                                        textAlign: 'center',
+                                        borderRight: '2px solid var(--color-border)',
+                                        ...(isFirstRow ? {
+                                            borderTop: '2px solid var(--color-border)',
+                                            borderTopRightRadius: 'var(--mantine-radius-md)',
+                                        } : {}),
+                                        ...(isLastRow ? {
+                                            borderBottomRightRadius: 'var(--mantine-radius-md)',
+                                        } : {}),
+                                    }}
+                                >
+                                    {renderSetMenu(set, setIndex)}
+                                </Table.Td>
                             </Table.Tr>
                         );
                     })}

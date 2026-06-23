@@ -163,6 +163,13 @@ export function reindexTrackingFields(fields) {
     }));
 }
 
+export function reindexSets(nextSets) {
+    return nextSets.map((set, index) => ({
+        ...set,
+        position: index + 1,
+    }));
+}
+
 export function getExerciseId(item) {
     return item.exerciseId ?? item.exercise?.id ?? null;
 }

@@ -265,6 +265,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                     <ExerciseSetTable
                         config={activeConfig}
                         disabled={customizingFields}
+                        stackControlled={!independent}
                         onChange={nextConfig => {
                             if (customizingFields) {
                                 setConfigDraft(nextConfig);

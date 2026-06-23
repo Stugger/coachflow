@@ -49,7 +49,7 @@ export function createExerciseItem(exercise, position = 1) {
 export function createStackItem(itemType, position = 1) {
     return {
         id: null,
-        draftId: createDraftId('item'),
+        draftId: createDraftId('stack-item'),
         position,
         itemType,
         exercise: null,

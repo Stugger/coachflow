@@ -210,7 +210,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 style={inputStyle}
                 styles={{
                     input: {
-                        textAlign: value && value.trim().length > 0 ? 'left' : 'center',
+                        textAlign: 'center',
                     },
                 }}
             />
