@@ -77,6 +77,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
         onDeleteStackExercise,
         onMoveStackExerciseUp,
         onMoveStackExerciseDown,
+        onAdjustStackRounds,
     } = stackActions;
 
     const {
@@ -347,6 +348,9 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                                 )}
                                                 onMoveStackExerciseDown={exerciseIndex => (
                                                     onMoveStackExerciseDown(itemIndex, exerciseIndex)
+                                                )}
+                                                onAdjustStackRounds={amount => (
+                                                    onAdjustStackRounds(itemIndex, amount)
                                                 )}
                                             />
                                         );

@@ -62,7 +62,7 @@ export function createStackItem(itemType, position = 1) {
     };
 }
 
-export function createStackExercise(exercise, position = 1) {
+export function createStackExercise(exercise, position = 1, rounds = 1) {
     return {
         id: null,
         draftId: createDraftId('item-exercise'),
@@ -71,7 +71,10 @@ export function createStackExercise(exercise, position = 1) {
         position,
         name: '',
         notes: '',
-        configJson: stringifyWorkoutConfig(createEmptyWorkoutConfig()),
+        configJson: resizeExerciseSetCount(
+            stringifyWorkoutConfig(createEmptyWorkoutConfig()),
+            rounds,
+        ),
     };
 }
 
@@ -92,6 +95,38 @@ export function createWorkoutSet(position = 1) {
         setType: WORKOUT_SET_TYPE.STANDARD,
         targets: {},
     };
+}
+
+export function resizeExerciseSetCount(configJson, count, {duplicateLastSet = false} = {}) {
+    const config = parseWorkoutConfig(configJson);
+
+    const nextSets = [...config.sets];
+
+    while (nextSets.length < count) {
+        const previousSet = nextSets.at(-1);
+
+        nextSets.push(
+            duplicateLastSet && previousSet
+                ? {
+                    ...structuredClone(previousSet),
+                    draftId: createDraftId('set'),
+                    position: nextSets.length + 1,
+                }
+                : createWorkoutSet(nextSets.length + 1),
+        );
+    }
+
+    while (nextSets.length > count) {
+        nextSets.pop();
+    }
+
+    return stringifyWorkoutConfig({
+        ...config,
+        sets: nextSets.map((set, index) => ({
+            ...set,
+            position: index + 1,
+        })),
+    });
 }
 
 export function parseWorkoutConfig(configJson) {

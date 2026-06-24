@@ -11,7 +11,7 @@ import {IconPlus} from '@tabler/icons-react';
 
 import WorkoutSection from './WorkoutSection';
 
-import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem} from './workout-draft-factory';
+import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, resizeExerciseSetCount} from './workout-draft-factory';
 import {reindexPositions} from './workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName} from './workout-builder-utils';
 
@@ -223,6 +223,7 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                         createStackExercise(
                             exercise,
                             (item.itemExercises?.length ?? 0) + 1,
+                            item.rounds ?? 1,
                         ),
                     ]),
                 };
@@ -254,6 +255,30 @@ function WorkoutBuilder({draft, exercises, onChange}) {
             return {
                 ...stack,
                 itemExercises: reindexPositions(itemExercises),
+            };
+        });
+    }
+
+    function adjustStackRounds(sectionIndex, stackItemIndex, amount) {
+        updateStackItem(sectionIndex, stackItemIndex, stack => {
+            const currentRounds = stack.rounds ?? 1;
+            const nextRounds = Math.max(1, currentRounds + amount);
+
+            if (nextRounds === currentRounds) {
+                return stack;
+            }
+
+            return {
+                ...stack,
+                rounds: nextRounds,
+                itemExercises: stack.itemExercises.map(itemExercise => ({
+                    ...itemExercise,
+                    configJson: resizeExerciseSetCount(
+                        itemExercise.configJson,
+                        nextRounds,
+                        {duplicateLastSet: amount > 0},
+                    ),
+                })),
             };
         });
     }
@@ -337,6 +362,7 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                             onMoveStackExerciseDown: (itemIndex, exerciseIndex) => (
                                 moveExerciseInStack(sectionIndex, itemIndex, exerciseIndex, 1)
                             ),
+                            onAdjustStackRounds: (itemIndex, amount) => adjustStackRounds(sectionIndex, itemIndex, amount),
                         }}
                         exercisePicker={{
                             exercises,

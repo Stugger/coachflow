@@ -16,6 +16,7 @@ import {
     Text,
     Textarea,
     Tooltip,
+    UnstyledButton,
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
@@ -27,6 +28,7 @@ import {
     IconDots,
     IconEdit,
     IconLink,
+    IconMinus,
     IconPlus,
     IconTrash,
 } from '@tabler/icons-react';
@@ -42,7 +44,12 @@ import {
 } from './workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 
-function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise, onDeleteStack, onMoveStackUp, onMoveStackDown, onChangeStackExercise, onDeleteStackExercise, onMoveStackExerciseUp, onMoveStackExerciseDown}) {
+function WorkoutStackCard({stack, itemIndex, itemCount,
+                              onChange,
+                              onAddExercise,
+                              onDeleteStack, onMoveStackUp, onMoveStackDown,
+                              onChangeStackExercise, onDeleteStackExercise, onMoveStackExerciseUp, onMoveStackExerciseDown,
+                              onAdjustStackRounds}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -56,7 +63,7 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const [expanded, setExpanded] = useState(false);
+    const [typeMenuOpened, setTypeMenuOpened] = useState(false);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -112,135 +119,166 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                         bg={headerGradient}
                         c="white"
                     >
-                        <Group justify="space-between" wrap="nowrap">
-                            <Group gap={6}>
+                        <Group gap={0} justify="space-between" wrap="nowrap">
+                            <Group gap={2} wrap="nowrap">
                                 {option.icon && (
                                     <option.icon size={18} opacity={0.65}/>
                                 )}
-                                <ActionIcon
-                                    variant="subtle"
-                                    color="black"
-                                    onClick={() => setExpanded(current => !current)}
+
+                                <Menu withinPortal
+                                      position="bottom-end"
+                                      opened={typeMenuOpened}
+                                      onChange={setTypeMenuOpened}
                                 >
-                                    {expanded
-                                        ? <IconChevronUp size={16} color="white"/>
-                                        : <IconChevronDown size={16} color="white"/>
-                                    }
-                                </ActionIcon>
+                                    <Menu.Target>
+                                        <UnstyledButton
+                                            className="subtleInput"
+                                            style={{
+                                                background: 'transparent',
+                                                minHeight: '1.5rem',
+                                                paddingInline: '0.4rem',
+                                            }}
+                                        >
+                                            <Group gap={3} wrap="nowrap">
+                                                <Text size="sm" fw={800}>
+                                                    {option?.label?.toUpperCase() ?? 'STACK'}
+                                                </Text>
+                                                {typeMenuOpened
+                                                    ? <IconChevronUp size={18} stroke={2.5} color="white"/>
+                                                    : <IconChevronDown size={18} stroke={2.5} color="white"/>
+                                                }
+                                            </Group>
+                                        </UnstyledButton>
+                                    </Menu.Target>
 
-                                <Group gap="sm" wrap="nowrap" style={{minWidth: 0}}>
-                                    <Text size="sm" fw={800}>
-                                        {option?.label?.toUpperCase() ?? 'STACK'}
-                                    </Text>
-
-                                    <Badge size="xs" variant="dot" color="white" bg="transparent" styles={{
-                                        root: {
-                                            borderColor: "white",
-                                        },
-                                        label: {
-                                            color: "white"
-                                        }
-                                    }}>
-
-                                        {stack.rounds ?? 3} round{stack.rounds === 1 ? '' : 's'}
-                                    </Badge>
-                                </Group>
+                                    <Menu.Dropdown>
+                                        {stackTypeOptions.map(option => (
+                                            <Menu.Item
+                                                key={option.value}
+                                                onClick={() => onChange({
+                                                    itemType: option.value || stack.itemType,
+                                                })}
+                                                leftSection={option.icon ? <option.icon size={18} color={`var(--mantine-color-${option.color}-6)`}/> : ""}
+                                                rightSection={option.value === stack.itemType ? <IconCheck size={18}/>: null}
+                                                disabled={option.disabled}
+                                            >
+                                                {option.label}
+                                            </Menu.Item>
+                                        ))}
+                                    </Menu.Dropdown>
+                                </Menu>
                             </Group>
 
-                            <Menu withinPortal position="bottom-end">
-                                <Menu.Target>
-                                    <Tooltip label="Stack options">
-                                        <ActionIcon variant="subtle" color={computedColorScheme === 'light' ? 'gray' : "white"}>
-                                            <IconDots size={18} color={computedColorScheme === 'light' ? 'black' : "white"}/>
-                                        </ActionIcon>
-                                    </Tooltip>
-                                </Menu.Target>
-
-                                <Menu.Dropdown>
-                                    <Menu.Item
-                                        leftSection={<IconEdit size={14}/>}
-                                        onClick={() => setExpanded(!expanded)}
+                            <Group gap="xs" wrap="nowrap">
+                                <Group
+                                    gap={0}
+                                    wrap="nowrap"
+                                    style={{
+                                        height: '1.75rem',
+                                        border: '1px solid rgba(0, 0, 0, 0.25)',
+                                        borderRadius: 'var(--mantine-radius-md)',
+                                        overflow: 'hidden',
+                                        backgroundColor: computedColorScheme === 'light' ? 'var(--color-background)' : 'var(--color-surface)',
+                                    }}
+                                >
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        radius={0}
+                                        disabled={(stack.rounds ?? 1) <= 1}
+                                        onClick={() => onAdjustStackRounds(-1)}
+                                        aria-label="Remove round"
+                                        style={{
+                                            width: '1.75rem',
+                                            height: '100%',
+                                            flexShrink: 0,
+                                            opacity: (stack.rounds ?? 1) <= 1 ? 0.45 : 0.75,
+                                        }}
                                     >
-                                        Edit stack
-                                    </Menu.Item>
+                                        <IconMinus size={16} />
+                                    </ActionIcon>
 
-                                    <Menu.Divider/>
-
-                                    <Menu.Item
-                                        leftSection={<IconArrowUp size={14}/>}
-                                        disabled={itemIndex === 0}
-                                        onClick={onMoveStackUp}
+                                    <Text
+                                        size="xs"
+                                        fw={700}
+                                        px={8}
+                                        pt={1}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            height: '100%',
+                                            whiteSpace: 'nowrap',
+                                            color: `var(--mantine-color-${option?.color ?? 'gray'}-7)`,
+                                            borderInline: '1px solid rgba(0, 0, 0, 0.25)',
+                                        }}
                                     >
-                                        Move up
-                                    </Menu.Item>
+                                        {stack.rounds ?? 1} {(stack.rounds ?? 1) === 1 ? 'Round' : 'Rounds'}
+                                    </Text>
 
-                                    <Menu.Item
-                                        leftSection={<IconArrowDown size={14}/>}
-                                        disabled={itemIndex === itemCount - 1}
-                                        onClick={onMoveStackDown}
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        //color={`var(--mantine-color-${option?.color ?? 'gray'}-9)`}
+                                        radius={0}
+                                        onClick={() => onAdjustStackRounds(1)}
+                                        aria-label="Add round"
+                                        style={{
+                                            width: '1.75rem',
+                                            height: '100%',
+                                            flexShrink: 0,
+                                        }}
                                     >
-                                        Move down
-                                    </Menu.Item>
+                                        <IconPlus size={16} />
+                                    </ActionIcon>
+                                </Group>
 
-                                    <Menu.Divider/>
+                                <Menu withinPortal position="bottom-end">
+                                    <Menu.Target>
+                                        <Tooltip label="Stack options">
+                                            <ActionIcon
+                                                variant="subtle"
+                                                color={computedColorScheme === 'light' ? 'gray' : 'white'}
+                                            >
+                                                <IconDots
+                                                    size={18}
+                                                    color={computedColorScheme === 'light' ? 'black' : 'white'}
+                                                />
+                                            </ActionIcon>
+                                        </Tooltip>
+                                    </Menu.Target>
 
-                                    <Menu.Item
-                                        leftSection={<IconTrash size={14}/>}
-                                        color="red"
-                                        onClick={onDeleteStack}
-                                    >
-                                        Delete stack
-                                    </Menu.Item>
-                                </Menu.Dropdown>
-                            </Menu>
+                                    <Menu.Dropdown>
+                                        <Menu.Item
+                                            leftSection={<IconArrowUp size={14}/>}
+                                            disabled={itemIndex === 0}
+                                            onClick={onMoveStackUp}
+                                        >
+                                            Move up
+                                        </Menu.Item>
+
+                                        <Menu.Item
+                                            leftSection={<IconArrowDown size={14}/>}
+                                            disabled={itemIndex === itemCount - 1}
+                                            onClick={onMoveStackDown}
+                                        >
+                                            Move down
+                                        </Menu.Item>
+
+                                        <Menu.Divider/>
+
+                                        <Menu.Item
+                                            leftSection={<IconTrash size={14}/>}
+                                            color="red"
+                                            onClick={onDeleteStack}
+                                        >
+                                            Delete stack
+                                        </Menu.Item>
+                                    </Menu.Dropdown>
+                                </Menu>
+                            </Group>
                         </Group>
                     </Box>
-
-                    <Collapse expanded={expanded}>
-                        <Box style={{padding: 'var(--mantine-spacing-md)', paddingBottom: 0}}>
-                            <Stack gap="sm">
-                                <Group grow>
-                                    <Select
-                                        label="Stack type"
-                                        data={stackTypeOptions}
-                                        value={stack.itemType}
-                                        onChange={value => onChange({
-                                            itemType: value || stack.itemType,
-                                        })}
-                                        allowDeselect={false}
-                                        renderOption={({option, checked}) => {
-                                            const Icon = option.icon;
-                                            return (
-                                                <Group gap="xs" flex={1}>
-                                                    {Icon && (
-                                                        <Icon
-                                                            size={18}
-                                                            color={`var(--mantine-color-${option.color}-6)`}
-                                                        />
-                                                    )}
-                                                    <Text size="sm">
-                                                        {option.label}
-                                                    </Text>
-                                                    {checked && (
-                                                        <IconCheck size={20} color="gray" style={{ marginInlineStart: 'auto' }}/>
-                                                    )}
-                                                </Group>
-                                            );
-                                        }}
-                                    />
-
-                                    <NumberInput
-                                        label="Rounds"
-                                        min={1}
-                                        value={stack.rounds ?? 3}
-                                        onChange={value => onChange({
-                                            rounds: typeof value === 'number' ? value : null,
-                                        })}
-                                    />
-                                </Group>
-                            </Stack>
-                        </Box>
-                    </Collapse>
 
                     <Box style={{padding: 'var(--mantine-spacing-md)', paddingBottom: 0}}>
                         <Textarea
@@ -256,19 +294,15 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                     </Box>
 
                     <Stack gap="sm" p="md">
-                        {!complete && (
-                            <Text size="sm" c={`red`} fw={600}>
-                                * {getStackRequirement(stack)}
-                            </Text>
-                        )}
-
                         {exerciseCount === 0 && (
                             <Paper withBorder radius="sm" p="md">
                                 <Stack gap="xs" align="center">
                                     <Text fw={700}>No exercises in this stack</Text>
-                                    <Text size="sm" c="dimmed" ta="center">
-                                        {getStackRequirement(stack)}
-                                    </Text>
+                                    {!complete && (
+                                        <Text size="sm" c="red" fw={600} pb={4}>
+                                            {getStackRequirement(stack)}
+                                        </Text>
+                                    )}
 
                                     <Button
                                         size="xs"
@@ -301,17 +335,34 @@ function WorkoutStackCard({stack, itemIndex, itemCount, onChange, onAddExercise,
                                         ))}
                                     </Stack>
                                 </Box>
-                                <Group justify="flex-end">
-                                    <Button
-                                        size="xs"
-                                        mt={4}
-                                        variant="light"
-                                        leftSection={<IconPlus size={14}/>}
-                                        onClick={onAddExercise}
-                                        disabled={!canAddExerciseToStack(stack)}
+                                <Group justify={complete ? "flex-end" : "space-between"}>
+                                    {!complete && (
+                                        <Text size="sm" c="red" fw={600}>
+                                            * {getStackRequirement(stack)}
+                                        </Text>
+                                    )}
+                                    <Tooltip
+                                        label="Max exercises for this stack"
+                                        disabled={canAddExerciseToStack(stack)}
+                                        offset={0}
+                                        withArrow
+                                        arrowSize={10}
+                                        arrowOffset={15}
+                                        events={{ hover: true, focus: false, touch: true }}
                                     >
-                                        Add Exercise
-                                    </Button>
+                                        <span>
+                                            <Button
+                                                size="xs"
+                                                mt={4}
+                                                variant="light"
+                                                leftSection={<IconPlus size={14}/>}
+                                                onClick={onAddExercise}
+                                                disabled={!canAddExerciseToStack(stack)}
+                                            >
+                                                Add Exercise
+                                            </Button>
+                                        </span>
+                                    </Tooltip>
                                 </Group>
                             </>
                         )}

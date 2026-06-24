@@ -308,7 +308,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
                             minWidth: SET_COLUMN_WIDTH,
                             textAlign: 'center',
                         }}>
-                            <Text size="xs" fw={600}>
+                            <Text size="sm" fw={600}>
                                 Set
                             </Text>
                         </Table.Th>
@@ -324,7 +324,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
                                         textAlign: 'center',
                                     }}
                                 >
-                                    <Text size="xs" fw={600}>
+                                    <Text size="sm" fw={600}>
                                         {definition.label}{field.unit ? ' (' + field.unit.toLowerCase() + ')' : field.mode ? ' (' + getTrackingFieldMode(field).label.toLowerCase() + ')' : ''}
                                     </Text>
                                 </Table.Th>
