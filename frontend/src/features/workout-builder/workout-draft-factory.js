@@ -179,7 +179,7 @@ export function stringifyWorkoutConfig(config) {
         sets: (config.sets ?? []).map((set, index) => ({
             position: index + 1,
             setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
-            targets: set.targets ?? {},
+            targets: normalizeTargets(set.targets),
         })),
     });
 }
@@ -199,4 +199,20 @@ export function pruneUnusedTargets(config) {
             ),
         })),
     };
+}
+
+function normalizeTargets(targets) {
+    return Object.fromEntries(
+        Object.entries(targets ?? {})
+            .sort(([firstKey], [secondKey]) => firstKey.localeCompare(secondKey))
+            .map(([key, value]) => [
+                key,
+                value && typeof value === 'object' && !Array.isArray(value)
+                    ? Object.fromEntries(
+                        Object.entries(value)
+                            .sort(([firstKey], [secondKey]) => firstKey.localeCompare(secondKey))
+                    )
+                    : value,
+            ])
+    );
 }
