@@ -67,7 +67,7 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                 src={exercise.thumbnailUrl}
                 alt={exercise.name}
                 size={56}
-                radius="md"
+                radius="sm"
                 onClick={() => onView(exercise)}
                 style={{
                     cursor: 'pointer',

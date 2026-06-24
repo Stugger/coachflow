@@ -14,6 +14,7 @@ import {
     IconFlag,
     IconFocus,
     IconPhoto,
+    IconTableImport,
     IconTag,
     IconTarget,
     IconCopy,
@@ -31,6 +32,8 @@ import {
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS,
 } from '../../constants/exercises.js';
+
+import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
 
 function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, onEdit, onArchive}) {
 
@@ -251,6 +254,14 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
                         <IconTag size={16}/>,
                         'Tags',
                         renderOptionBadges(EXERCISE_TAG_OPTIONS, metadata.tags, 'teal')
+                    )}
+                </Paper>
+
+                <Paper withBorder radius="md" p="md">
+                    {renderMetadataRow(
+                        <IconTableImport size={16}/>,
+                        'Tracking Fields',
+                        renderOptionBadges(TRACKING_FIELD_OPTIONS, metadata.defaultTrackingFields, 'blue')
                     )}
                 </Paper>
             </SimpleGrid>

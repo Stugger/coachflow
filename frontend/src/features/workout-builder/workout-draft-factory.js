@@ -1,4 +1,6 @@
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE, WORKOUT_SET_TYPE} from './workout-builder-constants';
+import * as ExerciseMetadataUtils from '../../utils/exercise-metadata-utils';
+import {createTrackingField, TRACKING_FIELD_DEFINITIONS,} from './workout-tracking-fields';
 
 export function createDraftId(prefix) {
     if (crypto.randomUUID) {
@@ -41,7 +43,9 @@ export function createExerciseItem(exercise, position = 1) {
         name: '',
         rounds: null,
         notes: '',
-        configJson: stringifyWorkoutConfig(createEmptyWorkoutConfig()),
+        configJson: stringifyWorkoutConfig(
+            createWorkoutConfigFromExercise(exercise),
+        ),
         itemExercises: [],
     };
 }
@@ -63,6 +67,10 @@ export function createStackItem(itemType, position = 1) {
 }
 
 export function createStackExercise(exercise, position = 1, rounds = 1) {
+    const configJson = stringifyWorkoutConfig(
+        createWorkoutConfigFromExercise(exercise),
+    );
+
     return {
         id: null,
         draftId: createDraftId('item-exercise'),
@@ -71,10 +79,22 @@ export function createStackExercise(exercise, position = 1, rounds = 1) {
         position,
         name: '',
         notes: '',
-        configJson: resizeExerciseSetCount(
-            stringifyWorkoutConfig(createEmptyWorkoutConfig()),
-            rounds,
-        ),
+        configJson: resizeExerciseSetCount(configJson, rounds),
+    };
+}
+
+export function createWorkoutConfigFromExercise(exercise) {
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(
+        exercise?.metadataJson,
+    );
+
+    const trackingFields = [...new Set(metadata.defaultTrackingFields ?? [])]
+        .filter(key => TRACKING_FIELD_DEFINITIONS[key])
+        .map((key, index) => createTrackingField(key, index + 1));
+
+    return {
+        ...createEmptyWorkoutConfig(),
+        trackingFields,
     };
 }
 

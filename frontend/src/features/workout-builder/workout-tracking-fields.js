@@ -141,7 +141,10 @@ export const TRACKING_FIELD_DEFINITIONS = {
     },
 };
 
-export const TRACKING_FIELD_OPTIONS = Object.values(TRACKING_FIELD_DEFINITIONS);
+export const TRACKING_FIELD_OPTIONS = Object.values(TRACKING_FIELD_DEFINITIONS).map(field => ({
+    value: field.key,
+    label: field.label,
+}));
 
 export function createTrackingField(key, position = 1) {
     const definition = TRACKING_FIELD_DEFINITIONS[key];

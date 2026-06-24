@@ -18,6 +18,7 @@ import {
     IconDumbbell,
     IconTarget,
     IconFocus,
+    IconTableImport,
     IconTag,
 
 } from '@tabler/icons-react';
@@ -30,6 +31,8 @@ import {
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS
 } from "../../constants/exercises.js";
+
+import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
 
 function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditing, onCancel}) {
 
@@ -140,7 +143,7 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
                     </Stack>
                 )}
 
-                <Divider label="Metadata" labelPosition="left"/>
+                <Divider label="Configuration" labelPosition="left"/>
 
                 <Select
                     label="Difficulty"
@@ -233,6 +236,23 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
                     clearSectionMode="clear"
                     nothingFoundMessage="No tags found"
                 />
+
+                <MultiSelect
+                    label="Default tracking fields"
+                    description="Added automatically when this exercise is added to a workout."
+                    placeholder="Select tracking fields"
+                    leftSection={<IconTableImport size={16}/>}
+                    data={TRACKING_FIELD_OPTIONS}
+                    value={form.defaultTrackingFields}
+                    onChange={value => onValueChange('defaultTrackingFields', value)}
+                    comboboxProps={{shadow: 'lg'}}
+                    withPillsReorder
+                    searchable
+                    clearable
+                    clearSectionMode="clear"
+                    nothingFoundMessage="No tracking fields found"
+                />
+
                 <Group justify="flex-end">
                     <Button type="button" variant="subtle" onClick={onCancel}>
                         Cancel

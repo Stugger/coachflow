@@ -155,8 +155,8 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
             return (
                 <Avatar
                     size={40}
-                    radius="md"
-                    variant="light"
+                    radius="sm"
+                    variant="subtle"
                     style={{cursor: 'pointer'}}
                 >
                     <IconPhoto size={24}/>
