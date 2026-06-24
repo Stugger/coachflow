@@ -201,8 +201,8 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                                     <Text
                                         size="xs"
                                         fw={700}
-                                        px={8}
                                         pt={1}
+                                        miw="4.75rem"
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
@@ -219,7 +219,6 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                                     <ActionIcon
                                         variant="subtle"
                                         color="gray"
-                                        //color={`var(--mantine-color-${option?.color ?? 'gray'}-9)`}
                                         radius={0}
                                         onClick={() => onAdjustStackRounds(1)}
                                         aria-label="Add round"
@@ -299,8 +298,8 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                                 <Stack gap="xs" align="center">
                                     <Text fw={700}>No exercises in this stack</Text>
                                     {!complete && (
-                                        <Text size="sm" c="red" fw={600} pb={4}>
-                                            {getStackRequirement(stack)}
+                                        <Text size={isMobile ? "xs" : "sm"} c="red" fw={600} pb={4}>
+                                            * {getStackRequirement(stack)}
                                         </Text>
                                     )}
 
@@ -335,9 +334,9 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                                         ))}
                                     </Stack>
                                 </Box>
-                                <Group justify={complete ? "flex-end" : "space-between"}>
+                                <Group gap={2} justify={complete ? "flex-end" : "space-between"} wrap="nowrap">
                                     {!complete && (
-                                        <Text size="sm" c="red" fw={600}>
+                                        <Text size={isMobile ? "xs" : "sm"} c="red" fw={600}>
                                             * {getStackRequirement(stack)}
                                         </Text>
                                     )}

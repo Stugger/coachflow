@@ -154,7 +154,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
         if (!exercise?.thumbnailUrl) {
             return (
                 <Avatar
-                    size={42}
+                    size={40}
                     radius="md"
                     variant="light"
                     style={{cursor: 'pointer'}}
@@ -168,7 +168,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
             <Avatar
                 src={exercise.thumbnailUrl}
                 alt={exercise.name}
-                size={42}
+                size={50}
                 radius="md"
                 style={{cursor: 'pointer'}}
             />
@@ -190,7 +190,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                 }}
             >
                 <Stack gap={isMobile ? 'sm' : 'md'}>
-                    <Group justify="space-between" align="center" wrap="nowrap" gap="md">
+                    <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
                         {renderExerciseThumbnail()}
 
                         <TextInput
@@ -216,6 +216,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                             style={{
                                 flex: 1,
                                 minWidth: 0,
+                                paddingLeft: isMobile ? 2 : 4,
                             }}
                             styles={{
                                 input: {
@@ -305,7 +306,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                         }}
                     />
 
-                    <Group justify="space-between" align="center" wrap="nowrap">
+                    <Group justify="space-between" align="center" wrap="nowrap" mt={-5}>
                         <Switch
                             label="Each side"
                             size={isMobile ? "xs" : "sm"}
