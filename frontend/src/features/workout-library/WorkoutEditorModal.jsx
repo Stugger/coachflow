@@ -504,7 +504,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                             }
                                         }}
                                     />
-                                    <Menu withinPortal position="bottom-end">
+                                    <Menu shadow="md" withinPortal position="bottom-end">
                                         <Menu.Target>
                                             <Tooltip label="Workout options" position="top-end">
                                                 <ActionIcon

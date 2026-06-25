@@ -201,7 +201,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                     <option.icon size={18} opacity={0.65}/>
                                 )}
 
-                                <Menu withinPortal
+                                <Menu shadow="md" withinPortal
                                       position="bottom-end"
                                       opened={typeMenuOpened}
                                       onChange={setTypeMenuOpened}
@@ -309,7 +309,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                         </ActionIcon>
                                     </Group>
 
-                                    <Menu withinPortal position="bottom-end">
+                                    <Menu shadow="md" withinPortal position="bottom-end">
                                         <Menu.Target>
                                             <Tooltip label="Stack options">
                                                 <ActionIcon

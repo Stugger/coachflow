@@ -142,7 +142,7 @@ function WorkoutTemplateListRow({template, onSelect, onEdit, onCopy, onArchive})
             </Table.Td>
 
             <Table.Td>
-                <Menu withinPortal position="bottom-end">
+                <Menu shadow="md" withinPortal position="bottom-end">
                     <Menu.Target>
                         <ActionIcon
                             variant="subtle"

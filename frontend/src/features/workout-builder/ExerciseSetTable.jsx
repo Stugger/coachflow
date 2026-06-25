@@ -221,7 +221,7 @@ function ExerciseSetTable({config, locked, stackControlled, onChange}) {
             || sets.length <= 1;
 
         return (
-            <Menu withinPortal position="bottom-end">
+            <Menu shadow="md" withinPortal position="bottom-end">
                 <Menu.Target>
                     <Tooltip label="Set options">
                         <ActionIcon

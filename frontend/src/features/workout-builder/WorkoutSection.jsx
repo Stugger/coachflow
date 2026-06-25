@@ -134,7 +134,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
     function renderAddItemButtons() {
         return (
             <Group justify="flex-end">
-                <Menu withinPortal position="bottom-end">
+                <Menu shadow="md" withinPortal position="bottom-end">
                     <Menu.Target>
                         <Button
                             size={isMobile ? 'xs' : 'sm'}
@@ -237,7 +237,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                             </Group>
                         </Group>
 
-                        <Menu withinPortal position="bottom-end">
+                        <Menu shadow="md" withinPortal position="bottom-end">
                             <Menu.Target>
                                 <Tooltip label="Section options" position="top-end">
                                     <ActionIcon variant="subtle" color="black">

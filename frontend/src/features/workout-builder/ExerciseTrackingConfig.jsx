@@ -175,7 +175,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
             : field.unit ?? definition.unit;
 
         return (
-            <Menu key={field.key} withinPortal position="bottom-start">
+            <Menu shadow="md" key={field.key} withinPortal position="bottom-start">
                 <Menu.Target>
                     <Badge
                         bg={computedColorScheme === 'light'
@@ -339,7 +339,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                     </Group>
                 )}
                 <Group justify="flex-end">
-                    <Menu withinPortal position="bottom-end" closeOnItemClick={false} style={{flexShrink: 0}}>
+                    <Menu shadow="md" withinPortal position="bottom-end" closeOnItemClick={false} style={{flexShrink: 0}}>
                         <Menu.Target>
                             <Button
                                 size="sm"

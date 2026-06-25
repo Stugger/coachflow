@@ -274,7 +274,7 @@ function ExerciseItemCard({
                             }}
                         />
 
-                        <Menu withinPortal position="bottom-end">
+                        <Menu shadow="md" withinPortal position="bottom-end">
                             <Menu.Target>
                                 <Tooltip label="Exercise options" position="top-end">
                                     <ActionIcon

@@ -205,53 +205,54 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                             </SimpleGrid>
                         )}
                     </Stack>
+
+                    <Menu shadow="md" position="bottom-end">
+                        <Menu.Target>
+                            <Tooltip label="Options" position="top-end">
+                                <ActionIcon variant="subtle" color="gray" size="md" mr={isMobile ? -2 : 0} style={{alignSelf: 'center'}}>
+                                    <IconDotsVertical size={18}/>
+                                </ActionIcon>
+                            </Tooltip>
+                        </Menu.Target>
+
+                        <Menu.Dropdown>
+                            <Menu.Item
+                                leftSection={<IconEye size={16}/>}
+                                onClick={() => onView(exercise)}
+                            >
+                                View
+                            </Menu.Item>
+
+                            <Menu.Item
+                                leftSection={<IconCopy size={16}/>}
+                                onClick={() => onCopy(exercise)}
+                            >
+                                {isGlobal ? 'Copy to mine' : 'Copy'}
+                            </Menu.Item>
+
+                            {isTrainerOwned && (
+                                <>
+                                    <Menu.Item
+                                        leftSection={<IconPencil size={16}/>}
+                                        onClick={() => onEdit(exercise)}
+                                    >
+                                        Edit
+                                    </Menu.Item>
+
+                                    <Menu.Divider/>
+
+                                    <Menu.Item
+                                        color="red"
+                                        leftSection={<IconTrash size={16}/>}
+                                        onClick={() => onArchive(exercise)}
+                                    >
+                                        Archive
+                                    </Menu.Item>
+                                </>
+                            )}
+                        </Menu.Dropdown>
+                    </Menu>
                 </Group>
-                <Menu shadow="md" width={160} position="bottom-end">
-                    <Menu.Target>
-                        <Tooltip label="Options" position="top-end">
-                            <ActionIcon variant="default" size="md">
-                                <IconDotsVertical size={16}/>
-                            </ActionIcon>
-                        </Tooltip>
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                        <Menu.Item
-                            leftSection={<IconEye size={16}/>}
-                            onClick={() => onView(exercise)}
-                        >
-                            View
-                        </Menu.Item>
-
-                        <Menu.Item
-                            leftSection={<IconCopy size={16}/>}
-                            onClick={() => onCopy(exercise)}
-                        >
-                            {isGlobal ? 'Copy to mine' : 'Copy'}
-                        </Menu.Item>
-
-                        {isTrainerOwned && (
-                            <>
-                                <Menu.Item
-                                    leftSection={<IconPencil size={16}/>}
-                                    onClick={() => onEdit(exercise)}
-                                >
-                                    Edit
-                                </Menu.Item>
-
-                                <Menu.Divider/>
-
-                                <Menu.Item
-                                    color="red"
-                                    leftSection={<IconTrash size={16}/>}
-                                    onClick={() => onArchive(exercise)}
-                                >
-                                    Archive
-                                </Menu.Item>
-                            </>
-                        )}
-                    </Menu.Dropdown>
-                </Menu>
             </Group>
         </Paper>
     );

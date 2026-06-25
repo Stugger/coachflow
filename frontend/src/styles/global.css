@@ -48,12 +48,6 @@
     animation: workout-builder-created 400ms ease-out both;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .workout-builder-created {
-        animation: none;
-    }
-}
-
 @keyframes workout-stack-round-feedback {
     0% {
         opacity: 0;
@@ -77,6 +71,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .workout-builder-created
     .workout-stack-round-feedback {
         animation: none;
     }
