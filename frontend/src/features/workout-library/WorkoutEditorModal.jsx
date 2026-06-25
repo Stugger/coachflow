@@ -480,7 +480,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                 {draft && (
                     <>
                         <Paper withBorder radius="md" p="md" bg={computedColorScheme === 'light' ? "var(--color-background)" : "var(--color-surface)"}>
-                            <Stack gap="sm">
+                            <Stack gap="lg">
                                 <Group justify="space-between" align="center" wrap="nowrap">
                                     <TextInput
                                         classNames={{ input: 'subtleInput' }}
@@ -539,23 +539,9 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                     autosize
                                 />
 
-                                <TextInput
-                                    label={
-                                        <Text size="xs" c="dimmed" fw={600} pl={10}>
-                                            COVER IMAGE URL
-                                        </Text>
-                                    }
-                                    pl={10}
-                                    classNames={{ input: 'subtleInput' }}
-                                    variant="unstyled"
-                                    placeholder="Add an image URL"
-                                    value={draft.coverImageUrl || ''}
-                                    onChange={event => updateDraftField('coverImageUrl', event.currentTarget.value)}
-                                />
-
                                 {workoutEquipment.length > 0 && (
                                     <Stack gap="sm">
-                                        <Text size="xs" c="dimmed" fw={600} pl={20} pt={5}>
+                                        <Text size="xs" c="dimmed" fw={600} pl={20} pb={2}>
                                             EQUIPMENT
                                         </Text>
                                         <Group gap="xs" pl={20}>

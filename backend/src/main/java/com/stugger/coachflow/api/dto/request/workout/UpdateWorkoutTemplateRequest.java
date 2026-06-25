@@ -20,7 +20,6 @@ public record UpdateWorkoutTemplateRequest(
         String name,
 
         String description,
-        String coverImageUrl,
 
         @Valid
         List<WorkoutTemplateSectionRequest> sections

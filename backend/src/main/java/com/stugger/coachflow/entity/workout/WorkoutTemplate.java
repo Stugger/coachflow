@@ -37,9 +37,6 @@ public class WorkoutTemplate {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "cover_image_url", columnDefinition = "TEXT")
-    private String coverImageUrl;
-
     @Column(nullable = false)
     private Boolean archived = false;
 

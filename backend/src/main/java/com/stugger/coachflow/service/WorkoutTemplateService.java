@@ -61,7 +61,6 @@ public class WorkoutTemplateService {
         workoutTemplate.setTrainer(trainer);
         workoutTemplate.setName(TextUtils.trimToEmpty(request.name()));
         workoutTemplate.setDescription(TextUtils.trimToNull(request.description()));
-        workoutTemplate.setCoverImageUrl(TextUtils.trimToNull(request.coverImageUrl()));
         workoutTemplate.setArchived(false);
         workoutTemplate.setCreatedAt(now);
         workoutTemplate.setUpdatedAt(now);
@@ -79,7 +78,6 @@ public class WorkoutTemplateService {
 
         workoutTemplate.setName(TextUtils.trimToEmpty(request.name()));
         workoutTemplate.setDescription(TextUtils.trimToNull(request.description()));
-        workoutTemplate.setCoverImageUrl(TextUtils.trimToNull(request.coverImageUrl()));
         workoutTemplate.setUpdatedAt(LocalDateTime.now());
 
         workoutTemplate.getSections().clear();

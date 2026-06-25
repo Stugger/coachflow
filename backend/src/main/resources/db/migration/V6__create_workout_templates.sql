@@ -5,7 +5,6 @@ CREATE TABLE workout_templates (
 
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    cover_image_url TEXT,
 
     archived BOOLEAN NOT NULL DEFAULT FALSE,
 

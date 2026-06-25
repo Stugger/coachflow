@@ -15,7 +15,6 @@ public record WorkoutTemplateResponse(
         TrainerSummaryResponse trainer,
         String name,
         String description,
-        String coverImageUrl,
         Boolean archived,
         List<WorkoutTemplateSectionResponse> sections,
         LocalDateTime createdAt,
@@ -26,7 +25,6 @@ public record WorkoutTemplateResponse(
             new TrainerSummaryResponse(workoutTemplate.getTrainer()),
             workoutTemplate.getName(),
             workoutTemplate.getDescription(),
-            workoutTemplate.getCoverImageUrl(),
             workoutTemplate.getArchived(),
             workoutTemplate.getSections().stream()
                     .map(WorkoutTemplateSectionResponse::new)

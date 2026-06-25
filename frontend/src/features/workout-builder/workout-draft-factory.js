@@ -15,7 +15,6 @@ export function createEmptyWorkoutDraft(trainerId) {
         trainerId,
         name: '',
         description: '',
-        coverImageUrl: '',
         sections: [],
     };
 }

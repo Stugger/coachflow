@@ -19,7 +19,6 @@ export function normalizeTemplateForDraft(template, trainerId) {
         trainerId: template.trainerId ?? template.trainer?.id ?? trainerId,
         name: template.name ?? '',
         description: template.description ?? '',
-        coverImageUrl: template.coverImageUrl ?? '',
         sections: normalizePositions(template.sections ?? []).map((section, sectionIndex) => ({
             id: section.id ?? null,
             draftId: createDraftId('section'),
@@ -80,7 +79,6 @@ export function buildTemplatePayload(draft, trainerId) {
         trainerId,
         name: trimToNull(draft.name) ?? '',
         description: trimToNull(draft.description),
-        coverImageUrl: trimToNull(draft.coverImageUrl),
         sections: normalizePositions(draft.sections ?? []).map((section, sectionIndex) => ({
             id: section.id ?? null,
             position: sectionIndex + 1,
