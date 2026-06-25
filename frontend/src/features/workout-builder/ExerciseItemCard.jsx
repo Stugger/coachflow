@@ -52,6 +52,7 @@ function ExerciseItemCard({
                               onDelete,
                               onMoveUp,
                               onMoveDown,
+                              onViewExercise,
                           }) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -186,6 +187,11 @@ function ExerciseItemCard({
                     radius="sm"
                     variant="subtle"
                     style={{cursor: 'pointer'}}
+                    onClick={() => {
+                        if (exercise) {
+                            onViewExercise(exercise)
+                        }
+                    }}
                 >
                     <IconPhoto size={24}/>
                 </Avatar>
@@ -199,6 +205,7 @@ function ExerciseItemCard({
                 size={50}
                 radius="md"
                 style={{cursor: 'pointer'}}
+                onClick={() => onViewExercise(exercise)}
             />
         );
     }
@@ -284,7 +291,8 @@ function ExerciseItemCard({
                             <Menu.Dropdown>
                                 <Menu.Item
                                     leftSection={<IconEye size={14}/>}
-                                    disabled
+                                    disabled={!exercise}
+                                    onClick={() => onViewExercise(exercise)}
                                 >
                                     View exercise
                                 </Menu.Item>

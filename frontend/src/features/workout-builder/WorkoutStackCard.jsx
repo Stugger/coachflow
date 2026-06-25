@@ -51,7 +51,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                               highlightedStackExerciseKey = null,
                               validationIssues = [],
                               onChange,
-                              onAddExercise,
+                              onAddExercise, onViewExercise,
                               onDeleteStack, onMoveStackUp, onMoveStackDown,
                               onChangeStackExercise, onDeleteStackExercise, onMoveStackExerciseUp, onMoveStackExerciseDown,
                               onAdjustStackRounds}) {
@@ -473,6 +473,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                                 onDelete={() => onDeleteStackExercise(exerciseIndex)}
                                                 onMoveUp={() => onMoveStackExerciseUp(exerciseIndex)}
                                                 onMoveDown={() => onMoveStackExerciseDown(exerciseIndex)}
+                                                onViewExercise={onViewExercise}
                                             />
                                         ))}
                                     </Stack>

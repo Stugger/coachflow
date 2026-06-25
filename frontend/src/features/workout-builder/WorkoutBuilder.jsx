@@ -18,7 +18,7 @@ import {reindexPositions} from './workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from './workout-builder-utils';
 import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
 
-function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
+function WorkoutBuilder({draft, exercises, validationIssues = [], onChange, onViewExercise}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -519,6 +519,7 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                             }),
                         }}
                         exerciseItemActions={{
+                            onViewExercise,
                             onDeleteExerciseItem: itemIndex => deleteItemFromSection(sectionIndex, itemIndex),
                             onMoveExerciseItemUp: itemIndex => moveItemInSection(sectionIndex, itemIndex, -1),
                             onMoveExerciseItemDown: itemIndex => moveItemInSection(sectionIndex, itemIndex, 1),

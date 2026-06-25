@@ -35,7 +35,7 @@ import {
 
 import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
 
-function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, onEdit, onArchive}) {
+function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
 
     const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise?.metadataJson);
     const isGlobal = exercise?.visibility === 'GLOBAL';
@@ -89,7 +89,11 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
     }
 
     function renderActions() {
-        if (!showLibraryActions) {
+        const canCopy = Boolean(onCopy);
+        const canEdit = isTrainerOwned && Boolean(onEdit);
+        const canArchive = isTrainerOwned && Boolean(onArchive);
+
+        if (!canCopy && !canEdit && !canArchive) {
             return (
                 <Group justify="flex-end">
                     <Button type="button" variant="light" onClick={onClose}>
@@ -101,20 +105,38 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
 
         return (
             <Group justify="flex-end">
-                <Button type="button" variant="light" leftSection={<IconCopy size={16}/>} onClick={onCopy}>
-                    {isGlobal ? 'Copy to mine' : 'Copy'}
-                </Button>
+                {canCopy && (
+                    <Button
+                        type="button"
+                        variant="light"
+                        leftSection={<IconCopy size={16}/>}
+                        onClick={onCopy}
+                    >
+                        {isGlobal ? 'Copy to mine' : 'Copy'}
+                    </Button>
+                )}
 
-                {isTrainerOwned && (
-                    <>
-                        <Button type="button" variant="light" leftSection={<IconEdit size={16}/>} onClick={onEdit}>
-                            Edit
-                        </Button>
+                {canEdit && (
+                    <Button
+                        type="button"
+                        variant="light"
+                        leftSection={<IconEdit size={16}/>}
+                        onClick={onEdit}
+                    >
+                        Edit
+                    </Button>
+                )}
 
-                        <Button type="button" color="red" variant="light" leftSection={<IconTrash size={16}/>} onClick={onArchive}>
-                            Archive
-                        </Button>
-                    </>
+                {canArchive && (
+                    <Button
+                        type="button"
+                        color="red"
+                        variant="light"
+                        leftSection={<IconTrash size={16}/>}
+                        onClick={onArchive}
+                    >
+                        Archive
+                    </Button>
                 )}
 
                 <Button type="button" variant="subtle" onClick={onClose}>

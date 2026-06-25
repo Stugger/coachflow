@@ -72,6 +72,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
     } = sectionActions;
 
     const {
+        onViewExercise,
         onDeleteExerciseItem,
         onMoveExerciseItemUp,
         onMoveExerciseItemDown,
@@ -371,6 +372,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                                     onDelete={() => onDeleteExerciseItem(itemIndex)}
                                                     onMoveUp={() => onMoveExerciseItemUp(itemIndex)}
                                                     onMoveDown={() => onMoveExerciseItemDown(itemIndex)}
+                                                    onViewExercise={onViewExercise}
                                                 />
                                             );
                                         }
@@ -393,6 +395,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                                     )),
                                                 }))}
                                                 onAddExercise={() => onOpenExercisePickerForStack(itemIndex)}
+                                                onViewExercise={onViewExercise}
                                                 onDeleteStack={() => onDeleteStack(itemIndex)}
                                                 onMoveStackUp={() => onMoveStackUp(itemIndex)}
                                                 onMoveStackDown={() => onMoveStackDown(itemIndex)}

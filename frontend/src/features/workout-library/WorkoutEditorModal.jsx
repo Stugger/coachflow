@@ -56,6 +56,8 @@ import {
     WORKOUT_VALIDATION_SCOPE,
 } from '../workout-builder/workout-draft-validation';
 
+import ExerciseViewer from '../../components/exercises/ExerciseViewer';
+
 function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -83,6 +85,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
     const [savedSnapshot, setSavedSnapshot] = useState('');
     const [draftRecovered, setDraftRecovered] = useState(false);
+
+    const [exerciseOverlay, setExerciseOverlay] = useState(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -422,6 +426,13 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
             .finally(() => setSaving(false));
     }
 
+    function openExerciseViewer(exercise) {
+        setExerciseOverlay({
+            mode: 'VIEW',
+            exercise,
+        });
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Reset helpers
     // ------------------------------------------------------------------------------------------------------------------------
@@ -436,6 +447,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         setSavedSnapshot('');
         setDraftRecovered(false);
         setActiveValidationIssueIds([]);
+        setExerciseOverlay(null);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -576,6 +588,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                             exercises={exercises}
                             validationIssues={activeValidationIssues}
                             onChange={setDraft}
+                            onViewExercise={openExerciseViewer}
                         />
                     </>
                 )}
@@ -700,13 +713,61 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         );
     }
 
+    function renderExerciseOverlay() {
+        if (!exerciseOverlay) {
+            return null;
+        }
+
+        const content = (
+            <ExerciseViewer
+                exercise={exerciseOverlay.exercise}
+                onClose={() => setExerciseOverlay(null)}
+            />
+        );
+
+        if (isMobile) {
+            return (
+                <Drawer
+                    opened
+                    onClose={() => setExerciseOverlay(null)}
+                    title='Exercise'
+                    position="bottom"
+                    size="100%"
+                    zIndex={300}
+                    styles={{
+                        title: {fontSize: '1.2rem'},
+                        body: {paddingBottom: '2rem'},
+                    }}
+                >
+                    {content}
+                </Drawer>
+            );
+        }
+
+        return (
+            <Modal
+                opened
+                onClose={() => setExerciseOverlay(null)}
+                title='Exercise'
+                centered
+                size="48rem"
+                zIndex={300}
+                styles={{
+                    title: {fontSize: '1.2rem'},
+                }}
+            >
+                {content}
+            </Modal>
+        );
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------
     return (
         <>
             {renderExitModal()}
-
+            {renderExerciseOverlay()}
             {isMobile ? (
                 <Drawer.Root
                     opened={opened}

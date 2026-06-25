@@ -504,7 +504,6 @@ function ExerciseLibraryPage({trainerId}) {
         const content = formMode === FORM_MODE.VIEW ? (
             <ExerciseViewer
                 exercise={selectedExercise}
-                showLibraryActions
                 onClose={closeModal}
                 onCopy={() => openCopyModal(selectedExercise)}
                 onEdit={() => openEditModal(selectedExercise)}
