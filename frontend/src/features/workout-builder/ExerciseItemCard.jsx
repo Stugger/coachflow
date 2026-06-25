@@ -47,6 +47,7 @@ function ExerciseItemCard({
                               itemIndex,
                               itemCount,
                               independent,
+                              isNew,
                               onChange,
                               onDelete,
                               onMoveUp,
@@ -209,6 +210,7 @@ function ExerciseItemCard({
     return (
         <>
             <Paper
+                className={isNew ? 'workout-builder-created' : undefined}
                 radius="sm"
                 p={isMobile ? 'md' : 'lg'}
                 shadow={computedColorScheme === 'light' ? "var(--mantine-shadow-md)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"}
@@ -430,7 +432,8 @@ function areExerciseItemCardPropsEqual(previous, next) {
         previous.parentStackItemIndex === next.parentStackItemIndex &&
         previous.itemIndex === next.itemIndex &&
         previous.itemCount === next.itemCount &&
-        previous.independent === next.independent;
+        previous.independent === next.independent &&
+        previous.isNew === next.isNew;
 }
 
 export default memo(ExerciseItemCard, areExerciseItemCardPropsEqual);

@@ -1,5 +1,9 @@
 import {WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 
+export function getWorkoutItemKey(item) {
+    return item.draftId || item.id;
+}
+
 /* Sections */
 
 export function getSectionKey(section) {

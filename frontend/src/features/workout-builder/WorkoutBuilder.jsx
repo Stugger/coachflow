@@ -15,7 +15,7 @@ import WorkoutSection from './WorkoutSection';
 
 import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, resizeExerciseSetCount} from './workout-draft-factory';
 import {reindexPositions} from './workout-draft-mappers';
-import {getSectionKey, getSectionDisplayName} from './workout-builder-utils';
+import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from './workout-builder-utils';
 import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
 
 function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
@@ -37,6 +37,8 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
 
     const sectionListEndRef = useRef(null);
     const pendingNewSectionScrollRef = useRef(false);
+
+    const [creationHighlight, setCreationHighlight] = useState(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -69,6 +71,18 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
 
         return () => cancelAnimationFrame(frameId);
     }, [sections.length]);
+
+    useEffect(() => {
+        if (!creationHighlight) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => {
+            setCreationHighlight(null);
+        }, 900);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [creationHighlight]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Draft helpers
@@ -103,6 +117,11 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
 
     const addSection = useCallback(() => {
         const nextSection = createWorkoutSection();
+
+        setCreationHighlight({
+            type: 'section',
+            key: getSectionKey(nextSection),
+        });
 
         pendingNewSectionScrollRef.current = true;
 
@@ -201,21 +220,35 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
     }, [validationIssues]);
 
     const addExerciseToSection = useCallback((sectionIndex, exercise) => {
+        const nextItem = createExerciseItem(exercise, 1); //position irrelevant since reindexPositions overwrites
+
+        setCreationHighlight({
+            type: 'item',
+            key: getWorkoutItemKey(nextItem),
+        });
+
         updateSection(sectionIndex, section => ({
             ...section,
             items: reindexPositions([
                 ...(section.items ?? []),
-                createExerciseItem(exercise, (section.items?.length ?? 0) + 1),
+                nextItem,
             ]),
         }));
     }, [updateSection]);
 
     const addStackToSection = useCallback((sectionIndex, itemType) => {
+        const nextStack = createStackItem(itemType, 1); //position irrelevant since reindexPositions overwrites
+
+        setCreationHighlight({
+            type: 'item',
+            key: getWorkoutItemKey(nextStack),
+        });
+
         updateSection(sectionIndex, section => ({
             ...section,
             items: reindexPositions([
                 ...(section.items ?? []),
-                createStackItem(itemType, (section.items?.length ?? 0) + 1),
+                nextStack,
             ]),
         }));
     }, [updateSection]);
@@ -273,8 +306,15 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
         }));
     }, [updateStackItem]);
 
-    const addExerciseToStack = useCallback((sectionIndex, itemIndex, exercise) => {
-        updateStackItem(sectionIndex, itemIndex, stack => ({
+    const addExerciseToStack = useCallback((sectionIndex, stackItemIndex, exercise) => {
+        const draftId = createDraftId('item-exercise');
+
+        setCreationHighlight({
+            type: 'stack-exercise',
+            key: draftId,
+        });
+
+        updateStackItem(sectionIndex, stackItemIndex, stack => ({
             ...stack,
             itemExercises: reindexPositions([
                 ...(stack.itemExercises ?? []),
@@ -282,6 +322,7 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                     exercise,
                     (stack.itemExercises?.length ?? 0) + 1,
                     stack.rounds ?? 1,
+                    draftId,
                 ),
             ]),
         }));
@@ -446,6 +487,20 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                         sectionIndex={sectionIndex}
                         sectionCount={sections.length}
                         expanded={expandedSectionIds.has(getSectionKey(section))}
+                        isNew={
+                            creationHighlight?.type === 'section' &&
+                            creationHighlight.key === getSectionKey(section)
+                        }
+                        highlightedTopLevelItemKey={
+                            creationHighlight?.type === 'item'
+                                ? creationHighlight.key
+                                : null
+                        }
+                        highlightedStackExerciseKey={
+                            creationHighlight?.type === 'stack-exercise'
+                                ? creationHighlight.key
+                                : null
+                        }
                         validationIssues={getSectionValidationIssues(section)}
                         sectionActions={{
                             onToggle: () => toggleSection(section),

@@ -1,4 +1,4 @@
-import {memo, useState} from 'react';
+import {memo, useEffect, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     useMantineTheme,
@@ -43,10 +43,13 @@ import {
     getStackRequirement,
     isStackComplete,
     canAddExerciseToStack,
+    getWorkoutItemKey,
 } from './workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 
-function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validationIssues = [],
+function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
+                              highlightedStackExerciseKey = null,
+                              validationIssues = [],
                               onChange,
                               onAddExercise,
                               onDeleteStack, onMoveStackUp, onMoveStackDown,
@@ -66,6 +69,11 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validation
     // ------------------------------------------------------------------------------------------------------------------------
 
     const [typeMenuOpened, setTypeMenuOpened] = useState(false);
+
+    const [roundFeedback, setRoundFeedback] = useState(null);
+
+    const roundFeedbackTimeoutRef = useRef(null);
+    const roundFeedbackSequenceRef = useRef(0);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -91,6 +99,65 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validation
     }));
 
     // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        return () => {
+            if (roundFeedbackTimeoutRef.current) {
+                window.clearTimeout(roundFeedbackTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Utility
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function showRoundFeedback(amount) {
+        const currentRounds = stack.rounds ?? 1;
+        const isEmptyStack = exerciseCount === 0;
+
+        const message = isEmptyStack
+            ? amount > 0
+                ? `Round ${currentRounds + 1} added`
+                : `Round ${currentRounds} removed`
+            : amount > 0
+                ? `Set ${currentRounds + 1} added to stack exercises`
+                : `Set ${currentRounds} removed from stack exercises`;
+
+        if (roundFeedbackTimeoutRef.current) {
+            window.clearTimeout(roundFeedbackTimeoutRef.current);
+        }
+
+        setRoundFeedback({
+            id: ++roundFeedbackSequenceRef.current,
+            message,
+            compact: isEmptyStack,
+        });
+
+        roundFeedbackTimeoutRef.current = window.setTimeout(() => {
+            setRoundFeedback(null);
+            roundFeedbackTimeoutRef.current = null;
+        }, 1700);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function handleAdjustStackRounds(amount) {
+        const currentRounds = stack.rounds ?? 1;
+
+        if (amount < 0 && currentRounds <= 1) {
+            return;
+        }
+
+        onAdjustStackRounds(amount);
+        showRoundFeedback(amount);
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------
 
@@ -104,6 +171,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validation
                 }}
             >
                 <Paper
+                    className={isNew ? 'workout-builder-created' : undefined}
                     withBorder
                     radius="sm"
                     shadow={shadow}
@@ -177,113 +245,159 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validation
                                 </Menu>
                             </Group>
 
-                            <Group gap="xs" wrap="nowrap">
-                                <Group
-                                    gap={0}
-                                    wrap="nowrap"
-                                    style={{
-                                        height: '1.75rem',
-                                        border: '1px solid rgba(0, 0, 0, 0.25)',
-                                        borderRadius: 'var(--mantine-radius-md)',
-                                        overflow: 'hidden',
-                                        backgroundColor: computedColorScheme === 'light' ? 'var(--color-background)' : 'var(--color-surface)',
-                                    }}
-                                >
-                                    <ActionIcon
-                                        variant="subtle"
-                                        color="gray"
-                                        radius={0}
-                                        disabled={(stack.rounds ?? 1) <= 1}
-                                        onClick={() => onAdjustStackRounds(-1)}
-                                        aria-label="Remove round"
+                            <Box pos="relative" style={{flexShrink: 0}}>
+                                <Group gap="xs" wrap="nowrap">
+                                    <Group
+                                        gap={0}
+                                        wrap="nowrap"
                                         style={{
-                                            width: '1.75rem',
-                                            height: '100%',
-                                            flexShrink: 0,
-                                            opacity: (stack.rounds ?? 1) <= 1 ? 0.45 : 0.75,
+                                            height: '1.75rem',
+                                            border: '1px solid rgba(0, 0, 0, 0.25)',
+                                            borderRadius: 'var(--mantine-radius-md)',
+                                            overflow: 'hidden',
+                                            backgroundColor: computedColorScheme === 'light' ? 'var(--color-background)' : 'var(--color-surface)',
                                         }}
                                     >
-                                        <IconMinus size={16} />
-                                    </ActionIcon>
+                                        <ActionIcon
+                                            variant="subtle"
+                                            color="gray"
+                                            radius={0}
+                                            disabled={(stack.rounds ?? 1) <= 1}
+                                            onClick={() => handleAdjustStackRounds(-1)}
+                                            aria-label="Remove round"
+                                            style={{
+                                                width: '1.75rem',
+                                                height: '100%',
+                                                flexShrink: 0,
+                                                opacity: (stack.rounds ?? 1) <= 1 ? 0.45 : 0.75,
+                                            }}
+                                        >
+                                            <IconMinus size={16} />
+                                        </ActionIcon>
 
-                                    <Text
-                                        size="xs"
-                                        fw={700}
-                                        pt={1}
-                                        miw="4.75rem"
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            height: '100%',
-                                            whiteSpace: 'nowrap',
-                                            color: `var(--mantine-color-${option?.color ?? 'gray'}-7)`,
-                                            borderInline: '1px solid rgba(0, 0, 0, 0.25)',
-                                        }}
-                                    >
-                                        {stack.rounds ?? 1} {(stack.rounds ?? 1) === 1 ? 'Round' : 'Rounds'}
-                                    </Text>
+                                        <Text
+                                            size="xs"
+                                            fw={700}
+                                            pt={1}
+                                            miw="4.75rem"
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                height: '100%',
+                                                whiteSpace: 'nowrap',
+                                                color: `var(--mantine-color-${option?.color ?? 'gray'}-7)`,
+                                                borderInline: '1px solid rgba(0, 0, 0, 0.25)',
+                                            }}
+                                        >
+                                            {stack.rounds ?? 1} {(stack.rounds ?? 1) === 1 ? 'Round' : 'Rounds'}
+                                        </Text>
 
-                                    <ActionIcon
-                                        variant="subtle"
-                                        color="gray"
-                                        radius={0}
-                                        onClick={() => onAdjustStackRounds(1)}
-                                        aria-label="Add round"
-                                        style={{
-                                            width: '1.75rem',
-                                            height: '100%',
-                                            flexShrink: 0,
-                                        }}
-                                    >
-                                        <IconPlus size={16} />
-                                    </ActionIcon>
+                                        <ActionIcon
+                                            variant="subtle"
+                                            color="gray"
+                                            radius={0}
+                                            onClick={() => handleAdjustStackRounds(1)}
+                                            aria-label="Add round"
+                                            style={{
+                                                width: '1.75rem',
+                                                height: '100%',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            <IconPlus size={16} />
+                                        </ActionIcon>
+                                    </Group>
+
+                                    <Menu withinPortal position="bottom-end">
+                                        <Menu.Target>
+                                            <Tooltip label="Stack options">
+                                                <ActionIcon
+                                                    variant="subtle"
+                                                    color={computedColorScheme === 'light' ? 'gray' : 'white'}
+                                                >
+                                                    <IconDots
+                                                        size={18}
+                                                        color={computedColorScheme === 'light' ? 'black' : 'white'}
+                                                    />
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        </Menu.Target>
+
+                                        <Menu.Dropdown>
+                                            <Menu.Item
+                                                leftSection={<IconArrowUp size={14}/>}
+                                                disabled={itemIndex === 0}
+                                                onClick={onMoveStackUp}
+                                            >
+                                                Move up
+                                            </Menu.Item>
+
+                                            <Menu.Item
+                                                leftSection={<IconArrowDown size={14}/>}
+                                                disabled={itemIndex === itemCount - 1}
+                                                onClick={onMoveStackDown}
+                                            >
+                                                Move down
+                                            </Menu.Item>
+
+                                            <Menu.Divider/>
+
+                                            <Menu.Item
+                                                leftSection={<IconTrash size={14}/>}
+                                                color="red"
+                                                onClick={onDeleteStack}
+                                            >
+                                                Delete stack
+                                            </Menu.Item>
+                                        </Menu.Dropdown>
+                                    </Menu>
                                 </Group>
 
-                                <Menu withinPortal position="bottom-end">
-                                    <Menu.Target>
-                                        <Tooltip label="Stack options">
-                                            <ActionIcon
-                                                variant="subtle"
-                                                color={computedColorScheme === 'light' ? 'gray' : 'white'}
+                                {roundFeedback && (
+                                    <Box
+                                        style={{
+                                            position: 'absolute',
+                                            top: 'calc(100% + 0.45rem)',
+                                            right: roundFeedback.compact ? '2.5rem' : 0,
+                                            zIndex: 10,
+                                            pointerEvents: 'none',
+                                            width: 'max-content',
+                                            maxWidth: 'calc(100vw - 2rem)',
+                                        }}
+                                    >
+                                        <Paper
+                                            key={roundFeedback.id}
+                                            className="workout-stack-round-feedback"
+                                            role="status"
+                                            withBorder
+                                            radius="sm"
+                                            px="sm"
+                                            py={6}
+                                            style={{
+                                                width: 'max-content',
+                                                maxWidth: '100%',
+                                                backgroundColor: computedColorScheme === 'light'
+                                                    ? 'var(--mantine-color-gray-0)'
+                                                    : 'var(--color-surface)',
+                                                color: 'var(--mantine-color-text)',
+                                                boxShadow: 'var(--mantine-shadow-sm)',
+                                            }}
+                                        >
+                                            <Text
+                                                size="xs"
+                                                fw={600}
+                                                style={{
+                                                    color: computedColorScheme === 'light' ? 'var(--mantine-color-gray-7)' : 'var(--mantine-color-gray-5)',
+                                                    whiteSpace: 'nowrap',
+                                                }}
                                             >
-                                                <IconDots
-                                                    size={18}
-                                                    color={computedColorScheme === 'light' ? 'black' : 'white'}
-                                                />
-                                            </ActionIcon>
-                                        </Tooltip>
-                                    </Menu.Target>
-
-                                    <Menu.Dropdown>
-                                        <Menu.Item
-                                            leftSection={<IconArrowUp size={14}/>}
-                                            disabled={itemIndex === 0}
-                                            onClick={onMoveStackUp}
-                                        >
-                                            Move up
-                                        </Menu.Item>
-
-                                        <Menu.Item
-                                            leftSection={<IconArrowDown size={14}/>}
-                                            disabled={itemIndex === itemCount - 1}
-                                            onClick={onMoveStackDown}
-                                        >
-                                            Move down
-                                        </Menu.Item>
-
-                                        <Menu.Divider/>
-
-                                        <Menu.Item
-                                            leftSection={<IconTrash size={14}/>}
-                                            color="red"
-                                            onClick={onDeleteStack}
-                                        >
-                                            Delete stack
-                                        </Menu.Item>
-                                    </Menu.Dropdown>
-                                </Menu>
-                            </Group>
+                                                {roundFeedback.message}
+                                            </Text>
+                                        </Paper>
+                                    </Box>
+                                )}
+                            </Box>
                         </Group>
                     </Box>
 
@@ -354,6 +468,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validation
                                                 itemIndex={exerciseIndex}
                                                 itemCount={stack.itemExercises.length}
                                                 independent={false}
+                                                isNew={highlightedStackExerciseKey === getWorkoutItemKey(itemExercise)}
                                                 onChange={updates => onChangeStackExercise(exerciseIndex, updates)}
                                                 onDelete={() => onDeleteStackExercise(exerciseIndex)}
                                                 onMoveUp={() => onMoveStackExerciseUp(exerciseIndex)}
@@ -424,6 +539,8 @@ function areWorkoutStackCardPropsEqual(previous, next) {
         previous.sectionIndex === next.sectionIndex &&
         previous.itemIndex === next.itemIndex &&
         previous.itemCount === next.itemCount &&
+        previous.isNew === next.isNew &&
+        previous.highlightedStackExerciseKey === next.highlightedStackExerciseKey &&
         haveSameValidationIssues(previous.validationIssues, next.validationIssues);
 }
 

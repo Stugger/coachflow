@@ -66,14 +66,14 @@ export function createStackItem(itemType, position = 1) {
     };
 }
 
-export function createStackExercise(exercise, position = 1, rounds = 1) {
+export function createStackExercise(exercise, position = 1, rounds = 1, draftId = createDraftId('item-exercise'),) {
     const configJson = stringifyWorkoutConfig(
         createWorkoutConfigFromExercise(exercise),
     );
 
     return {
         id: null,
-        draftId: createDraftId('item-exercise'),
+        draftId,
         exercise,
         exerciseId: exercise.id,
         position,

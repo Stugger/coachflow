@@ -41,11 +41,13 @@ import ExerciseItemCard from './ExerciseItemCard';
 import WorkoutStackCard from './WorkoutStackCard';
 import ExercisePickerModal from './ExercisePickerModal';
 
-import {getSectionDisplayName, getSectionTypeLabel} from './workout-builder-utils';
+import {getSectionDisplayName, getSectionTypeLabel, getWorkoutItemKey} from './workout-builder-utils';
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
 
-function WorkoutSection({section, sectionIndex, sectionCount, expanded, validationIssues = [],
+function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
+                            highlightedTopLevelItemKey = null, highlightedStackExerciseKey = null,
+                            validationIssues = [],
                             sectionActions,
                             exerciseItemActions,
                             stackActions,
@@ -180,6 +182,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, validati
             />
 
             <Paper
+                className={isNew ? 'workout-builder-created' : undefined}
                 withBorder
                 radius="md"
                 bg="var(--color-background)"
@@ -357,6 +360,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, validati
                                                     itemIndex={itemIndex}
                                                     itemCount={section.items.length}
                                                     independent={true}
+                                                    isNew={highlightedTopLevelItemKey === getWorkoutItemKey(item)}
                                                     onChange={updates => onChange(currentSection => ({
                                                         items: (currentSection.items ?? []).map((currentItem, index) => (
                                                             index === itemIndex
@@ -378,6 +382,8 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, validati
                                                 sectionIndex={sectionIndex}
                                                 itemIndex={itemIndex}
                                                 itemCount={section.items.length}
+                                                isNew={highlightedTopLevelItemKey === getWorkoutItemKey(item)}
+                                                highlightedStackExerciseKey={highlightedStackExerciseKey}
                                                 validationIssues={getStackValidationIssues(item)}
                                                 onChange={updates => onChange(currentSection => ({
                                                     items: (currentSection.items ?? []).map((currentItem, index) => (
@@ -439,6 +445,9 @@ function areWorkoutSectionPropsEqual(previous, next) {
         previous.sectionIndex === next.sectionIndex &&
         previous.sectionCount === next.sectionCount &&
         previous.expanded === next.expanded &&
+        previous.isNew === next.isNew &&
+        previous.highlightedTopLevelItemKey === next.highlightedTopLevelItemKey &&
+        previous.highlightedStackExerciseKey === next.highlightedStackExerciseKey &&
         previous.exercisePicker.exercises === next.exercisePicker.exercises &&
         previous.exercisePicker.opened === next.exercisePicker.opened &&
         haveSameValidationIssues(previous.validationIssues, next.validationIssues);

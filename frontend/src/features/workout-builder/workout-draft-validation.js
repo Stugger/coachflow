@@ -62,7 +62,7 @@ function validateSection(issues, section, sectionIndex) {
             id: `section-items-required-${sectionKey}`,
             scope: WORKOUT_VALIDATION_SCOPE.SECTION,
             sectionKey,
-            message: 'Add at least one exercise or stack to this section.',
+            message: 'Add at least one item to this section.',
         });
     }
 
