@@ -13,7 +13,7 @@ import {IconAlertCircle, IconPlus} from '@tabler/icons-react';
 
 import WorkoutSection from './WorkoutSection';
 
-import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, resizeExerciseSetCount} from './workout-draft-factory';
+import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, createDraftId, resizeExerciseSetCount} from './workout-draft-factory';
 import {reindexPositions} from './workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from './workout-builder-utils';
 import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
