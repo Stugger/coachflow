@@ -1,9 +1,10 @@
-import {useCallback, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     Alert,
     Button,
     Group,
+    Modal,
     Paper,
     Stack,
     Text,
@@ -32,6 +33,11 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
     const [expandedSectionIds, setExpandedSectionIds] = useState(() => new Set());
     const [exercisePickerTarget, setExercisePickerTarget] = useState(null);
 
+    const [sectionPendingDelete, setSectionPendingDelete] = useState(null);
+
+    const sectionListEndRef = useRef(null);
+    const pendingNewSectionScrollRef = useRef(false);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
@@ -42,6 +48,27 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
         issue.scope === WORKOUT_VALIDATION_SCOPE.WORKOUT &&
         issue.field === 'sections'
     );
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        if (!pendingNewSectionScrollRef.current) {
+            return;
+        }
+
+        pendingNewSectionScrollRef.current = false;
+
+        const frameId = requestAnimationFrame(() => {
+            sectionListEndRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'end',
+            });
+        });
+
+        return () => cancelAnimationFrame(frameId);
+    }, [sections.length]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Draft helpers
@@ -77,6 +104,8 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
     const addSection = useCallback(() => {
         const nextSection = createWorkoutSection();
 
+        pendingNewSectionScrollRef.current = true;
+
         updateSections(currentSections => [
             ...currentSections,
             nextSection,
@@ -89,18 +118,47 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
         });
     }, [updateSections]);
 
-    const deleteSection = useCallback(sectionIndex => {
-        const section = sections[sectionIndex];
-        const confirmed = !section?.items?.length || window.confirm(`Delete "${getSectionDisplayName(section)}"?`);
+    const deleteSectionByKey = useCallback(sectionKey => {
+        updateSections(currentSections =>
+            currentSections.filter(section =>
+                getSectionKey(section) !== sectionKey
+            )
+        );
 
-        if (!confirmed) {
+        setExpandedSectionIds(current => {
+            const next = new Set(current);
+            next.delete(sectionKey);
+            return next;
+        });
+    }, [updateSections]);
+
+    const requestDeleteSection = useCallback(sectionIndex => {
+        const section = sections[sectionIndex];
+
+        if (!section) {
             return;
         }
 
-        updateSections(currentSections => (
-            currentSections.filter((_, index) => index !== sectionIndex)
-        ));
-    }, [sections, updateSections]);
+        if (!section.items?.length) {
+            deleteSectionByKey(getSectionKey(section));
+            return;
+        }
+
+        setSectionPendingDelete({
+            key: getSectionKey(section),
+            name: getSectionDisplayName(section),
+            itemCount: section.items.length,
+        });
+    }, [sections, deleteSectionByKey]);
+
+    const confirmDeleteSection = useCallback(() => {
+        if (!sectionPendingDelete) {
+            return;
+        }
+
+        deleteSectionByKey(sectionPendingDelete.key);
+        setSectionPendingDelete(null);
+    }, [sectionPendingDelete, deleteSectionByKey]);
 
     const moveSection = useCallback((sectionIndex, direction) => {
         updateSections(currentSections => {
@@ -349,6 +407,37 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                 </Paper>
             )}
 
+            <Modal
+                opened={Boolean(sectionPendingDelete)}
+                onClose={() => setSectionPendingDelete(null)}
+                title={`Delete "${sectionPendingDelete?.name}"?`}
+                centered
+                zIndex='var(--mantine-z-index-popover)'
+            >
+                <Stack gap="lg">
+                    <Text c="dimmed" size="sm">
+                        This will remove the section and its {sectionPendingDelete?.itemCount} item
+                        {sectionPendingDelete?.itemCount === 1 ? '' : 's'} from this workout.
+                    </Text>
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            onClick={() => setSectionPendingDelete(null)}
+                        >
+                            Keep section
+                        </Button>
+
+                        <Button
+                            color="red"
+                            onClick={confirmDeleteSection}
+                        >
+                            Delete section
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+
             <Stack gap="1.5rem">
                 {sections.map((section, sectionIndex) => (
                     <WorkoutSection
@@ -362,7 +451,7 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                             onToggle: () => toggleSection(section),
                             onMoveUp: () => moveSection(sectionIndex, -1),
                             onMoveDown: () => moveSection(sectionIndex, 1),
-                            onDelete: () => deleteSection(sectionIndex),
+                            onDelete: () => requestDeleteSection(sectionIndex),
                             onChange: updatesOrUpdater => updateSection(sectionIndex, currentSection => {
                                 const updates = typeof updatesOrUpdater === 'function'
                                     ? updatesOrUpdater(currentSection)
@@ -422,6 +511,12 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                     Add Section
                 </Button>
             )}
+
+            <div
+                ref={sectionListEndRef}
+                aria-hidden="true"
+                style={{height: 1}}
+            />
         </Stack>
     );
 }

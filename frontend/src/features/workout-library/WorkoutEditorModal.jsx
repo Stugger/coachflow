@@ -7,6 +7,7 @@ import {
     Button,
     Drawer,
     Group,
+    Loader,
     LoadingOverlay,
     Modal,
     Menu,
@@ -93,6 +94,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
     const canLoad = opened && trainerId && (isCreating || templateId);
 
+    const [exitModalOpen, setExitModalOpen] = useState(false);
+
     const title = useMemo(() => {
         if (draft && draft.name) {
             return draft.name;
@@ -138,24 +141,36 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         issue.field === 'name'
     );
 
-    const statusLabel = useMemo(() => {
+    const editorStatus = useMemo(() => {
         if (!draft) {
-            return '';
+            return null;
         }
 
         if (saving) {
-            return 'Saving';
+            return {
+                label: 'Saving…',
+                color: 'var(--mantine-color-gray-5)',
+                loading: true,
+            };
         }
 
         if (isCreating || isCopying) {
-            return 'Unsaved draft';
+            return {
+                label: hasUnsavedChanges ? 'Unsaved draft' : 'Draft',
+                icon: <IconSketching size={16} color="gray" style={{flexShrink: 0}} />,
+            };
         }
 
         return hasUnsavedChanges
-            ? 'Unsaved changes'
-            : 'Saved';
-    }, [
-        draft, saving, isCreating, isCopying, hasUnsavedChanges,]);
+            ? {
+                label: 'Unsaved changes',
+                color: 'var(--mantine-color-yellow-6)',
+            }
+            : {
+                label: 'Saved',
+                color: 'var(--mantine-color-green-6)',
+            };
+    }, [draft, saving, isCreating, isCopying, hasUnsavedChanges]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -350,19 +365,19 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
 
+    function discardAndClose() {
+        setExitModalOpen(false);
+        clearSavedDraft();
+        onClose();
+    }
+
     function handleClose() {
-        const discardMessage = (isCreating || isCopying)
-            ? 'Discard this unsaved workout?'
-            : 'Discard unsaved workout changes?';
-
-        const confirmed = !hasUnsavedChanges || window.confirm(discardMessage);
-
-        if (!confirmed) {
+        if (!hasUnsavedChanges) {
+            discardAndClose();
             return;
         }
 
-        clearSavedDraft();
-        onClose();
+        setExitModalOpen(true);
     }
 
     function saveWorkout() {
@@ -416,6 +431,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         setExercises([]);
         setLoaded(false);
         setSaving(false);
+        setExitModalOpen(false);
         setMessage('');
         setSavedSnapshot('');
         setDraftRecovered(false);
@@ -593,36 +609,33 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                         </Alert>
                     )}
 
-                    <Group justify={!statusLabel ? 'flex-end' : 'space-between'}>
-                        {statusLabel === 'Saved' && (
-                            <Group gap={3}>
-                                <IconCircleCheck size={16} stroke={2.4} color="green"/>
-                                <Text size="sm" c="dimmed" fw={600}>Saved</Text>
+                    <Group justify={editorStatus ? 'space-between' : 'flex-end'} wrap="nowrap">
+                        {editorStatus && (
+                            <Group gap={editorStatus.icon ? 4 : 8} wrap="nowrap">
+                                {editorStatus.loading ? (
+                                    <Loader size={14} color="gray"/>
+                                ) : editorStatus.icon ? (
+                                    editorStatus.icon
+                                ) : (
+                                    <Box
+                                        aria-hidden
+                                        style={{
+                                            width: '0.45rem',
+                                            height: '0.45rem',
+                                            borderRadius: '50%',
+                                            backgroundColor: editorStatus.color,
+                                            flexShrink: 0,
+                                        }}
+                                    />
+                                )}
+
+                                <Text size="sm" c="dimmed" fw={500}>
+                                    {editorStatus.label}
+                                </Text>
                             </Group>
                         )}
 
-                        {statusLabel === 'Unsaved draft' && (
-                            <Group gap={3}>
-                                <IconSketching size={16} stroke={2.4} color="gray"/>
-                                <Text size="sm" c="dimmed" fw={600}>Unsaved draft</Text>
-                            </Group>
-                        )}
-
-                        {statusLabel === 'Unsaved changes' && (
-                            <Group gap={3}>
-                                <IconAlertCircle size={16} stroke={2.4} color="orange"/>
-                                <Text size="sm" c="dimmed" fw={600}>Unsaved changes</Text>
-                            </Group>
-                        )}
-
-                        {statusLabel === 'Saving' && (
-                            <Group gap={3}>
-                                <IconDeviceFloppy size={16} stroke={2.4}/>
-                                <Text size="sm" c="dimmed" fw={600}>Saving…</Text>
-                            </Group>
-                        )}
-
-                        <Group>
+                        <Group wrap="nowrap">
                             <Button
                                 variant="default"
                                 size={isMobile ? 'xs' : 'sm'}
@@ -653,132 +666,169 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         );
     }
 
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Main return
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    if (isMobile) {
+    function renderExitModal() {
         return (
-            <Drawer.Root
-                opened={opened}
-                onClose={handleClose}
-                position="bottom"
-                size="100%"
-                closeOnClickOutside={false}
-                closeOnEscape={false}
+            <Modal
+                opened={exitModalOpen}
+                onClose={() => setExitModalOpen(false)}
+                title={isEditing ? 'Discard unsaved changes?' : 'Discard this workout draft?'}
+                centered
+                zIndex='var(--mantine-z-index-popover)'
             >
-                <Drawer.Overlay/>
+                <Stack gap="lg">
+                    <Text c="dimmed" size="sm">
+                        Your unsaved changes and this browser's recovery draft will be discarded.
+                    </Text>
 
-                <Drawer.Content
-                    style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        height: '100dvh',
-                        width: '100dvw',
-                        overflow: 'hidden',
-                    }}
-                >
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            onClick={() => setExitModalOpen(false)}
+                        >
+                            Keep editing
+                        </Button>
 
-                    <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
-
-                    <Drawer.Header
-                        style={{
-                            flexShrink: 0,
-                            borderBottom: '1px solid var(--color-border)',
-                            backgroundColor: computedColorScheme === 'dark'
-                                ? 'var(--color-surface)'
-                                : 'var(--color-background)',
-                        }}
-                    >
-                        <Drawer.Title style={{ flex: 1, minWidth: 0 }}>
-                            <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
-                                <IconHammer size={22} style={{ flexShrink: 0 }} />
-                                <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
-                                    {title}
-                                </Text>
-                            </Group>
-                        </Drawer.Title>
-
-                        <Drawer.CloseButton style={{ flexShrink: 0 }} />
-                    </Drawer.Header>
-
-                    <Drawer.Body
-                        style={{
-                            flex: 1,
-                            minHeight: 0,
-                            overflowY: 'auto',
-                            padding: 'var(--mantine-spacing-md)',
-                        }}
-                    >
-                        {renderEditorContent()}
-                    </Drawer.Body>
-
-                    {renderFooter()}
-                </Drawer.Content>
-            </Drawer.Root>
+                        <Button
+                            color="red"
+                            onClick={discardAndClose}
+                        >
+                            Discard changes
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         );
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
     return (
-        <Modal.Root
-            opened={opened}
-            onClose={handleClose}
-            centered
-            closeOnClickOutside={false}
-            closeOnEscape={false}
-            fullScreen
-        >
-            <Modal.Overlay/>
+        <>
+            {renderExitModal()}
 
-            <Modal.Content
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    flex: 'none',
-                    width: 'calc(100vw - 6rem)',
-                    height: 'calc(100vh - 6rem)',
-                    margin: '3rem',
-                    borderRadius: '1rem',
-                    overflow: 'hidden',
-                }}
-            >
-                <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
-
-                <Modal.Header
-                    style={{
-                        flexShrink: 0,
-                        borderBottom: '1px solid var(--color-border)',
-                        backgroundColor: computedColorScheme === 'dark'
-                            ? 'var(--color-surface)'
-                            : 'var(--color-background)',
-                    }}
+            {isMobile ? (
+                <Drawer.Root
+                    opened={opened}
+                    onClose={handleClose}
+                    position="bottom"
+                    size="100%"
+                    closeOnClickOutside={false}
+                    closeOnEscape={false}
                 >
-                    <Modal.Title style={{ flex: 1, minWidth: 0 }}>
-                        <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
-                            <IconHammer size={22} style={{ flexShrink: 0 }} />
-                            <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
-                                {title}
-                            </Text>
-                        </Group>
-                    </Modal.Title>
 
-                    <Modal.CloseButton style={{ flexShrink: 0 }} />
-                </Modal.Header>
+                    <Drawer.Overlay/>
 
-                <Modal.Body
-                    style={{
-                        flex: 1,
-                        minHeight: 0,
-                        overflowY: 'auto',
-                        padding: 'var(--mantine-spacing-lg)',
-                    }}
+                    <Drawer.Content
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            height: '100dvh',
+                            width: '100dvw',
+                            overflow: 'hidden',
+                        }}
+                    >
+
+                        <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
+
+                        <Drawer.Header
+                            style={{
+                                flexShrink: 0,
+                                borderBottom: '1px solid var(--color-border)',
+                                backgroundColor: computedColorScheme === 'dark'
+                                    ? 'var(--color-surface)'
+                                    : 'var(--color-background)',
+                            }}
+                        >
+                            <Drawer.Title style={{ flex: 1, minWidth: 0 }}>
+                                <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
+                                    <IconHammer size={22} style={{ flexShrink: 0 }} />
+                                    <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                        {title}
+                                    </Text>
+                                </Group>
+                            </Drawer.Title>
+
+                            <Drawer.CloseButton style={{ flexShrink: 0 }} />
+                        </Drawer.Header>
+
+                        <Drawer.Body
+                            style={{
+                                flex: 1,
+                                minHeight: 0,
+                                overflowY: 'auto',
+                                padding: 'var(--mantine-spacing-md)',
+                            }}
+                        >
+                            {renderEditorContent()}
+                        </Drawer.Body>
+
+                        {renderFooter()}
+                    </Drawer.Content>
+                </Drawer.Root>
+            ) : (
+                <Modal.Root
+                    opened={opened}
+                    onClose={handleClose}
+                    centered
+                    closeOnClickOutside={false}
+                    closeOnEscape={false}
+                    fullScreen
                 >
-                    {renderEditorContent()}
-                </Modal.Body>
 
-                {renderFooter()}
-            </Modal.Content>
-        </Modal.Root>
+                    <Modal.Overlay/>
+
+                    <Modal.Content
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            flex: 'none',
+                            width: 'calc(100vw - 6rem)',
+                            height: 'calc(100vh - 6rem)',
+                            margin: '3rem',
+                            borderRadius: '1rem',
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <LoadingOverlay visible={!loaded} overlayProps={{blur: 2}}/>
+
+                        <Modal.Header
+                            style={{
+                                flexShrink: 0,
+                                borderBottom: '1px solid var(--color-border)',
+                                backgroundColor: computedColorScheme === 'dark'
+                                    ? 'var(--color-surface)'
+                                    : 'var(--color-background)',
+                            }}
+                        >
+                            <Modal.Title style={{ flex: 1, minWidth: 0 }}>
+                                <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
+                                    <IconHammer size={22} style={{ flexShrink: 0 }} />
+                                    <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                        {title}
+                                    </Text>
+                                </Group>
+                            </Modal.Title>
+
+                            <Modal.CloseButton style={{ flexShrink: 0 }} />
+                        </Modal.Header>
+
+                        <Modal.Body
+                            style={{
+                                flex: 1,
+                                minHeight: 0,
+                                overflowY: 'auto',
+                                padding: 'var(--mantine-spacing-lg)',
+                            }}
+                        >
+                            {renderEditorContent()}
+                        </Modal.Body>
+
+                        {renderFooter()}
+                    </Modal.Content>
+                </Modal.Root>
+            )}
+        </>
     );
 }
 
