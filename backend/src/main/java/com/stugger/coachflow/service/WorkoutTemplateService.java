@@ -6,6 +6,7 @@ import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateItemExercise
 import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateItemRequest;
 import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateSectionRequest;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateResponse;
+import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateSummaryResponse;
 import com.stugger.coachflow.entity.exercise.Exercise;
 import com.stugger.coachflow.entity.exercise.ExerciseVisibility;
 import com.stugger.coachflow.entity.person.Trainer;
@@ -25,9 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Jake
@@ -108,11 +107,13 @@ public class WorkoutTemplateService {
     }
 
     @Transactional(readOnly = true)
-    public List<WorkoutTemplateResponse> getTrainerWorkoutTemplates(Long trainerId) {
+    public List<WorkoutTemplateSummaryResponse> getTrainerWorkoutTemplateSummaries(Long trainerId) {
         getTrainerOrThrow(trainerId);
 
-        return workoutTemplateRepository.findByTrainerIdAndArchivedFalseOrderByNameAsc(trainerId).stream()
-                .map(WorkoutTemplateResponse::new)
+        return workoutTemplateRepository
+                .findByTrainerIdAndArchivedFalseOrderByUpdatedAtDesc(trainerId)
+                .stream()
+                .map(this::toWorkoutTemplateSummary)
                 .toList();
     }
 
@@ -121,6 +122,39 @@ public class WorkoutTemplateService {
     //  Mapping
     //
     //---------------------------------------------------------------------------------------------------------
+
+    private WorkoutTemplateSummaryResponse toWorkoutTemplateSummary(WorkoutTemplate workoutTemplate) {
+        Set<String> exerciseNames = new LinkedHashSet<>();
+        int exerciseCount = 0;
+
+        for (WorkoutTemplateSection section : workoutTemplate.getSections()) {
+            for (WorkoutTemplateItem item : section.getItems()) {
+                if (item.getExercise() != null) {
+                    exerciseCount++;
+                    exerciseNames.add(getExerciseDisplayName(item.getName(), item.getExercise()));
+                    continue;
+                }
+                for (WorkoutTemplateItemExercise itemExercise : item.getItemExercises()) {
+                    exerciseCount++;
+                    exerciseNames.add(getExerciseDisplayName(itemExercise.getName(), itemExercise.getExercise()));
+                }
+            }
+        }
+
+        return new WorkoutTemplateSummaryResponse(
+                workoutTemplate,
+                List.copyOf(exerciseNames),
+                exerciseCount
+        );
+    }
+
+    private String getExerciseDisplayName(String nameOverride, Exercise exercise) {
+        String trimmedOverride = TextUtils.trimToNull(nameOverride);
+
+        return trimmedOverride != null
+                ? trimmedOverride
+                : exercise.getName();
+    }
 
     private void setSections(WorkoutTemplate workoutTemplate, List<WorkoutTemplateSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
         validateSectionPositions(sectionRequests);

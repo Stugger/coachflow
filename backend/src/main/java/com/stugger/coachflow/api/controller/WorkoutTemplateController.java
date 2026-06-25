@@ -3,6 +3,7 @@ package com.stugger.coachflow.api.controller;
 import com.stugger.coachflow.api.dto.request.workout.CreateWorkoutTemplateRequest;
 import com.stugger.coachflow.api.dto.request.workout.UpdateWorkoutTemplateRequest;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateResponse;
+import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateSummaryResponse;
 import com.stugger.coachflow.service.WorkoutTemplateService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -24,10 +25,9 @@ public class WorkoutTemplateController {
     }
 
     @GetMapping("/trainer/{trainerId}")
-    public List<WorkoutTemplateResponse> getTrainerWorkoutTemplates(@PathVariable Long trainerId) {
-        return workoutTemplateService.getTrainerWorkoutTemplates(trainerId);
+    public List<WorkoutTemplateSummaryResponse> getTrainerWorkoutTemplates(@PathVariable Long trainerId) {
+        return workoutTemplateService.getTrainerWorkoutTemplateSummaries(trainerId);
     }
-
     @GetMapping("/{workoutTemplateId}")
     public WorkoutTemplateResponse getWorkoutTemplate(@PathVariable Long workoutTemplateId, @RequestParam Long trainerId) {
         return workoutTemplateService.getWorkoutTemplate(workoutTemplateId, trainerId);

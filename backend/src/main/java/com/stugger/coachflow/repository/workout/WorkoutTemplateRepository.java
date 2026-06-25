@@ -11,5 +11,5 @@ import java.util.List;
  */
 public interface WorkoutTemplateRepository extends JpaRepository<WorkoutTemplate, Long> {
 
-    List<WorkoutTemplate> findByTrainerIdAndArchivedFalseOrderByNameAsc(Long trainerId);
+    List<WorkoutTemplate> findByTrainerIdAndArchivedFalseOrderByUpdatedAtDesc(Long trainerId);
 }

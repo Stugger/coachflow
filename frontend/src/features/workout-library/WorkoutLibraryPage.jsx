@@ -7,15 +7,16 @@ import {
     Group,
     LoadingOverlay,
     Paper,
-    ScrollArea,
     Stack,
+    Table,
     Text,
     TextInput,
     Title,
-    Box,
-    Loader,
 } from '@mantine/core';
-import {IconAlertCircle, IconPlus, IconSearch} from '@tabler/icons-react';
+
+import {useMediaQuery} from '@mantine/hooks';
+
+import {IconAlertCircle, IconBarbell, IconClock, IconPlus, IconSearch, IconClipboardList} from '@tabler/icons-react';
 
 import WorkoutTemplateListRow from './WorkoutTemplateListRow';
 import WorkoutEditorModal from './WorkoutEditorModal';
@@ -25,7 +26,14 @@ import {
     getWorkoutTemplates,
 } from './workout-template-api';
 
+
 function WorkoutLibraryPage({trainerId}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Responsive state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const isMobile = useMediaQuery('(max-width: 48em)');
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -55,10 +63,33 @@ function WorkoutLibraryPage({trainerId}) {
     const filteredTemplates = useMemo(() => {
         const search = searchText.trim().toLowerCase();
 
-        return templates
-            .filter(template => !search || template.name?.toLowerCase().includes(search))
-            .sort((a, b) => a.name.localeCompare(b.name));
+        if (!search) {
+            return templates;
+        }
+
+        return templates.filter(template => {
+            const searchableValues = [
+                template.name,
+                ...(template.exerciseNames ?? []),
+            ];
+
+            return searchableValues.some(value =>
+                value?.toLowerCase().includes(search)
+            );
+        });
     }, [templates, searchText]);
+
+    const mobileHeaderCellStyle = isMobile
+        ? {
+            height: 0,
+            paddingTop: 0,
+            paddingBottom: 0,
+            borderBottom: 0,
+            fontSize: 0,
+            lineHeight: 0,
+            overflow: 'hidden',
+        }
+        : {};
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -184,51 +215,139 @@ function WorkoutLibraryPage({trainerId}) {
                 </Alert>
             )}
 
-            <Paper withBorder radius="md" p="md">
-                <Stack gap="md">
-                    <Group justify="space-between">
-                        <Text fw={800}>Workouts</Text>
-                        <Text size="sm" c="dimmed">{filteredTemplates.length} shown</Text>
-                    </Group>
-
+            <Paper
+                withBorder
+                radius="md"
+                p='md'
+                style={{overflow: 'hidden'}}
+            >
+                <Stack gap='md'>
                     <TextInput
-                        placeholder="Search workouts"
+                        placeholder="Search by workout or exercise name..."
+                        label="Search"
                         leftSection={<IconSearch size={16}/>}
                         value={searchText}
                         onChange={event => setSearchText(event.currentTarget.value)}
                     />
+                    <Text size="sm" c="dimmed">
+                        {filteredTemplates.length} of {templates.length} workouts
+                    </Text>
+                </Stack>
+            </Paper>
 
-                    <ScrollArea h={{base: 340, lg: 640}} type="auto">
-                        <Stack gap="xs">
+            <Text size="sm" c="dimmed">
+                Showing {filteredTemplates.length} of {templates.length} workouts
+            </Text>
+
+            {templates.length === 0 ? (
+                <Paper withBorder p="xl" radius="md">
+                    <Stack gap="xs" align="center" ta="center">
+                        <Text fw={700}>No workouts yet</Text>
+                        <Text size="sm" c="dimmed" pb='0.5rem'>
+                            Create your first workout to start building your library foundation.
+                        </Text>
+                        <Button leftSection={<IconPlus size={16}/>} onClick={openNewEditor}>
+                            New Workout
+                        </Button>
+                    </Stack>
+                </Paper>
+            ) : (
+                <Paper
+                    withBorder
+                    radius="md"
+                    p={0}
+                    style={{overflow: 'hidden'}}
+                >
+                    <Table
+                        highlightOnHover={filteredTemplates.length > 0}
+                        verticalSpacing="md"
+                        horizontalSpacing="md"
+                        mt={isMobile ? -1 : '0.25rem'}
+                        style={{
+                            width: '100%',
+                            tableLayout: 'fixed',
+                        }}
+                    >
+                        <Table.Thead>
+                            <Table.Tr style={isMobile ? {height: 0} : undefined}>
+                                <Table.Th
+                                    style={{
+                                        width: '50%',
+                                        ...mobileHeaderCellStyle,
+                                    }}
+                                >
+                                    {!isMobile && (
+                                        <Group gap={4}>
+                                            <IconClipboardList size={16} stroke={2.4}/>
+                                            <Text size="sm" fw={600}>
+                                                Workout
+                                            </Text>
+                                        </Group>
+                                    )}
+                                </Table.Th>
+
+                                <Table.Th
+                                    style={{
+                                        display: isMobile ? 'none' : undefined,
+                                        ...mobileHeaderCellStyle,
+                                    }}
+                                >
+                                    <Group gap={5} justify="center">
+                                        <IconBarbell size={18} stroke={1.8}/>
+                                        <Text size="sm" fw={600}>
+                                            Exercises
+                                        </Text>
+                                    </Group>
+                                </Table.Th>
+
+                                <Table.Th
+                                    style={{
+                                        display: isMobile ? 'none' : undefined,
+                                        ...mobileHeaderCellStyle,
+                                    }}
+                                >
+                                    <Group gap={4} justify="center">
+                                        <IconClock size={16} stroke={2.4}/>
+                                        <Text size="sm" fw={600}>
+                                            Updated
+                                        </Text>
+                                    </Group>
+                                </Table.Th>
+
+                                <Table.Th
+                                    style={{
+                                        width: isMobile ? '2rem' : '4rem',
+                                        ...mobileHeaderCellStyle,
+                                    }}
+                                />
+                            </Table.Tr>
+                        </Table.Thead>
+
+                        <Table.Tbody>
                             {filteredTemplates.map(template => (
                                 <WorkoutTemplateListRow
                                     key={template.id}
                                     template={template}
                                     onSelect={() => openEditEditor(template)}
-                                    onEdit={event => {
-                                        event?.stopPropagation?.();
-                                        openEditEditor(template);
-                                    }}
-                                    onCopy={event => {
-                                        event?.stopPropagation?.();
-                                        openCopyEditor(template);
-                                    }}
-                                    onArchive={event => {
-                                        event?.stopPropagation?.();
-                                        archiveTemplate(template);
-                                    }}
+                                    onEdit={() => openEditEditor(template)}
+                                    onCopy={() => openCopyEditor(template)}
+                                    onArchive={() => archiveTemplate(template)}
                                 />
                             ))}
 
                             {filteredTemplates.length === 0 && (
-                                <Text size="sm" c="dimmed" ta="center" py="xl">
-                                    No workouts found.
-                                </Text>
+                                <Table.Tr>
+                                    <Table.Td colSpan={4}>
+                                        <Text size="sm" c="dimmed" ta="center" py="xl">
+                                            No workouts found.
+                                        </Text>
+                                    </Table.Td>
+                                </Table.Tr>
                             )}
-                        </Stack>
-                    </ScrollArea>
-                </Stack>
-            </Paper>
+                        </Table.Tbody>
+                    </Table>
+                </Paper>
+            )}
         </Stack>
     );
 }
