@@ -10,6 +10,26 @@
     }
 }
 
+.interactive-card {
+    cursor: 'pointer';
+    transition:
+            transform 150ms ease,
+            box-shadow 150ms ease,
+            border-color 150ms ease;
+}
+
+.interactive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--mantine-shadow-md);
+    border-color: var(--mantine-primary-color-filled);
+}
+
+.interactive-card.subtle:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--mantine-shadow-xs);
+    border-color: currentColor;
+}
+
 .subtleInputContainer,
 .subtleInput {
     border: 1px solid transparent;

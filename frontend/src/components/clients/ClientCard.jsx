@@ -60,7 +60,7 @@ function ClientCard({client, reviewStatus, onClick}) {
 
     return (
         <Card
-            className="client-card"
+            className="interactive-card"
             withBorder
             shadow="sm"
             radius="md"

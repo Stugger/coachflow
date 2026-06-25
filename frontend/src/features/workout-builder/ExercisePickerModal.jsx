@@ -163,7 +163,7 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                     backgroundColor: 'var(--color-background)',
                 }}
             >
-                <Stack gap="xs" p="md">
+                <Stack gap={8} pt="xs" pb="xs" pl="xs" pr="md">
                     {filteredExercises.map(renderExerciseRow)}
                 </Stack>
             </ScrollArea>
@@ -184,6 +184,7 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                 }}
             >
                 <Box
+                    className="interactive-card subtle"
                     p="sm"
                     style={{
                         border: '1px solid var(--color-border)',
@@ -201,7 +202,7 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                             <Avatar
                                 src={exercise.thumbnailUrl}
                                 alt={exercise.name}
-                                size={46}
+                                size={50}
                                 radius="sm"
                                 variant="subtle"
                             >
