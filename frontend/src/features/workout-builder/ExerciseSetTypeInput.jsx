@@ -11,7 +11,7 @@ import {
 
 import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from './workout-builder-constants';
 
-function ExerciseSetTypeInput({set, disabled, onChange}) {
+function ExerciseSetTypeInput({set, locked, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -43,15 +43,20 @@ function ExerciseSetTypeInput({set, disabled, onChange}) {
         >
             <Menu.Target>
                 <UnstyledButton
-                    className="subtleInput"
-                    disabled={disabled}
-                    onMouseEnter={() => setHovered(true)}
+                    className="subtleInputContainer"
+                    data-locked={locked || undefined}
+                    disabled={locked}
+                    onMouseEnter={() => {
+                        if (!locked) {
+                            setHovered(true);
+                        }
+                    }}
                     onMouseLeave={() => setHovered(false)}
                     style={{
                         width: '100%',
                         minHeight: '2.25rem',
                         paddingInline: '0.35rem',
-                        cursor: disabled ? 'default' : 'pointer',
+                        cursor: locked ? 'default' : undefined,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -66,7 +71,7 @@ function ExerciseSetTypeInput({set, disabled, onChange}) {
                                 lineHeight: 'var(--mantine-line-height-sm)',
                                 display: 'block',
                                 transform: 'translateY(1px)',
-                                ...(disabled ? {
+                                ...(locked ? {
                                     opacity: '0.5',
                                 }: {})
                             }}
@@ -79,7 +84,7 @@ function ExerciseSetTypeInput({set, disabled, onChange}) {
                                 : option.shortLabel ?? set.position}
                         </Text>
 
-                        {!disabled && showSetNumber && (
+                        {!locked && showSetNumber && (
                             <IconChevronDown
                                 size={13}
                                 style={{transform: 'translateY(1px)'}}

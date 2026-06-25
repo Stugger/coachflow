@@ -68,7 +68,7 @@ function getTotalSeconds(parts) {
 
 //TODO typing from left input should move caret into right input when maxed, backspacing from second input should bring caret to end of first input when empty, left/right arrows should move between inputs when no more characters left to move between
 
-function TimeTargetInput({value, disabled, onChange, inputWidth}) {
+function TimeTargetInput({value, locked, onChange, inputWidth}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -129,6 +129,10 @@ function TimeTargetInput({value, disabled, onChange, inputWidth}) {
     }
 
     function handleFocus(key) {
+        if (locked) {
+            return;
+        }
+
         setIsEditing(true);
 
         if (Number(parts[key] || 0) === 0) {
@@ -145,21 +149,18 @@ function TimeTargetInput({value, disabled, onChange, inputWidth}) {
 
     return (
         <Box
-            disabled={disabled}
-            className={'subtleInput'}
+            className="subtleInputContainer"
+            data-locked={locked || undefined}
             style={{
                 width: inputWidth,
                 marginInline: 'auto',
                 paddingInline: 0,
                 borderRadius: 'var(--mantine-radius-md)',
-                ...(disabled ? {
-                    border: 'none',
-                } : {}),
             }}
         >
             <Group gap={0} wrap="nowrap" justify="center">
                 <TextInput
-                    disabled={disabled}
+                    readOnly={locked}
                     value={parts.minutes}
                     onFocus={() => handleFocus('minutes')}
                     onChange={event => updatePart('minutes', event.currentTarget.value)}
@@ -175,16 +176,17 @@ function TimeTargetInput({value, disabled, onChange, inputWidth}) {
                             background: 'transparent',
                             textAlign: 'right',
                             paddingRight: '0.2rem',
+                            cursor: locked ? 'default' : undefined,
                         },
                     }}
                 />
 
-                <Text size="sm" c="dimmed" fw={600}>
+                <Text size="sm" c="dimmed" fw={600} styles={{root: {cursor: 'default'}}}>
                     :
                 </Text>
 
                 <TextInput
-                    disabled={disabled}
+                    readOnly={locked}
                     value={parts.seconds}
                     onFocus={() => handleFocus('seconds')}
                     onChange={event => updatePart('seconds', event.currentTarget.value)}
@@ -200,6 +202,7 @@ function TimeTargetInput({value, disabled, onChange, inputWidth}) {
                             background: 'transparent',
                             textAlign: 'left',
                             paddingLeft: '0.2rem',
+                            cursor: locked ? 'default' : undefined,
                         },
                     }}
                 />

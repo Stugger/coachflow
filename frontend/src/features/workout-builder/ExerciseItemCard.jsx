@@ -336,7 +336,7 @@ function ExerciseItemCard({
 
                     <ExerciseSetTable
                         config={activeConfig}
-                        disabled={customizingFields}
+                        locked={customizingFields}
                         stackControlled={!independent}
                         onChange={nextConfig => {
                             if (customizingFields) {

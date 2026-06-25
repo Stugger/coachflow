@@ -11,7 +11,7 @@ import TimeTargetInput from './TimeTargetInput';
 import {TRACKING_FIELD_TYPE} from './workout-builder-constants';
 import {TRACKING_FIELD_DEFINITIONS} from './workout-tracking-fields';
 
-function ExerciseSetTargetInput({field, value, disabled, onChange}) {
+function ExerciseSetTargetInput({field, value, locked, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -52,7 +52,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
     if (type === TRACKING_FIELD_TYPE.INTEGER) {
         return (
             <NumberInput
-                disabled={disabled}
+                readOnly={locked}
                 classNames={{input: 'subtleInput'}}
                 variant="unstyled"
                 value={value ?? ''}
@@ -66,6 +66,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 styles={{
                     input: {
                         textAlign: 'center',
+                        cursor: locked ? 'default' : undefined,
                     },
                 }}
             />
@@ -79,7 +80,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
     if (type === TRACKING_FIELD_TYPE.DECIMAL) {
         return (
             <NumberInput
-                disabled={disabled}
+                readOnly={locked}
                 classNames={{input: 'subtleInput'}}
                 variant="unstyled"
                 value={value ?? ''}
@@ -92,6 +93,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 styles={{
                     input: {
                         textAlign: 'center',
+                        cursor: locked ? 'default' : undefined,
                     },
                 }}
             />
@@ -126,7 +128,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 }}
             >
                 <NumberInput
-                    disabled={disabled}
+                    readOnly={locked}
                     classNames={{input: 'subtleInput'}}
                     variant="unstyled"
                     value={rangeValue.min ?? ''}
@@ -136,15 +138,20 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                     hideControls
                     min={0}
                     style={{width: inputWidth}}
-                    styles={{input: {textAlign: 'right'}}}
+                    styles={{
+                        input: {
+                            textAlign: 'right',
+                            cursor: locked ? 'default' : undefined,
+                        },
+                    }}
                 />
 
-                <Text size="sm" c="dimmed">
+                <Text size="sm" c="dimmed" styles={{root: {cursor: 'default'}}}>
                     –
                 </Text>
 
                 <NumberInput
-                    disabled={disabled}
+                    readOnly={locked}
                     classNames={{input: 'subtleInput'}}
                     variant="unstyled"
                     value={rangeValue.max ?? ''}
@@ -154,7 +161,12 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                     hideControls
                     min={0}
                     style={{width: inputWidth}}
-                    styles={{input: {textAlign: 'left'}}}
+                    styles={{
+                        input: {
+                            textAlign: 'left',
+                            cursor: locked ? 'default' : undefined,
+                        },
+                    }}
                 />
             </Group>
         );
@@ -168,7 +180,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
         return (
             <TimeTargetInput
                 value={value}
-                disabled={disabled}
+                locked={locked}
                 onChange={onChange}
                 inputWidth={inputWidth}
             />
@@ -182,7 +194,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
     if (type === TRACKING_FIELD_TYPE.TEXT) {
         return (
             <TextInput
-                disabled={disabled}
+                readOnly={locked}
                 classNames={{input: 'subtleInput'}}
                 variant="unstyled"
                 value={value ?? ''}
@@ -192,6 +204,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 styles={{
                     input: {
                         textAlign: 'center',
+                        cursor: locked ? 'default' : undefined,
                     },
                 }}
             />
@@ -205,7 +218,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
     if (type === TRACKING_FIELD_TYPE.TEXT_LONG) {
         return (
             <Textarea
-                disabled={disabled}
+                readOnly={locked}
                 classNames={{input: 'subtleInput'}}
                 variant="unstyled"
                 value={value ?? ''}
@@ -217,6 +230,7 @@ function ExerciseSetTargetInput({field, value, disabled, onChange}) {
                 styles={{
                     input: {
                         textAlign: 'center',
+                        cursor: locked ? 'default' : undefined,
                     },
                 }}
             />

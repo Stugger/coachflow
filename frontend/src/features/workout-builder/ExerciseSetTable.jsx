@@ -38,7 +38,7 @@ const rowCellStyle = {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
+function ExerciseSetTable({config, locked, stackControlled, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -214,9 +214,9 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
         const isFirstSet = setIndex === 0;
         const isLastSet = setIndex === sets.length - 1;
 
-        const duplicateDisabled = disabled || stackControlled;
+        const duplicateDisabled = locked || stackControlled;
         const deleteDisabled =
-            disabled
+            locked
             || stackControlled
             || sets.length <= 1;
 
@@ -227,7 +227,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
                         <ActionIcon
                             variant="subtle"
                             color="gray"
-                            disabled={disabled}
+                            disabled={locked}
                         >
                             <IconDotsVertical size={18}/>
                         </ActionIcon>
@@ -247,7 +247,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
 
                     <Menu.Item
                         leftSection={<IconArrowUp size={14}/>}
-                        disabled={disabled || isFirstSet}
+                        disabled={locked || isFirstSet}
                         onClick={() => moveSet(set.position, -1)}
                     >
                         Move up
@@ -255,7 +255,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
 
                     <Menu.Item
                         leftSection={<IconArrowDown size={14}/>}
-                        disabled={disabled || isLastSet}
+                        disabled={locked || isLastSet}
                         onClick={() => moveSet(set.position, 1)}
                     >
                         Move down
@@ -286,7 +286,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
             type="auto"
             scrollbarSize={8}
             style={{
-                opacity: disabled ? 0.65 : 1,
+                opacity: locked ? 0.4 : 1,
             }}
         >
             <Table
@@ -365,7 +365,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
                                 >
                                     <ExerciseSetTypeInput
                                         set={set}
-                                        disabled={disabled}
+                                        locked={locked}
                                         onChange={setType => updateSetType(set.position, setType)}
                                     />
                                 </Table.Td>
@@ -385,7 +385,7 @@ function ExerciseSetTable({config, disabled, stackControlled, onChange}) {
                                         <ExerciseSetTargetInput
                                             field={field}
                                             value={set.targets?.[field.key]}
-                                            disabled={disabled}
+                                            locked={locked}
                                             onChange={value => updateSetTarget(set.position, field.key, value)}
                                         />
                                     </Table.Td>
