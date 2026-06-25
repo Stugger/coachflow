@@ -50,7 +50,10 @@ import {
     getWorkoutEquipment,
 } from '../workout-builder/workout-draft-mappers';
 
-import {validateWorkoutDraft} from '../workout-builder/workout-draft-validation';
+import {
+    validateWorkoutDraft,
+    WORKOUT_VALIDATION_SCOPE,
+} from '../workout-builder/workout-draft-validation';
 
 function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSaved}) {
 
@@ -74,6 +77,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     const [loaded, setLoaded] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    const [activeValidationIssueIds, setActiveValidationIssueIds] = useState([]);
     const [message, setMessage] = useState('');
 
     const [savedSnapshot, setSavedSnapshot] = useState('');
@@ -86,6 +90,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     const isEditing = mode === 'edit';
     const isCopying = mode === 'copy';
     const isCreating = mode === 'new';
+
+    const canLoad = opened && trainerId && (isCreating || templateId);
 
     const title = useMemo(() => {
         if (draft && draft.name) {
@@ -115,20 +121,41 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     }, [draft, trainerId]);
 
     const hasUnsavedChanges = loaded && draft && currentSnapshot !== savedSnapshot;
+    const hasSaveableChanges = isCopying || hasUnsavedChanges;
 
-    const canLoad = opened && trainerId && (isCreating || templateId);
+    const validationIssues = useMemo(() => {
+        return validateWorkoutDraft(draft);
+    }, [draft]);
+
+    const activeValidationIssues = validationIssues.filter(issue =>
+        activeValidationIssueIds.includes(issue.id)
+    );
+
+    const showValidation = activeValidationIssues.length > 0;
+
+    const workoutNameIssue = activeValidationIssues.find(issue =>
+        issue.scope === WORKOUT_VALIDATION_SCOPE.WORKOUT &&
+        issue.field === 'name'
+    );
 
     const statusLabel = useMemo(() => {
         if (!draft) {
             return '';
         }
 
-        if (isCreating || isCopying) {
-            return hasUnsavedChanges ? 'Unsaved' : 'Draft';
+        if (saving) {
+            return 'Saving';
         }
 
-        return hasUnsavedChanges ? 'Unsaved' : 'Saved';
-    }, [draft, isCreating, isCopying, hasUnsavedChanges]);
+        if (isCreating || isCopying) {
+            return 'Unsaved draft';
+        }
+
+        return hasUnsavedChanges
+            ? 'Unsaved changes'
+            : 'Saved';
+    }, [
+        draft, saving, isCreating, isCopying, hasUnsavedChanges,]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -174,6 +201,22 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         localStorage.setItem(draftKey, JSON.stringify(draft));
     }, [opened, loaded, draft, draftKey]);
 
+    useEffect(() => {
+        setActiveValidationIssueIds(previousIds => {
+            const currentIssueIds = new Set(
+                validationIssues.map(issue => issue.id)
+            );
+
+            const nextIds = previousIds.filter(issueId =>
+                currentIssueIds.has(issueId)
+            );
+
+            return nextIds.length === previousIds.length
+                ? previousIds
+                : nextIds;
+        });
+    }, [validationIssues]);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // API loading
     // ------------------------------------------------------------------------------------------------------------------------
@@ -183,6 +226,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         setSaving(false);
         setMessage('');
         setDraftRecovered(false);
+        setActiveValidationIssueIds([]);
 
         Promise.all([
             getExercises(trainerId),
@@ -307,7 +351,11 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     // ------------------------------------------------------------------------------------------------------------------------
 
     function handleClose() {
-        const confirmed = !hasUnsavedChanges || window.confirm('Discard unsaved workout changes?');
+        const discardMessage = (isCreating || isCopying)
+            ? 'Discard this unsaved workout?'
+            : 'Discard unsaved workout changes?';
+
+        const confirmed = !hasUnsavedChanges || window.confirm(discardMessage);
 
         if (!confirmed) {
             return;
@@ -318,15 +366,18 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     }
 
     function saveWorkout() {
-        const validationErrors = validateWorkoutDraft(draft);
+        setMessage('');
 
-        if (validationErrors.length > 0) {
-            setMessage(validationErrors[0]);
+        if (validationIssues.length > 0) {
+            setActiveValidationIssueIds(
+                validationIssues.map(issue => issue.id)
+            );
             return;
         }
 
+        setActiveValidationIssueIds([]);
+
         setSaving(true);
-        setMessage('');
 
         const payload = buildTemplatePayload(draft, trainerId);
 
@@ -336,14 +387,18 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
         request
             .then(savedTemplate => {
+                const savedDraft = normalizeTemplateForDraft(
+                    savedTemplate,
+                    trainerId,
+                );
+
                 clearSavedDraft();
+                setDraft(savedDraft);
+                setSavedSnapshot(createSnapshot(savedDraft));
+                setDraftRecovered(false);
+                setActiveValidationIssueIds([]);
 
-                if (onSaved) {
-                    onSaved(savedTemplate);
-                    return;
-                }
-
-                onClose();
+                onSaved?.(savedTemplate);
             })
             .catch(error => {
                 console.error('Failed to save workout:', error);
@@ -364,6 +419,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         setMessage('');
         setSavedSnapshot('');
         setDraftRecovered(false);
+        setActiveValidationIssueIds([]);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -405,7 +461,9 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                         size="lg"
                                         placeholder="Name your workout"
                                         value={draft.name}
+                                        maxLength={255}
                                         onChange={event => updateDraftField('name', event.currentTarget.value)}
+                                        error={workoutNameIssue?.message}
                                         required
                                         style={{
                                             flex: 1,
@@ -500,6 +558,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                         <WorkoutBuilder
                             draft={draft}
                             exercises={exercises}
+                            validationIssues={activeValidationIssues}
                             onChange={setDraft}
                         />
                     </>
@@ -520,41 +579,76 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                     flexShrink: 0,
                 }}
             >
-                <Group justify={!statusLabel ? "flex-end" : "space-between"}>
-                    {statusLabel === 'Saved' && (
-                        <Group gap={3}>
-                            <IconCircleCheck size={16} stroke={2.4} color='green'/>
-                            <Text size="sm" c='dimmed' fw={600}>Saved</Text>
-                        </Group>
-                    )}
-                    {statusLabel === 'Draft' && (
-                        <Group gap={3}>
-                            <IconSketching size={16} stroke={2.4} color='gray'/>
-                            <Text size="sm" c='dimmed' fw={600}>Draft</Text>
-                        </Group>
-                    )}
-                    {statusLabel === 'Unsaved' && (
-                        <Group gap={3}>
-                            <IconAlertCircle size={16} stroke={2.4} color='orange'/>
-                            <Text size="sm" c='dimmed' fw={600}>Unsaved</Text>
-                        </Group>
+                <Stack gap="xs">
+                    {showValidation && (
+                        <Alert
+                            color="red"
+                            variant="light"
+                            icon={<IconAlertCircle size={16} />}
+                            p="xs"
+                        >
+                            {isMobile
+                                ? `${activeValidationIssues.length} issue${activeValidationIssues.length === 1 ? ' needs' : 's need'} attention.`
+                                : `${activeValidationIssues.length} issue${activeValidationIssues.length === 1 ? ' needs' : 's need'} attention before saving.`}
+                        </Alert>
                     )}
 
-                    <Group>
-                        <Button variant="default" size={isMobile ? "xs" : "sm"} leftSection={<IconX size={16}/>} onClick={handleClose}>
-                            Cancel
-                        </Button>
-                        <Button
-                            size={isMobile ? "xs" : "sm"}
-                            leftSection={<IconDeviceFloppy size={16}/>}
-                            onClick={saveWorkout}
-                            loading={saving}
-                            disabled={!loaded}
-                        >
-                            Save & Close
-                        </Button>
+                    <Group justify={!statusLabel ? 'flex-end' : 'space-between'}>
+                        {statusLabel === 'Saved' && (
+                            <Group gap={3}>
+                                <IconCircleCheck size={16} stroke={2.4} color="green"/>
+                                <Text size="sm" c="dimmed" fw={600}>Saved</Text>
+                            </Group>
+                        )}
+
+                        {statusLabel === 'Unsaved draft' && (
+                            <Group gap={3}>
+                                <IconSketching size={16} stroke={2.4} color="gray"/>
+                                <Text size="sm" c="dimmed" fw={600}>Unsaved draft</Text>
+                            </Group>
+                        )}
+
+                        {statusLabel === 'Unsaved changes' && (
+                            <Group gap={3}>
+                                <IconAlertCircle size={16} stroke={2.4} color="orange"/>
+                                <Text size="sm" c="dimmed" fw={600}>Unsaved changes</Text>
+                            </Group>
+                        )}
+
+                        {statusLabel === 'Saving' && (
+                            <Group gap={3}>
+                                <IconDeviceFloppy size={16} stroke={2.4}/>
+                                <Text size="sm" c="dimmed" fw={600}>Saving…</Text>
+                            </Group>
+                        )}
+
+                        <Group>
+                            <Button
+                                variant="default"
+                                size={isMobile ? 'xs' : 'sm'}
+                                leftSection={<IconX size={16}/>}
+                                onClick={handleClose}
+                            >
+                                Close
+                            </Button>
+
+                            <Button
+                                size={isMobile ? 'xs' : 'sm'}
+                                leftSection={<IconDeviceFloppy size={16}/>}
+                                onClick={saveWorkout}
+                                loading={saving}
+                                disabled={
+                                    !loaded ||
+                                    saving ||
+                                    !hasSaveableChanges ||
+                                    activeValidationIssues.length > 0
+                                }
+                            >
+                                Save
+                            </Button>
+                        </Group>
                     </Group>
-                </Group>
+                </Stack>
             </Box>
         );
     }

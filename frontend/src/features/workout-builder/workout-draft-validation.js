@@ -1,105 +1,157 @@
 import {WORKOUT_ITEM_TYPE} from './workout-builder-constants';
 import {getExerciseId} from './workout-draft-mappers';
+import {
+    getStackOption,
+    getStackRequirement,
+    isStackComplete,
+} from './workout-builder-utils';
+
+export const WORKOUT_VALIDATION_SCOPE = {
+    WORKOUT: 'WORKOUT',
+    SECTION: 'SECTION',
+    STACK: 'STACK',
+    ITEM: 'ITEM',
+};
 
 export function validateWorkoutDraft(draft) {
-    const errors = [];
+    const issues = [];
 
     if (!draft) {
-        errors.push('Workout draft is missing.');
-        return errors;
+        issues.push({
+            id: 'workout-draft-missing',
+            scope: WORKOUT_VALIDATION_SCOPE.WORKOUT,
+            message: 'Workout draft is missing.',
+        });
+
+        return issues;
     }
 
     if (!draft.name?.trim()) {
-        errors.push('Workout name is required.');
+        issues.push({
+            id: 'workout-name-required',
+            scope: WORKOUT_VALIDATION_SCOPE.WORKOUT,
+            field: 'name',
+            message: 'Workout name is required.',
+        });
     }
 
-    (draft.sections ?? []).forEach((section, sectionIndex) => {
-        validateSection(errors, section, sectionIndex);
+    const sections = draft.sections ?? [];
+
+    if (sections.length === 0) {
+        issues.push({
+            id: 'workout-section-required',
+            scope: WORKOUT_VALIDATION_SCOPE.WORKOUT,
+            field: 'sections',
+            message: 'Add at least one section to this workout.',
+        });
+    }
+
+    sections.forEach((section, sectionIndex) => {
+        validateSection(issues, section, sectionIndex);
     });
 
-    return errors;
+    return issues;
 }
 
-function validateSection(errors, section, sectionIndex) {
-    const sectionLabel = section.name?.trim() || `Section ${sectionIndex + 1}`;
+function validateSection(issues, section, sectionIndex) {
+    const sectionKey = getDraftKey(section, `section-${sectionIndex}`);
+    const items = section.items ?? [];
 
-    if (!section.sectionType) {
-        errors.push(`${sectionLabel} needs a section type.`);
+    if (items.length === 0) {
+        issues.push({
+            id: `section-items-required-${sectionKey}`,
+            scope: WORKOUT_VALIDATION_SCOPE.SECTION,
+            sectionKey,
+            message: 'Add at least one exercise or stack to this section.',
+        });
     }
 
-    (section.items ?? []).forEach((item, itemIndex) => {
-        validateItem(errors, item, sectionLabel, itemIndex);
+    items.forEach((item, itemIndex) => {
+        validateItem(issues, item, sectionKey, itemIndex);
     });
 }
 
-function validateItem(errors, item, sectionLabel, itemIndex) {
-    const itemLabel = `${sectionLabel}, item ${itemIndex + 1}`;
-
-    if (!item.itemType) {
-        errors.push(`${itemLabel} needs an item type.`);
-        return;
-    }
+function validateItem(issues, item, sectionKey, itemIndex) {
+    const itemKey = getDraftKey(item, `item-${sectionKey}-${itemIndex}`);
 
     if (item.itemType === WORKOUT_ITEM_TYPE.EXERCISE) {
-        validateExerciseItem(errors, item, itemLabel);
+        validateExerciseItem(issues, item, sectionKey, itemKey);
         return;
     }
 
-    if (item.itemType === WORKOUT_ITEM_TYPE.SUPERSET) {
-        validateStackItem(errors, item, itemLabel, 2, 2);
+    if (!getStackOption(item.itemType)) {
+        issues.push({
+            id: `item-type-invalid-${itemKey}`,
+            scope: WORKOUT_VALIDATION_SCOPE.ITEM,
+            sectionKey,
+            itemKey,
+            message: 'This workout item has an invalid type.',
+        });
+
         return;
     }
 
-    if (item.itemType === WORKOUT_ITEM_TYPE.TRISET) {
-        validateStackItem(errors, item, itemLabel, 3, 3);
-        return;
-    }
-
-    if (item.itemType === WORKOUT_ITEM_TYPE.CIRCUIT) {
-        validateStackItem(errors, item, itemLabel, 2, null);
-        return;
-    }
-
-    errors.push(`${itemLabel} has an unknown item type.`);
+    validateStackItem(issues, item, sectionKey, itemKey);
 }
 
-function validateExerciseItem(errors, item, itemLabel) {
-    if (!getExerciseId(item)) {
-        errors.push(`${itemLabel} needs an exercise.`);
-    }
-
-    if (item.rounds !== null && item.rounds !== undefined && item.rounds !== '') {
-        errors.push(`${itemLabel} should not have rounds. Rounds are only for stacks.`);
-    }
-
-    if ((item.itemExercises ?? []).length > 0) {
-        errors.push(`${itemLabel} should not have stack exercises.`);
-    }
-}
-
-function validateStackItem(errors, item, itemLabel, minExercises, exactExercises) {
-    const rounds = Number(item.rounds);
-    const childExercises = item.itemExercises ?? [];
-
-    if (!Number.isFinite(rounds) || rounds <= 0) {
-        errors.push(`${itemLabel} needs at least 1 round.`);
-    }
-
+function validateExerciseItem(issues, item, sectionKey, itemKey) {
     if (getExerciseId(item)) {
-        errors.push(`${itemLabel} should not have a direct exercise. Add exercises inside the stack instead.`);
+        return;
     }
 
-    if (exactExercises !== null && childExercises.length !== exactExercises) {
-        errors.push(`${itemLabel} needs exactly ${exactExercises} exercises.`);
-    }
-
-    if (exactExercises === null && childExercises.length < minExercises) {
-        errors.push(`${itemLabel} needs at least ${minExercises} exercises.`);
-    }
-
-    childExercises.forEach((itemExercise, itemExerciseIndex) => {
-        if (!getExerciseId(itemExercise)) {
-            errors.push(`${itemLabel}, stack exercise ${itemExerciseIndex + 1} needs an exercise.`);
-        }
+    issues.push({
+        id: `exercise-required-${itemKey}`,
+        scope: WORKOUT_VALIDATION_SCOPE.ITEM,
+        sectionKey,
+        itemKey,
+        message: 'Choose an exercise for this workout item.',
     });
+}
+
+function validateStackItem(issues, stack, sectionKey, stackKey) {
+    const rounds = Number(stack.rounds);
+
+    if (!Number.isInteger(rounds) || rounds < 1) {
+        issues.push({
+            id: `stack-rounds-invalid-${stackKey}`,
+            scope: WORKOUT_VALIDATION_SCOPE.STACK,
+            sectionKey,
+            stackKey,
+            message: 'Stack rounds must be at least 1.',
+        });
+    }
+
+    if (!isStackComplete(stack)) {
+        issues.push({
+            id: `stack-requirement-${stackKey}`,
+            scope: WORKOUT_VALIDATION_SCOPE.STACK,
+            sectionKey,
+            stackKey,
+            message: getStackRequirement(stack),
+        });
+    }
+
+    (stack.itemExercises ?? []).forEach((itemExercise, exerciseIndex) => {
+        if (getExerciseId(itemExercise)) {
+            return;
+        }
+
+        const exerciseKey = getDraftKey(
+            itemExercise,
+            `stack-exercise-${stackKey}-${exerciseIndex}`,
+        );
+
+        issues.push({
+            id: `stack-exercise-required-${exerciseKey}`,
+            scope: WORKOUT_VALIDATION_SCOPE.STACK,
+            sectionKey,
+            stackKey,
+            exerciseKey,
+            message: 'Choose an exercise for every stack entry.',
+        });
+    });
+}
+
+function getDraftKey(entity, fallback) {
+    return entity?.draftId ?? entity?.id ?? fallback;
 }

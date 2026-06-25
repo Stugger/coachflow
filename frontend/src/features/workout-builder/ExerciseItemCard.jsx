@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     ActionIcon,
@@ -54,10 +54,23 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
+    const exercise = item.exercise;
+
     const [configDraft, setConfigDraft] = useState(null);
     const [customizingFields, setCustomizingFields] = useState(false);
 
+    const nameInputRef = useRef(false);
     const exerciseOptionsButtonRef = useRef(null);
+
+    const libraryExerciseName = exercise?.name ?? '';
+
+    const [nameInputValue, setNameInputValue] = useState(
+        item.name?.trim() || libraryExerciseName,
+    );
+
+    const hasNameOverride =
+        Boolean(item.name?.trim()) &&
+        item.name.trim() !== exercise?.name?.trim();
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -69,11 +82,17 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
         ? configDraft
         : committedConfig;
 
-    const exercise = item.exercise;
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
 
-    const hasNameOverride =
-        Boolean(item.name?.trim()) &&
-        item.name.trim() !== exercise?.name?.trim();
+    useEffect(() => {
+        if (!nameInputRef.current) {
+            setNameInputValue(
+                item.name?.trim() || libraryExerciseName,
+            );
+        }
+    }, [item.name, libraryExerciseName]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Draft persistence helpers
@@ -195,7 +214,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
 
                         <TextInput
                             fw={600}
-                            variant={computedColorScheme === 'light' ? "filled" : "default"}
+                            variant={computedColorScheme === 'light' ? 'filled' : 'default'}
                             placeholder="Name this exercise"
                             leftSection={
                                 hasNameOverride && (
@@ -208,11 +227,24 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
                                     </Tooltip>
                                 )
                             }
-                            value={item.name || exercise?.name || ''}
-                            onChange={event => onChange({
-                                name: event.currentTarget.value,
-                            })}
-                            required
+                            value={nameInputValue}
+                            maxLength={255}
+                            onFocus={() => {
+                                nameInputRef.current = true;
+                            }}
+                            onChange={event => {
+                                const nextName = event.currentTarget.value;
+                                setNameInputValue(nextName);
+                                onChange({
+                                    name: nextName,
+                                });
+                            }}
+                            onBlur={() => {
+                                nameInputRef.current = false;
+                                if (!nameInputValue.trim()) {
+                                    setNameInputValue(libraryExerciseName);
+                                }
+                            }}
                             style={{
                                 flex: 1,
                                 minWidth: 0,

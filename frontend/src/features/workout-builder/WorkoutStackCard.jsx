@@ -3,6 +3,7 @@ import {
     useMantineTheme,
     getGradient,
     ActionIcon,
+    Alert,
     Badge,
     Box,
     Button,
@@ -20,6 +21,7 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconAlertCircle,
     IconArrowDown,
     IconArrowUp,
     IconCheck,
@@ -44,7 +46,7 @@ import {
 } from './workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 
-function WorkoutStackCard({stack, itemIndex, itemCount,
+function WorkoutStackCard({stack, itemIndex, itemCount, validationIssues = [],
                               onChange,
                               onAddExercise,
                               onDeleteStack, onMoveStackUp, onMoveStackDown,
@@ -72,6 +74,8 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
     const option = getStackOption(stack.itemType);
     const exerciseCount = stack.itemExercises?.length ?? 0;
     const complete = isStackComplete(stack);
+
+    const hasValidationIssues = validationIssues.length > 0;
 
     const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-background)'}, useMantineTheme());
     const shadow = computedColorScheme === 'light' ? "var(--mantine-shadow-lg)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"
@@ -109,7 +113,11 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                         border: 'none',
                         borderTop: '1px solid var(--color-border)',
                         borderBottom: '1px solid var(--color-border)',
-                        borderLeft: '1px solid var(--color-border)'
+                        borderLeft: '1px solid var(--color-border)',
+                        outline: hasValidationIssues
+                            ? '2px solid var(--mantine-color-red-5)'
+                            : undefined,
+                        outlineOffset: '-1px',
                     }}
                 >
                     <Box
@@ -292,12 +300,30 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                         />
                     </Box>
 
+                    {hasValidationIssues && (
+                        <Box px="md" pt="md">
+                            <Alert
+                                color="red"
+                                variant="light"
+                                icon={<IconAlertCircle size={16}/>}
+                            >
+                                <Stack gap={2}>
+                                    {validationIssues.map(issue => (
+                                        <Text key={issue.id} size="sm">
+                                            {issue.message}
+                                        </Text>
+                                    ))}
+                                </Stack>
+                            </Alert>
+                        </Box>
+                    )}
+
                     <Stack gap="sm" p="md">
                         {exerciseCount === 0 && (
                             <Paper withBorder radius="sm" p="md">
                                 <Stack gap="xs" align="center">
                                     <Text fw={700}>No exercises in this stack</Text>
-                                    {!complete && (
+                                    {!complete && !hasValidationIssues && (
                                         <Text size={isMobile ? "xs" : "sm"} c="red" fw={600} pb={4}>
                                             * {getStackRequirement(stack)}
                                         </Text>
@@ -334,8 +360,8 @@ function WorkoutStackCard({stack, itemIndex, itemCount,
                                         ))}
                                     </Stack>
                                 </Box>
-                                <Group gap={2} justify={complete ? "flex-end" : "space-between"} wrap="nowrap">
-                                    {!complete && (
+                                <Group gap={2} justify={complete || hasValidationIssues ? "flex-end" : "space-between"} wrap="nowrap">
+                                    {!complete && !hasValidationIssues && (
                                         <Text size={isMobile ? "xs" : "sm"} c="red" fw={600}>
                                             * {getStackRequirement(stack)}
                                         </Text>

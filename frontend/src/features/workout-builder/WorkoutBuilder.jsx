@@ -1,21 +1,23 @@
 import {useState} from 'react';
 import {
     useComputedColorScheme,
+    Alert,
     Button,
     Group,
     Paper,
     Stack,
     Text,
 } from '@mantine/core';
-import {IconPlus} from '@tabler/icons-react';
+import {IconAlertCircle, IconPlus} from '@tabler/icons-react';
 
 import WorkoutSection from './WorkoutSection';
 
 import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, resizeExerciseSetCount} from './workout-draft-factory';
 import {reindexPositions} from './workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName} from './workout-builder-utils';
+import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
 
-function WorkoutBuilder({draft, exercises, onChange}) {
+function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -35,6 +37,11 @@ function WorkoutBuilder({draft, exercises, onChange}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const sections = draft.sections ?? [];
+
+    const workoutBuilderIssues = validationIssues.filter(issue =>
+        issue.scope === WORKOUT_VALIDATION_SCOPE.WORKOUT &&
+        issue.field === 'sections'
+    );
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Draft helpers
@@ -115,6 +122,14 @@ function WorkoutBuilder({draft, exercises, onChange}) {
 
             return next;
         });
+    }
+
+    function getSectionValidationIssues(section) {
+        const sectionKey = getSectionKey(section);
+
+        return validationIssues.filter(issue =>
+            issue.sectionKey === sectionKey
+        );
     }
 
     function addExerciseFromPicker(exercise) {
@@ -298,6 +313,22 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                 </Stack>
             </Group>
 
+            {workoutBuilderIssues.length > 0 && (
+                <Alert
+                    color="red"
+                    variant="light"
+                    icon={<IconAlertCircle size={16}/>}
+                >
+                    <Stack gap={2}>
+                        {workoutBuilderIssues.map(issue => (
+                            <Text key={issue.id} size="sm">
+                                {issue.message}
+                            </Text>
+                        ))}
+                    </Stack>
+                </Alert>
+            )}
+
             {sections.length === 0 && (
                 <Paper
                     withBorder
@@ -325,6 +356,7 @@ function WorkoutBuilder({draft, exercises, onChange}) {
                         sectionIndex={sectionIndex}
                         sectionCount={sections.length}
                         expanded={expandedSectionIds.has(getSectionKey(section))}
+                        validationIssues={getSectionValidationIssues(section)}
                         sectionActions={{
                             onToggle: () => toggleSection(section),
                             onMoveUp: () => moveSection(sectionIndex, -1),

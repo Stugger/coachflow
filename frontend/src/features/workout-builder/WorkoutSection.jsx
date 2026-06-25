@@ -2,6 +2,7 @@ import {
     useMantineTheme,
     getGradient,
     ActionIcon,
+    Alert,
     Badge,
     Box,
     Button,
@@ -19,6 +20,7 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconAlertCircle,
     IconArrowDown,
     IconArrowUp,
     IconBarbell,
@@ -38,10 +40,15 @@ import ExerciseItemCard from './ExerciseItemCard';
 import WorkoutStackCard from './WorkoutStackCard';
 import ExercisePickerModal from './ExercisePickerModal';
 
-import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 import {getSectionDisplayName, getSectionTypeLabel} from './workout-builder-utils';
+import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
+import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
 
-function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionActions, exerciseItemActions, stackActions, exercisePicker}) {
+function WorkoutSection({section, sectionIndex, sectionCount, expanded, validationIssues = [],
+                            sectionActions,
+                            exerciseItemActions,
+                            stackActions,
+                            exercisePicker}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -92,12 +99,29 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
 
-
     const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f'}, useMantineTheme());
 
     const itemCount = section.items?.length ?? 0;
     const sectionName = getSectionDisplayName(section);
     const sectionTypeLabel = getSectionTypeLabel(section.sectionType);
+
+    const sectionValidationIssues = validationIssues.filter(issue =>
+        issue.scope === WORKOUT_VALIDATION_SCOPE.SECTION
+    );
+
+    const hasSectionValidationIssues = sectionValidationIssues.length > 0;
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Utility
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function getStackValidationIssues(stack) {
+        const stackKey = stack.draftId ?? stack.id;
+
+        return validationIssues.filter(issue =>
+            issue.stackKey === stackKey
+        );
+    }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers
@@ -158,7 +182,13 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                 withBorder
                 radius="md"
                 bg="var(--color-background)"
-                style={{overflow: 'hidden'}}
+                style={{
+                    overflow: 'hidden',
+                    outline: hasSectionValidationIssues
+                        ? '2px solid var(--mantine-color-red-5)'
+                        : undefined,
+                    outlineOffset: '-1px',
+                }}
             >
                 <Box
                     style={{
@@ -254,6 +284,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                     label="Section name"
                                     placeholder="Warm Up"
                                     value={section.name || ''}
+                                    maxLength={255}
                                     onChange={event => onChange({name: event.currentTarget.value})}
                                 />
 
@@ -279,6 +310,24 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                         autosize
                     />
                 </Box>
+
+                {hasSectionValidationIssues && (
+                    <Box px="md" pt="md">
+                        <Alert
+                            color="red"
+                            variant="light"
+                            icon={<IconAlertCircle size={16}/>}
+                        >
+                            <Stack gap={2}>
+                                {sectionValidationIssues.map(issue => (
+                                    <Text key={issue.id} size="sm">
+                                        {issue.message}
+                                    </Text>
+                                ))}
+                            </Stack>
+                        </Alert>
+                    </Box>
+                )}
 
                 <Box p="md">
                     {itemCount === 0 && (
@@ -326,6 +375,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, sectionA
                                                 stack={item}
                                                 itemIndex={itemIndex}
                                                 itemCount={section.items.length}
+                                                validationIssues={getStackValidationIssues(item)}
                                                 onChange={updates => onChange({
                                                     items: section.items.map((currentItem, index) => (
                                                         index === itemIndex
