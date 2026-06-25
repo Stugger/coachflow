@@ -217,8 +217,13 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
             return;
         }
 
+        if (!hasUnsavedChanges) {
+            localStorage.removeItem(draftKey);
+            return;
+        }
+
         localStorage.setItem(draftKey, JSON.stringify(draft));
-    }, [opened, loaded, draft, draftKey]);
+    }, [opened, loaded, draft, draftKey, hasUnsavedChanges]);
 
     useEffect(() => {
         setActiveValidationIssueIds(previousIds => {
