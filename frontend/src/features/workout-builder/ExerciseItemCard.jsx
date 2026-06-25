@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {memo, useMemo, useEffect, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     ActionIcon,
@@ -40,7 +40,18 @@ import {
     pruneUnusedTargets,
 } from './workout-draft-factory';
 
-function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, onDelete, onMoveUp, onMoveDown}) {
+function ExerciseItemCard({
+                              item,
+                              sectionIndex,
+                              parentStackItemIndex = null,
+                              itemIndex,
+                              itemCount,
+                              independent,
+                              onChange,
+                              onDelete,
+                              onMoveUp,
+                              onMoveDown,
+                          }) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -72,11 +83,10 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
         Boolean(item.name?.trim()) &&
         item.name.trim() !== exercise?.name?.trim();
 
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Derived state
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    const committedConfig = parseWorkoutConfig(item.configJson);
+    const committedConfig = useMemo(
+        () => parseWorkoutConfig(item.configJson),
+        [item.configJson],
+    );
 
     const activeConfig = customizingFields && configDraft
         ? configDraft
@@ -107,10 +117,7 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     }
 
     function updateExerciseConfig(nextConfig) {
-        const currentConfigJson = stringifyWorkoutConfig(
-            parseWorkoutConfig(item.configJson)
-        );
-
+        const currentConfigJson = stringifyWorkoutConfig(committedConfig);
         const nextConfigJson = stringifyWorkoutConfig(nextConfig);
 
         if (nextConfigJson !== currentConfigJson) {
@@ -149,7 +156,8 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
         if (customizingFields) {
             return;
         }
-        setConfigDraft(structuredClone(parseWorkoutConfig(item.configJson)));
+
+        setConfigDraft(structuredClone(committedConfig));
         setCustomizingFields(true);
     }
 
@@ -416,4 +424,13 @@ function ExerciseItemCard({item, itemIndex, itemCount, independent, onChange, on
     );
 }
 
-export default ExerciseItemCard;
+function areExerciseItemCardPropsEqual(previous, next) {
+    return previous.item === next.item &&
+        previous.sectionIndex === next.sectionIndex &&
+        previous.parentStackItemIndex === next.parentStackItemIndex &&
+        previous.itemIndex === next.itemIndex &&
+        previous.itemCount === next.itemCount &&
+        previous.independent === next.independent;
+}
+
+export default memo(ExerciseItemCard, areExerciseItemCardPropsEqual);

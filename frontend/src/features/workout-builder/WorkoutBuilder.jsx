@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useCallback, useState} from 'react';
 import {
     useComputedColorScheme,
     Alert,
@@ -49,30 +49,36 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
 
     /* Section helpers */
 
-    function updateSections(nextSections) {
-        onChange({
-            ...draft,
-            sections: reindexPositions(nextSections),
+    const updateSections = useCallback(updater => {
+        onChange(currentDraft => {
+            const currentSections = currentDraft.sections ?? [];
+
+            const nextSections = typeof updater === 'function'
+                ? updater(currentSections)
+                : updater;
+
+            return {
+                ...currentDraft,
+                sections: reindexPositions(nextSections),
+            };
         });
-    }
+    }, [onChange]);
 
-    function updateSection(sectionIndex, updater) {
-        const nextSections = sections.map((section, index) => {
-            if (index !== sectionIndex) {
-                return section;
-            }
+    const updateSection = useCallback((sectionIndex, updater) => {
+        updateSections(currentSections => (
+            currentSections.map((section, index) => (
+                index === sectionIndex
+                    ? updater(section)
+                    : section
+            ))
+        ));
+    }, [updateSections]);
 
-            return updater(section);
-        });
+    const addSection = useCallback(() => {
+        const nextSection = createWorkoutSection();
 
-        updateSections(nextSections);
-    }
-
-    function addSection() {
-        const nextSection = createWorkoutSection(sections.length + 1);
-
-        updateSections([
-            ...sections,
+        updateSections(currentSections => [
+            ...currentSections,
             nextSection,
         ]);
 
@@ -81,34 +87,38 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
             next.add(getSectionKey(nextSection));
             return next;
         });
-    }
+    }, [updateSections]);
 
-    function deleteSection(sectionIndex) {
+    const deleteSection = useCallback(sectionIndex => {
         const section = sections[sectionIndex];
-        const confirmed = !section.items?.length || window.confirm(`Delete "${getSectionDisplayName(section)}"?`);
+        const confirmed = !section?.items?.length || window.confirm(`Delete "${getSectionDisplayName(section)}"?`);
 
         if (!confirmed) {
             return;
         }
 
-        updateSections(sections.filter((_, index) => index !== sectionIndex));
-    }
+        updateSections(currentSections => (
+            currentSections.filter((_, index) => index !== sectionIndex)
+        ));
+    }, [sections, updateSections]);
 
-    function moveSection(sectionIndex, direction) {
-        const targetIndex = sectionIndex + direction;
+    const moveSection = useCallback((sectionIndex, direction) => {
+        updateSections(currentSections => {
+            const targetIndex = sectionIndex + direction;
 
-        if (targetIndex < 0 || targetIndex >= sections.length) {
-            return;
-        }
+            if (targetIndex < 0 || targetIndex >= currentSections.length) {
+                return currentSections;
+            }
 
-        const nextSections = [...sections];
-        const [section] = nextSections.splice(sectionIndex, 1);
-        nextSections.splice(targetIndex, 0, section);
+            const nextSections = [...currentSections];
+            const [section] = nextSections.splice(sectionIndex, 1);
+            nextSections.splice(targetIndex, 0, section);
 
-        updateSections(nextSections);
-    }
+            return nextSections;
+        });
+    }, [updateSections]);
 
-    function toggleSection(section) {
+    const toggleSection = useCallback(section => {
         const key = getSectionKey(section);
 
         setExpandedSectionIds(current => {
@@ -122,37 +132,17 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
 
             return next;
         });
-    }
+    }, []);
 
-    function getSectionValidationIssues(section) {
+    const getSectionValidationIssues = useCallback(section => {
         const sectionKey = getSectionKey(section);
 
         return validationIssues.filter(issue =>
             issue.sectionKey === sectionKey
         );
-    }
+    }, [validationIssues]);
 
-    function addExerciseFromPicker(exercise) {
-        if (!exercisePickerTarget) {
-            return;
-        }
-
-        if (exercisePickerTarget.type === 'section') {
-            addExerciseToSection(exercisePickerTarget.sectionIndex, exercise);
-        } else if (exercisePickerTarget.type === 'stack') {
-            addExerciseToStack(
-                exercisePickerTarget.sectionIndex,
-                exercisePickerTarget.itemIndex,
-                exercise,
-            );
-        }
-
-        setExercisePickerTarget(null);
-    }
-
-    /* Section item helpers */
-
-    function addExerciseToSection(sectionIndex, exercise) {
+    const addExerciseToSection = useCallback((sectionIndex, exercise) => {
         updateSection(sectionIndex, section => ({
             ...section,
             items: reindexPositions([
@@ -160,38 +150,9 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                 createExerciseItem(exercise, (section.items?.length ?? 0) + 1),
             ]),
         }));
-    }
+    }, [updateSection]);
 
-    function deleteItemFromSection(sectionIndex, itemIndex) {
-        updateSection(sectionIndex, section => ({
-            ...section,
-            items: reindexPositions(
-                (section.items ?? []).filter((_, index) => index !== itemIndex)
-            ),
-        }));
-    }
-
-    function moveItemInSection(sectionIndex, itemIndex, direction) {
-        const section = sections[sectionIndex];
-        const targetIndex = itemIndex + direction;
-
-        if (targetIndex < 0 || targetIndex >= (section.items?.length ?? 0)) {
-            return;
-        }
-
-        const nextItems = [...section.items];
-        const [item] = nextItems.splice(itemIndex, 1);
-        nextItems.splice(targetIndex, 0, item);
-
-        updateSection(sectionIndex, section => ({
-            ...section,
-            items: reindexPositions(nextItems),
-        }));
-    }
-
-    /* Stack helpers */
-
-    function addStackToSection(sectionIndex, itemType) {
+    const addStackToSection = useCallback((sectionIndex, itemType) => {
         updateSection(sectionIndex, section => ({
             ...section,
             items: reindexPositions([
@@ -199,63 +160,85 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                 createStackItem(itemType, (section.items?.length ?? 0) + 1),
             ]),
         }));
-    }
+    }, [updateSection]);
 
-    function updateStackItem(sectionIndex, stackItemIndex, updater) {
+    const deleteItemFromSection = useCallback((sectionIndex, itemIndex) => {
         updateSection(sectionIndex, section => ({
             ...section,
-            items: section.items.map((item, itemIndex) => (
+            items: reindexPositions(
+                (section.items ?? []).filter((_, index) => index !== itemIndex)
+            ),
+        }));
+    }, [updateSection]);
+
+    const moveItemInSection = useCallback((sectionIndex, itemIndex, direction) => {
+        updateSection(sectionIndex, section => {
+            const items = section.items ?? [];
+            const targetIndex = itemIndex + direction;
+
+            if (targetIndex < 0 || targetIndex >= items.length) {
+                return section;
+            }
+
+            const nextItems = [...items];
+            const [item] = nextItems.splice(itemIndex, 1);
+            nextItems.splice(targetIndex, 0, item);
+
+            return {
+                ...section,
+                items: reindexPositions(nextItems),
+            };
+        });
+    }, [updateSection]);
+
+    /* Stack helpers */
+
+    const updateStackItem = useCallback((sectionIndex, stackItemIndex, updater) => {
+        updateSection(sectionIndex, section => ({
+            ...section,
+            items: (section.items ?? []).map((item, itemIndex) => (
                 itemIndex === stackItemIndex
                     ? updater(item)
                     : item
             )),
         }));
-    }
+    }, [updateSection]);
 
-    function updateExerciseInStack(sectionIndex, stackItemIndex, exerciseIndex, updates) {
+    const updateExerciseInStack = useCallback((sectionIndex, stackItemIndex, exerciseIndex, updates) => {
         updateStackItem(sectionIndex, stackItemIndex, stack => ({
             ...stack,
-            itemExercises: stack.itemExercises.map((itemExercise, index) => (
+            itemExercises: (stack.itemExercises ?? []).map((itemExercise, index) => (
                 index === exerciseIndex
                     ? {...itemExercise, ...updates}
                     : itemExercise
             )),
         }));
-    }
+    }, [updateStackItem]);
 
-    function addExerciseToStack(sectionIndex, itemIndex, exercise) {
-        updateSection(sectionIndex, section => ({
-            ...section,
-            items: section.items.map((item, index) => {
-                if (index !== itemIndex) {
-                    return item;
-                }
-
-                return {
-                    ...item,
-                    itemExercises: reindexPositions([
-                        ...(item.itemExercises ?? []),
-                        createStackExercise(
-                            exercise,
-                            (item.itemExercises?.length ?? 0) + 1,
-                            item.rounds ?? 1,
-                        ),
-                    ]),
-                };
-            }),
+    const addExerciseToStack = useCallback((sectionIndex, itemIndex, exercise) => {
+        updateStackItem(sectionIndex, itemIndex, stack => ({
+            ...stack,
+            itemExercises: reindexPositions([
+                ...(stack.itemExercises ?? []),
+                createStackExercise(
+                    exercise,
+                    (stack.itemExercises?.length ?? 0) + 1,
+                    stack.rounds ?? 1,
+                ),
+            ]),
         }));
-    }
+    }, [updateStackItem]);
 
-    function deleteExerciseFromStack(sectionIndex, stackItemIndex, exerciseIndex) {
+    const deleteExerciseFromStack = useCallback((sectionIndex, stackItemIndex, exerciseIndex) => {
         updateStackItem(sectionIndex, stackItemIndex, stack => ({
             ...stack,
             itemExercises: reindexPositions(
                 (stack.itemExercises ?? []).filter((_, index) => index !== exerciseIndex)
             ),
         }));
-    }
+    }, [updateStackItem]);
 
-    function moveExerciseInStack(sectionIndex, stackItemIndex, exerciseIndex, direction) {
+    const moveExerciseInStack = useCallback((sectionIndex, stackItemIndex, exerciseIndex, direction) => {
         updateStackItem(sectionIndex, stackItemIndex, stack => {
             const itemExercises = [...(stack.itemExercises ?? [])];
             const targetIndex = exerciseIndex + direction;
@@ -272,9 +255,9 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                 itemExercises: reindexPositions(itemExercises),
             };
         });
-    }
+    }, [updateStackItem]);
 
-    function adjustStackRounds(sectionIndex, stackItemIndex, amount) {
+    const adjustStackRounds = useCallback((sectionIndex, stackItemIndex, amount) => {
         updateStackItem(sectionIndex, stackItemIndex, stack => {
             const currentRounds = stack.rounds ?? 1;
             const nextRounds = Math.max(1, currentRounds + amount);
@@ -286,7 +269,7 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
             return {
                 ...stack,
                 rounds: nextRounds,
-                itemExercises: stack.itemExercises.map(itemExercise => ({
+                itemExercises: (stack.itemExercises ?? []).map(itemExercise => ({
                     ...itemExercise,
                     configJson: resizeExerciseSetCount(
                         itemExercise.configJson,
@@ -296,7 +279,25 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                 })),
             };
         });
-    }
+    }, [updateStackItem]);
+
+    const addExerciseFromPicker = useCallback(exercise => {
+        if (!exercisePickerTarget) {
+            return;
+        }
+
+        if (exercisePickerTarget.type === 'section') {
+            addExerciseToSection(exercisePickerTarget.sectionIndex, exercise);
+        } else if (exercisePickerTarget.type === 'stack') {
+            addExerciseToStack(
+                exercisePickerTarget.sectionIndex,
+                exercisePickerTarget.itemIndex,
+                exercise,
+            );
+        }
+
+        setExercisePickerTarget(null);
+    }, [exercisePickerTarget, addExerciseToSection, addExerciseToStack]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
@@ -362,10 +363,16 @@ function WorkoutBuilder({draft, exercises, validationIssues = [], onChange}) {
                             onMoveUp: () => moveSection(sectionIndex, -1),
                             onMoveDown: () => moveSection(sectionIndex, 1),
                             onDelete: () => deleteSection(sectionIndex),
-                            onChange: updates => updateSection(sectionIndex, currentSection => ({
-                                ...currentSection,
-                                ...updates,
-                            })),
+                            onChange: updatesOrUpdater => updateSection(sectionIndex, currentSection => {
+                                const updates = typeof updatesOrUpdater === 'function'
+                                    ? updatesOrUpdater(currentSection)
+                                    : updatesOrUpdater;
+
+                                return {
+                                    ...currentSection,
+                                    ...updates,
+                                };
+                            }),
                         }}
                         exerciseItemActions={{
                             onDeleteExerciseItem: itemIndex => deleteItemFromSection(sectionIndex, itemIndex),

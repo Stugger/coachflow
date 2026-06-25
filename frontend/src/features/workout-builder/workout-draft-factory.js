@@ -166,12 +166,16 @@ export function parseWorkoutConfig(configJson) {
     }
 
     const sets = config.sets?.length
-        ? config.sets.map((set, index) => ({
-            draftId: set.draftId ?? createDraftId('set'),
-            position: set.position ?? index + 1,
-            setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
-            targets: set.targets ?? {},
-        }))
+        ? config.sets.map((set, index) => {
+            const position = set.position ?? index + 1;
+
+            return {
+                draftId: set.draftId ?? `set-${position}`,
+                position,
+                setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
+                targets: set.targets ?? {},
+            };
+        })
         : [createWorkoutSet()];
 
     return {

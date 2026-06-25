@@ -1,3 +1,4 @@
+import {memo} from 'react';
 import {
     useMantineTheme,
     getGradient,
@@ -352,16 +353,17 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, validati
                                                 <ExerciseItemCard
                                                     key={item.draftId || item.id}
                                                     item={item}
+                                                    sectionIndex={sectionIndex}
                                                     itemIndex={itemIndex}
                                                     itemCount={section.items.length}
                                                     independent={true}
-                                                    onChange={updates => onChange({
-                                                        items: section.items.map((currentItem, index) => (
+                                                    onChange={updates => onChange(currentSection => ({
+                                                        items: (currentSection.items ?? []).map((currentItem, index) => (
                                                             index === itemIndex
                                                                 ? {...currentItem, ...updates}
                                                                 : currentItem
                                                         )),
-                                                    })}
+                                                    }))}
                                                     onDelete={() => onDeleteExerciseItem(itemIndex)}
                                                     onMoveUp={() => onMoveExerciseItemUp(itemIndex)}
                                                     onMoveDown={() => onMoveExerciseItemDown(itemIndex)}
@@ -373,16 +375,17 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, validati
                                             <WorkoutStackCard
                                                 key={item.draftId || item.id}
                                                 stack={item}
+                                                sectionIndex={sectionIndex}
                                                 itemIndex={itemIndex}
                                                 itemCount={section.items.length}
                                                 validationIssues={getStackValidationIssues(item)}
-                                                onChange={updates => onChange({
-                                                    items: section.items.map((currentItem, index) => (
+                                                onChange={updates => onChange(currentSection => ({
+                                                    items: (currentSection.items ?? []).map((currentItem, index) => (
                                                         index === itemIndex
                                                             ? {...currentItem, ...updates}
                                                             : currentItem
                                                     )),
-                                                })}
+                                                }))}
                                                 onAddExercise={() => onOpenExercisePickerForStack(itemIndex)}
                                                 onDeleteStack={() => onDeleteStack(itemIndex)}
                                                 onMoveStackUp={() => onMoveStackUp(itemIndex)}
@@ -417,4 +420,28 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, validati
     );
 }
 
-export default WorkoutSection;
+function haveSameValidationIssues(previousIssues = [], nextIssues = []) {
+    if (previousIssues === nextIssues) {
+        return true;
+    }
+
+    if (previousIssues.length !== nextIssues.length) {
+        return false;
+    }
+
+    return previousIssues.every((issue, index) =>
+        issue.id === nextIssues[index]?.id
+    );
+}
+
+function areWorkoutSectionPropsEqual(previous, next) {
+    return previous.section === next.section &&
+        previous.sectionIndex === next.sectionIndex &&
+        previous.sectionCount === next.sectionCount &&
+        previous.expanded === next.expanded &&
+        previous.exercisePicker.exercises === next.exercisePicker.exercises &&
+        previous.exercisePicker.opened === next.exercisePicker.opened &&
+        haveSameValidationIssues(previous.validationIssues, next.validationIssues);
+}
+
+export default memo(WorkoutSection, areWorkoutSectionPropsEqual);

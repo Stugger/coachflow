@@ -1,3 +1,4 @@
+import {memo, useState} from 'react';
 import {
     useComputedColorScheme,
     useMantineTheme,
@@ -34,7 +35,6 @@ import {
     IconPlus,
     IconTrash,
 } from '@tabler/icons-react';
-import {useState} from 'react';
 
 import ExerciseItemCard from './ExerciseItemCard';
 
@@ -46,7 +46,7 @@ import {
 } from './workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
 
-function WorkoutStackCard({stack, itemIndex, itemCount, validationIssues = [],
+function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, validationIssues = [],
                               onChange,
                               onAddExercise,
                               onDeleteStack, onMoveStackUp, onMoveStackDown,
@@ -349,6 +349,8 @@ function WorkoutStackCard({stack, itemIndex, itemCount, validationIssues = [],
                                             <ExerciseItemCard
                                                 key={itemExercise.draftId || itemExercise.id}
                                                 item={itemExercise}
+                                                sectionIndex={sectionIndex}
+                                                parentStackItemIndex={itemIndex}
                                                 itemIndex={exerciseIndex}
                                                 itemCount={stack.itemExercises.length}
                                                 independent={false}
@@ -403,4 +405,26 @@ function WorkoutStackCard({stack, itemIndex, itemCount, validationIssues = [],
     );
 }
 
-export default WorkoutStackCard;
+function haveSameValidationIssues(previousIssues = [], nextIssues = []) {
+    if (previousIssues === nextIssues) {
+        return true;
+    }
+
+    if (previousIssues.length !== nextIssues.length) {
+        return false;
+    }
+
+    return previousIssues.every((issue, index) =>
+        issue.id === nextIssues[index]?.id
+    );
+}
+
+function areWorkoutStackCardPropsEqual(previous, next) {
+    return previous.stack === next.stack &&
+        previous.sectionIndex === next.sectionIndex &&
+        previous.itemIndex === next.itemIndex &&
+        previous.itemCount === next.itemCount &&
+        haveSameValidationIssues(previous.validationIssues, next.validationIssues);
+}
+
+export default memo(WorkoutStackCard, areWorkoutStackCardPropsEqual);

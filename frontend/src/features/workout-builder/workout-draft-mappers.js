@@ -150,10 +150,16 @@ export function normalizePositions(items) {
 }
 
 export function reindexPositions(items) {
-    return items.map((item, index) => ({
-        ...item,
-        position: index + 1,
-    }));
+    return items.map((item, index) => {
+        const position = index + 1;
+
+        return item.position === position
+            ? item
+            : {
+                ...item,
+                position,
+            };
+    });
 }
 
 export function reindexTrackingFields(fields) {
