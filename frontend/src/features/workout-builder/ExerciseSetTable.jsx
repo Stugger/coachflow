@@ -291,7 +291,7 @@ function ExerciseSetTable({config, locked, stackControlled, onChange}) {
         >
             <Table
                 //withColumnBorders
-                verticalSpacing="sm"
+                verticalSpacing={'calc(var(--mantine-spacing-sm) * 0.5)'}
                 horizontalSpacing="sm"
                 mb="xs"
                 style={{
@@ -309,7 +309,7 @@ function ExerciseSetTable({config, locked, stackControlled, onChange}) {
                             textAlign: 'center',
                         }}>
                             <Text size="sm" fw={600}>
-                                Set
+                                {stackControlled ? 'Round' : 'Set'}
                             </Text>
                         </Table.Th>
 
