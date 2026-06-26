@@ -40,6 +40,8 @@ import {
     pruneUnusedTargets,
 } from './workout-draft-factory';
 
+import {resolveMediaUrl} from '../../utils/media-url-utils';
+
 function ExerciseItemCard({
                               item,
                               sectionIndex,
@@ -200,7 +202,7 @@ function ExerciseItemCard({
 
         return (
             <Avatar
-                src={exercise.thumbnailUrl}
+                src={resolveMediaUrl(exercise.thumbnailUrl)}
                 alt={exercise.name}
                 size={50}
                 radius="md"

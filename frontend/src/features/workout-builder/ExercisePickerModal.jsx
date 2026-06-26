@@ -24,6 +24,8 @@ import {
     EXERCISE_TAG_OPTIONS
 } from '../../constants/exercises';
 
+import {resolveMediaUrl} from '../../utils/media-url-utils';
+
 function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -200,7 +202,7 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                             }}
                         >
                             <Avatar
-                                src={exercise.thumbnailUrl}
+                                src={resolveMediaUrl(exercise.thumbnailUrl)}
                                 alt={exercise.name}
                                 size={50}
                                 radius="sm"

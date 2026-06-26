@@ -35,6 +35,8 @@ import {
 
 import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
 
+import {resolveMediaUrl} from '../../utils/media-url-utils';
+
 function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
 
     const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise?.metadataJson);
@@ -43,6 +45,49 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
 
     function findOptionLabel(options, value) {
         return options.find(option => option.value === value)?.label || value;
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderThumbnail() {
+        return (
+            <Paper
+                withBorder
+                radius="md"
+                p="xs"
+                style={{
+                    width: '7rem',
+                    height: '7rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                }}
+            >
+                {exercise.thumbnailUrl ? (
+                    <img
+                        src={resolveMediaUrl(exercise.thumbnailUrl)}
+                        alt={exercise.name}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '0.4rem',
+                        }}
+                    />
+                ) : (
+                    <Stack gap={4} align="center">
+                        <IconPhoto size={28}/>
+                        <Text size="xs" c="dimmed" ta="center">
+                            No thumbnail
+                        </Text>
+                    </Stack>
+                )}
+            </Paper>
+        );
     }
 
     function renderOptionBadges(options, values, color = 'gray') {
@@ -150,43 +195,14 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
         return null;
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
         <Stack gap="md">
             <Group align="flex-start" wrap="nowrap">
-                <Paper
-                    withBorder
-                    radius="md"
-                    p="xs"
-                    style={{
-                        width: '7rem',
-                        height: '7rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                    }}
-                >
-                    {exercise.thumbnailUrl ? (
-                        <img
-                            src={exercise.thumbnailUrl}
-                            alt={exercise.name}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                borderRadius: '0.4rem',
-                            }}
-                        />
-                    ) : (
-                        <Stack gap={4} align="center">
-                            <IconPhoto size={28}/>
-                            <Text size="xs" c="dimmed" ta="center">
-                                No thumbnail
-                            </Text>
-                        </Stack>
-                    )}
-                </Paper>
+                {renderThumbnail()}
 
                 <Stack gap={6} style={{flex: 1, minWidth: 0}}>
                     <Title order={3}>

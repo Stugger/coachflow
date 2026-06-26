@@ -27,6 +27,8 @@ import {
     MUSCLE_OPTIONS,
 } from '../../constants/exercises.js';
 
+import {resolveMediaUrl} from '../../utils/media-url-utils';
+
 function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, onCopy, onEdit, onArchive}) {
 
     const isGlobal = exercise.visibility === 'GLOBAL';
@@ -64,7 +66,7 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
 
         return (
             <Avatar
-                src={exercise.thumbnailUrl}
+                src={resolveMediaUrl(exercise.thumbnailUrl)}
                 alt={exercise.name}
                 size={56}
                 radius="sm"
