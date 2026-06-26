@@ -1,0 +1,43 @@
+package com.stugger.coachflow.api.dto.response.workout;
+
+import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
+import com.stugger.coachflow.entity.workout.WorkoutTemplateItem;
+import com.stugger.coachflow.entity.workout.WorkoutTemplateItemType;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * @author Jake
+ * @since June 15th, 2026
+ */
+public record WorkoutTemplateItemResponse(
+        Long id,
+        Integer position,
+        WorkoutTemplateItemType itemType,
+        ExerciseResponse exercise,
+        String name,
+        Integer rounds,
+        String notes,
+        String configJson,
+        List<WorkoutTemplateItemExerciseResponse> itemExercises,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
+) {
+    public WorkoutTemplateItemResponse(WorkoutTemplateItem item) {
+        this(item.getId(),
+            item.getPosition(),
+            item.getItemType(),
+            item.getExercise() == null ? null : new ExerciseResponse(item.getExercise()),
+            item.getName(),
+            item.getRounds(),
+            item.getNotes(),
+            item.getConfigJson(),
+            item.getItemExercises().stream()
+                    .map(WorkoutTemplateItemExerciseResponse::new)
+                    .toList(),
+            item.getCreatedAt(),
+            item.getUpdatedAt()
+        );
+    }
+}

@@ -2,6 +2,7 @@ import {
     ActionIcon,
     Avatar,
     Badge,
+    Box,
     Group,
     Menu,
     Paper,
@@ -26,6 +27,8 @@ import {
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS,
 } from '../../constants/exercises.js';
+
+import {resolveMediaUrl} from '../../utils/media-url-utils';
 
 function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, onCopy, onEdit, onArchive}) {
 
@@ -53,9 +56,6 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                         radius="md"
                         variant="light"
                         onClick={() => onView(exercise)}
-                        style={{
-                            cursor: 'pointer',
-                        }}
                 >
                     <IconPhoto size={24}/>
                 </Avatar>
@@ -64,14 +64,10 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
 
         return (
             <Avatar
-                src={exercise.thumbnailUrl}
+                src={resolveMediaUrl(exercise.thumbnailUrl)}
                 alt={exercise.name}
                 size={56}
-                radius="md"
-                onClick={() => onView(exercise)}
-                style={{
-                    cursor: 'pointer',
-                }}
+                radius="sm"
             />
         );
     }
@@ -83,17 +79,13 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                 lineClamp={1}
                 role="button"
                 tabIndex={0}
-                onClick={() => onView(exercise)}
                 onKeyDown={event => {
                     if (event.key === 'Enter' || event.key === ' ') {
                         event.preventDefault();
                         onView(exercise);
                     }
                 }}
-                style={{
-                    cursor: 'pointer',
-                    width: 'fit-content',
-                }}
+                style={{width: 'fit-content'}}
             >
                 {exercise.name}
             </Text>
@@ -135,7 +127,15 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
     }
 
     return (
-        <Paper withBorder p="sm" radius="md">
+        <Paper
+            withBorder
+            p="sm"
+            radius="md"
+            onClick={() => onView(exercise)}
+            style={{
+                cursor: 'pointer',
+            }}
+        >
             <Group justify="space-between" align="flex-start" wrap="nowrap">
                 <Group align="flex-start" wrap="nowrap" style={{flex: 1, minWidth: 0}}>
                     {renderExerciseThumbnail()}
@@ -205,53 +205,65 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                             </SimpleGrid>
                         )}
                     </Stack>
+
+                    <Box
+                        onClick={event => event.stopPropagation()}
+                        style={{alignSelf: 'center'}}
+                    >
+                        <Menu shadow="md" position="bottom-end">
+                            <Menu.Target>
+                                <Tooltip label="Options" position="top-end">
+                                    <ActionIcon
+                                        variant="subtle"
+                                        color="gray"
+                                        size="md"
+                                        mr={isMobile ? -2 : 0}
+                                        style={{alignSelf: 'center'}}
+                                    >
+                                        <IconDotsVertical size={18}/>
+                                    </ActionIcon>
+                                </Tooltip>
+                            </Menu.Target>
+
+                            <Menu.Dropdown>
+                                <Menu.Item
+                                    leftSection={<IconEye size={16}/>}
+                                    onClick={() => onView(exercise)}
+                                >
+                                    View
+                                </Menu.Item>
+
+                                <Menu.Item
+                                    leftSection={<IconCopy size={16}/>}
+                                    onClick={() => onCopy(exercise)}
+                                >
+                                    {isGlobal ? 'Copy to mine' : 'Copy'}
+                                </Menu.Item>
+
+                                {isTrainerOwned && (
+                                    <>
+                                        <Menu.Item
+                                            leftSection={<IconPencil size={16}/>}
+                                            onClick={() => onEdit(exercise)}
+                                        >
+                                            Edit
+                                        </Menu.Item>
+
+                                        <Menu.Divider/>
+
+                                        <Menu.Item
+                                            color="red"
+                                            leftSection={<IconTrash size={16}/>}
+                                            onClick={() => onArchive(exercise)}
+                                        >
+                                            Archive
+                                        </Menu.Item>
+                                    </>
+                                )}
+                            </Menu.Dropdown>
+                        </Menu>
+                    </Box>
                 </Group>
-                <Menu shadow="md" width={160} position="bottom-end">
-                    <Menu.Target>
-                        <Tooltip label="Options" position="top-end">
-                            <ActionIcon variant="default" size="md">
-                                <IconDotsVertical size={16}/>
-                            </ActionIcon>
-                        </Tooltip>
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                        <Menu.Item
-                            leftSection={<IconEye size={16}/>}
-                            onClick={() => onView(exercise)}
-                        >
-                            View
-                        </Menu.Item>
-
-                        <Menu.Item
-                            leftSection={<IconCopy size={16}/>}
-                            onClick={() => onCopy(exercise)}
-                        >
-                            {isGlobal ? 'Copy to mine' : 'Copy'}
-                        </Menu.Item>
-
-                        {isTrainerOwned && (
-                            <>
-                                <Menu.Item
-                                    leftSection={<IconPencil size={16}/>}
-                                    onClick={() => onEdit(exercise)}
-                                >
-                                    Edit
-                                </Menu.Item>
-
-                                <Menu.Divider/>
-
-                                <Menu.Item
-                                    color="red"
-                                    leftSection={<IconTrash size={16}/>}
-                                    onClick={() => onArchive(exercise)}
-                                >
-                                    Archive
-                                </Menu.Item>
-                            </>
-                        )}
-                    </Menu.Dropdown>
-                </Menu>
             </Group>
         </Paper>
     );

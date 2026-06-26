@@ -19,7 +19,7 @@ export const ROUTES = {
     CLIENT_HABITS: '/clients/:clientId/habits',
     CLIENT_MEASUREMENTS: '/clients/:clientId/measurements',
 
-    clientProfile: (clientId) => `/clients/${clientId}/history`, //open first tab by default
+    clientProfile: (clientId) => `/clients/${clientId}/history`,
     clientHistory: (clientId) => `/clients/${clientId}/history`,
     clientPrograms: (clientId) => `/clients/${clientId}/programs`,
     clientRecords: (clientId) => `/clients/${clientId}/records`,
@@ -29,6 +29,14 @@ export const ROUTES = {
     /* Exercise Library */
 
     EXERCISES: "/exercises",
+
+    /* Workout Library */
+
+    WORKOUT_TEMPLATES: "/workout-templates",
+
+    workoutLibraryNew: () => "/workout-templates?editor=new",
+    workoutLibraryEdit: (templateId) => `/workout-templates?editor=edit&templateId=${templateId}`,
+    workoutLibraryCopy: (templateId) => `/workout-templates?editor=copy&templateId=${templateId}`,
 
     /* Appointment */
 

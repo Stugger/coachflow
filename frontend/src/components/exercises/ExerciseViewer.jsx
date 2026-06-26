@@ -14,6 +14,7 @@ import {
     IconFlag,
     IconFocus,
     IconPhoto,
+    IconTableImport,
     IconTag,
     IconTarget,
     IconCopy,
@@ -32,7 +33,11 @@ import {
     MUSCLE_OPTIONS,
 } from '../../constants/exercises.js';
 
-function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, onEdit, onArchive}) {
+import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
+
+import {resolveMediaUrl} from '../../utils/media-url-utils';
+
+function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
 
     const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise?.metadataJson);
     const isGlobal = exercise?.visibility === 'GLOBAL';
@@ -40,6 +45,49 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
 
     function findOptionLabel(options, value) {
         return options.find(option => option.value === value)?.label || value;
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderThumbnail() {
+        return (
+            <Paper
+                withBorder
+                radius="md"
+                p={2}
+                style={{
+                    width: '7rem',
+                    height: '7rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                }}
+            >
+                {exercise.thumbnailUrl ? (
+                    <img
+                        src={resolveMediaUrl(exercise.thumbnailUrl)}
+                        alt={exercise.name}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '0.4rem',
+                        }}
+                    />
+                ) : (
+                    <Stack gap={4} align="center">
+                        <IconPhoto size={28}/>
+                        <Text size="xs" c="dimmed" ta="center">
+                            No thumbnail
+                        </Text>
+                    </Stack>
+                )}
+            </Paper>
+        );
     }
 
     function renderOptionBadges(options, values, color = 'gray') {
@@ -60,7 +108,7 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
 
     function renderMetadataRow(icon, label, content) {
         return (
-            <Stack gap={4}>
+            <Stack gap='xs'>
                 <Group gap={6}>
                     {icon}
                     <Text size="sm" fw={700}>
@@ -86,7 +134,11 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
     }
 
     function renderActions() {
-        if (!showLibraryActions) {
+        const canCopy = Boolean(onCopy);
+        const canEdit = isTrainerOwned && Boolean(onEdit);
+        const canArchive = isTrainerOwned && Boolean(onArchive);
+
+        if (!canCopy && !canEdit && !canArchive) {
             return (
                 <Group justify="flex-end">
                     <Button type="button" variant="light" onClick={onClose}>
@@ -98,20 +150,38 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
 
         return (
             <Group justify="flex-end">
-                <Button type="button" variant="light" leftSection={<IconCopy size={16}/>} onClick={onCopy}>
-                    {isGlobal ? 'Copy to mine' : 'Copy'}
-                </Button>
+                {canCopy && (
+                    <Button
+                        type="button"
+                        variant="light"
+                        leftSection={<IconCopy size={16}/>}
+                        onClick={onCopy}
+                    >
+                        {isGlobal ? 'Copy to mine' : 'Copy'}
+                    </Button>
+                )}
 
-                {isTrainerOwned && (
-                    <>
-                        <Button type="button" variant="light" leftSection={<IconEdit size={16}/>} onClick={onEdit}>
-                            Edit
-                        </Button>
+                {canEdit && (
+                    <Button
+                        type="button"
+                        variant="light"
+                        leftSection={<IconEdit size={16}/>}
+                        onClick={onEdit}
+                    >
+                        Edit
+                    </Button>
+                )}
 
-                        <Button type="button" color="red" variant="light" leftSection={<IconTrash size={16}/>} onClick={onArchive}>
-                            Archive
-                        </Button>
-                    </>
+                {canArchive && (
+                    <Button
+                        type="button"
+                        color="red"
+                        variant="light"
+                        leftSection={<IconTrash size={16}/>}
+                        onClick={onArchive}
+                    >
+                        Archive
+                    </Button>
                 )}
 
                 <Button type="button" variant="subtle" onClick={onClose}>
@@ -125,43 +195,14 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
         return null;
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
         <Stack gap="md">
             <Group align="flex-start" wrap="nowrap">
-                <Paper
-                    withBorder
-                    radius="md"
-                    p="xs"
-                    style={{
-                        width: '7rem',
-                        height: '7rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        flexShrink: 0,
-                    }}
-                >
-                    {exercise.thumbnailUrl ? (
-                        <img
-                            src={exercise.thumbnailUrl}
-                            alt={exercise.name}
-                            style={{
-                                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover',
-                                borderRadius: '0.4rem',
-                            }}
-                        />
-                    ) : (
-                        <Stack gap={4} align="center">
-                            <IconPhoto size={28}/>
-                            <Text size="xs" c="dimmed" ta="center">
-                                No thumbnail
-                            </Text>
-                        </Stack>
-                    )}
-                </Paper>
+                {renderThumbnail()}
 
                 <Stack gap={6} style={{flex: 1, minWidth: 0}}>
                     <Title order={3}>
@@ -191,9 +232,9 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
                 </>
             )}
 
-            <Divider label="Details / Instructions" labelPosition="left"/>
+            <Divider label="Instructions" labelPosition="left"/>
 
-            <Paper withBorder radius="md" p="md">
+            <Paper pl='xs' pr='xs' pb='xs'>
                 {exercise.details ? (
                     <Text size="sm" style={{whiteSpace: 'pre-wrap'}}>
                         {exercise.details}
@@ -205,7 +246,7 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
                 )}
             </Paper>
 
-            <Divider label="Metadata" labelPosition="left"/>
+            <Divider label="Focus" labelPosition="left"/>
 
             <SimpleGrid cols={{base: 1, sm: 2}}>
                 <Paper withBorder radius="md" p="md">
@@ -224,6 +265,11 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
                     )}
                 </Paper>
 
+            </SimpleGrid>
+
+            <Divider label="Category" labelPosition="left"/>
+
+            <SimpleGrid cols={{base: 1, sm: 2}}>
                 <Paper withBorder radius="md" p="md">
                     {renderMetadataRow(
                         <IconDumbbell size={16}/>,
@@ -251,6 +297,14 @@ function ExerciseViewer({exercise, showLibraryActions = false, onClose, onCopy, 
                         <IconTag size={16}/>,
                         'Tags',
                         renderOptionBadges(EXERCISE_TAG_OPTIONS, metadata.tags, 'teal')
+                    )}
+                </Paper>
+
+                <Paper withBorder radius="md" p="md">
+                    {renderMetadataRow(
+                        <IconTableImport size={16}/>,
+                        'Tracking Fields',
+                        renderOptionBadges(TRACKING_FIELD_OPTIONS, metadata.defaultTrackingFields, 'blue')
                     )}
                 </Paper>
             </SimpleGrid>

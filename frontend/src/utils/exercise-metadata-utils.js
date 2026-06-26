@@ -4,6 +4,7 @@ export const emptyExerciseMetadata = {
     secondaryMuscles: [],
     difficulty: '',
     tags: [],
+    defaultTrackingFields: [],
 };
 
 export function parseExerciseMetadataJson(metadataJson) {
@@ -20,6 +21,9 @@ export function parseExerciseMetadataJson(metadataJson) {
             secondaryMuscles: Array.isArray(metadata.secondaryMuscles) ? metadata.secondaryMuscles : [],
             difficulty: metadata.difficulty || '',
             tags: Array.isArray(metadata.tags) ? metadata.tags : [],
+            defaultTrackingFields: Array.isArray(metadata.defaultTrackingFields)
+                ? metadata.defaultTrackingFields
+                : [],
         };
     } catch (error) {
         console.error('Error parsing exercise metadata:', error);

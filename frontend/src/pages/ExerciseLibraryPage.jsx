@@ -238,7 +238,6 @@ function ExerciseLibraryPage({trainerId}) {
 
         const searchableValues = [
             exercise.name,
-            exercise.details,
             exercise.visibility,
             findOptionLabel(EXERCISE_DIFFICULTY_OPTIONS, metadata.difficulty),
             ...metadata.equipment.map(value => findOptionLabel(EQUIPMENT_OPTIONS, value)),
@@ -385,6 +384,7 @@ function ExerciseLibraryPage({trainerId}) {
             secondaryMuscles: form.secondaryMuscles,
             difficulty: form.difficulty || null,
             tags: form.tags,
+            defaultTrackingFields: form.defaultTrackingFields,
         };
 
         const hasMetadata =
@@ -392,7 +392,8 @@ function ExerciseLibraryPage({trainerId}) {
             metadata.primaryMuscles.length > 0 ||
             metadata.secondaryMuscles.length > 0 ||
             metadata.difficulty !== null ||
-            metadata.tags.length > 0;
+            metadata.tags.length > 0 ||
+            metadata.defaultTrackingFields.length > 0;
 
         return hasMetadata ? JSON.stringify(metadata) : null;
     }
@@ -503,7 +504,6 @@ function ExerciseLibraryPage({trainerId}) {
         const content = formMode === FORM_MODE.VIEW ? (
             <ExerciseViewer
                 exercise={selectedExercise}
-                showLibraryActions
                 onClose={closeModal}
                 onCopy={() => openCopyModal(selectedExercise)}
                 onEdit={() => openEditModal(selectedExercise)}

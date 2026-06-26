@@ -1,6 +1,5 @@
 import './styles/global.css';
 import './styles/app-shell.css';
-import './styles/clients.css';
 
 import {useState} from 'react';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
@@ -13,6 +12,7 @@ import ClientsPage from './pages/ClientsPage';
 import ClientProfilePage from './pages/ClientProfilePage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
+import WorkoutLibraryPage from './features/workout-library/WorkoutLibraryPage';
 
 import AppShell from './components/AppShell';
 
@@ -95,6 +95,7 @@ function App() {
                 <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
 
                 <Route path={ROUTES.EXERCISES} element={<ExerciseLibraryPage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.WORKOUT_TEMPLATES} element={<WorkoutLibraryPage trainerId={auth.trainer.id}/>}/>
                 <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage trainerId={auth.trainer.id}/>}/>
 
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>

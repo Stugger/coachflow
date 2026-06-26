@@ -18,11 +18,14 @@ import {
     IconDumbbell,
     IconTarget,
     IconFocus,
+    IconTableImport,
     IconTag,
 
 } from '@tabler/icons-react';
 
 import ExerciseVideoPreview from './ExerciseVideoPreview.jsx';
+
+import {resolveMediaUrl} from '../../utils/media-url-utils';
 
 import {
     EQUIPMENT_OPTIONS,
@@ -31,7 +34,13 @@ import {
     MUSCLE_OPTIONS
 } from "../../constants/exercises.js";
 
+import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
+
 function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditing, onCancel}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function promptForThumbnailUrl() {
         const url = window.prompt('Enter thumbnail image URL', form.thumbnailUrl || '');
@@ -43,46 +52,61 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
         onValueChange('thumbnailUrl', url.trim());
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderThumbnail() {
+        return (
+            <Paper
+                className={"interactive-card subtle"}
+                withBorder
+                radius="md"
+                p={2}
+                onClick={promptForThumbnailUrl}
+                style={{
+                    width: '7rem',
+                    height: '7rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                }}
+            >
+                {form.thumbnailUrl ? (
+                    <img
+                        src={resolveMediaUrl(form.thumbnailUrl)}
+                        alt="Exercise thumbnail"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '0.4rem',
+                        }}
+                    />
+                ) : (
+                    <Stack gap={4} align="center">
+                        <IconPhoto size={28}/>
+                        <Text size="xs" c="dimmed" ta="center">
+                            Add thumbnail
+                        </Text>
+                    </Stack>
+                )}
+            </Paper>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
         <form onSubmit={onSubmit}>
-            <Stack>
+            <Stack pt={1}>
                 <Group align="flex-start" wrap="nowrap">
-                    <Paper
-                        withBorder
-                        radius="md"
-                        p="xs"
-                        onClick={promptForThumbnailUrl}
-                        style={{
-                            width: '7rem',
-                            height: '7rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            overflow: 'hidden',
-                            flexShrink: 0,
-                        }}
-                    >
-                        {form.thumbnailUrl ? (
-                            <img
-                                src={form.thumbnailUrl}
-                                alt="Exercise thumbnail"
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover',
-                                    borderRadius: '0.4rem',
-                                }}
-                            />
-                        ) : (
-                            <Stack gap={4} align="center">
-                                <IconPhoto size={28}/>
-                                <Text size="xs" c="dimmed" ta="center">
-                                    Add thumbnail
-                                </Text>
-                            </Stack>
-                        )}
-                    </Paper>
+                    {renderThumbnail()}
 
                     <Stack gap="sm" style={{flex: 1}}>
                         <TextInput
@@ -110,7 +134,7 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
 
                 <Textarea
                     name="details"
-                    label="Details / Instructions"
+                    label="Instructions"
                     placeholder="Setup, execution, coaching cues, etc."
                     value={form.details}
                     onChange={onChange}
@@ -140,7 +164,7 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
                     </Stack>
                 )}
 
-                <Divider label="Metadata" labelPosition="left"/>
+                <Divider label="Configuration" labelPosition="left"/>
 
                 <Select
                     label="Difficulty"
@@ -233,6 +257,23 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
                     clearSectionMode="clear"
                     nothingFoundMessage="No tags found"
                 />
+
+                <MultiSelect
+                    label="Default tracking fields"
+                    description="Added automatically when this exercise is added to a workout."
+                    placeholder="Select tracking fields"
+                    leftSection={<IconTableImport size={16}/>}
+                    data={TRACKING_FIELD_OPTIONS}
+                    value={form.defaultTrackingFields}
+                    onChange={value => onValueChange('defaultTrackingFields', value)}
+                    comboboxProps={{shadow: 'lg'}}
+                    withPillsReorder
+                    searchable
+                    clearable
+                    clearSectionMode="clear"
+                    nothingFoundMessage="No tracking fields found"
+                />
+
                 <Group justify="flex-end">
                     <Button type="button" variant="subtle" onClick={onCancel}>
                         Cancel
