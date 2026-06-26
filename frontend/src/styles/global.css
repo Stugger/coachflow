@@ -27,7 +27,6 @@
 .interactive-card.subtle:hover {
     transform: translateY(-1px);
     box-shadow: var(--mantine-shadow-xs);
-    border-color: currentColor;
 }
 
 .subtleInputContainer,

@@ -56,7 +56,7 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
             <Paper
                 withBorder
                 radius="md"
-                p="xs"
+                p={2}
                 style={{
                     width: '7rem',
                     height: '7rem',
@@ -108,7 +108,7 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
 
     function renderMetadataRow(icon, label, content) {
         return (
-            <Stack gap={4}>
+            <Stack gap='xs'>
                 <Group gap={6}>
                     {icon}
                     <Text size="sm" fw={700}>
@@ -232,9 +232,9 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
                 </>
             )}
 
-            <Divider label="Details / Instructions" labelPosition="left"/>
+            <Divider label="Instructions" labelPosition="left"/>
 
-            <Paper withBorder radius="md" p="md">
+            <Paper pl='xs' pr='xs' pb='xs'>
                 {exercise.details ? (
                     <Text size="sm" style={{whiteSpace: 'pre-wrap'}}>
                         {exercise.details}
@@ -246,7 +246,7 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
                 )}
             </Paper>
 
-            <Divider label="Metadata" labelPosition="left"/>
+            <Divider label="Focus" labelPosition="left"/>
 
             <SimpleGrid cols={{base: 1, sm: 2}}>
                 <Paper withBorder radius="md" p="md">
@@ -265,6 +265,11 @@ function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
                     )}
                 </Paper>
 
+            </SimpleGrid>
+
+            <Divider label="Category" labelPosition="left"/>
+
+            <SimpleGrid cols={{base: 1, sm: 2}}>
                 <Paper withBorder radius="md" p="md">
                     {renderMetadataRow(
                         <IconDumbbell size={16}/>,

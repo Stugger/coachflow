@@ -62,7 +62,7 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
                 className={"interactive-card subtle"}
                 withBorder
                 radius="md"
-                p="xs"
+                p={2}
                 onClick={promptForThumbnailUrl}
                 style={{
                     width: '7rem',
@@ -104,7 +104,7 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
 
     return (
         <form onSubmit={onSubmit}>
-            <Stack>
+            <Stack pt={1}>
                 <Group align="flex-start" wrap="nowrap">
                     {renderThumbnail()}
 
@@ -134,7 +134,7 @@ function ExerciseForm({form, errors, onChange, onValueChange, onSubmit, isEditin
 
                 <Textarea
                     name="details"
-                    label="Details / Instructions"
+                    label="Instructions"
                     placeholder="Setup, execution, coaching cues, etc."
                     value={form.details}
                     onChange={onChange}
