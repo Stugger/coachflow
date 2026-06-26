@@ -7,9 +7,10 @@ export const TRACKING_FIELD_KEY = {
     DISTANCE: 'distance',
     SPEED: 'speed',
     INCLINE: 'incline',
+    HEIGHT: 'height',
     RESISTANCE: 'resistance',
-    REST: 'rest',
     RPE: 'rpe',
+    REST: 'rest',
     NOTES: 'notes',
 };
 
@@ -90,6 +91,18 @@ export const TRACKING_FIELD_DEFINITIONS = {
         label: 'Incline',
         type: TRACKING_FIELD_TYPE.DECIMAL,
         unit: '%',
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
+    },
+    [TRACKING_FIELD_KEY.HEIGHT]: {
+        key: TRACKING_FIELD_KEY.HEIGHT,
+        label: 'Height',
+        type: TRACKING_FIELD_TYPE.DECIMAL,
+        unit: 'FEET',
+        units: [
+            {value: 'FEET', label: 'ft'},
+            {value: 'INCHES', label: 'in'},
+        ],
         minColumnWidth: '7rem',
         inputWidth: '5rem',
     },

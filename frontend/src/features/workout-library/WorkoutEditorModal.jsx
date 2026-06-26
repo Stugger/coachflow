@@ -530,14 +530,14 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                                     </Menu>
                                 </Group>
                                 <Textarea
+                                    classNames={{ input: 'subtleInput' }}
+                                    variant="unstyled"
+                                    pl='0.7rem'
                                     label={
-                                        <Text size="xs" c="dimmed" fw={600} pl={10}>
+                                        <Text size="xs" c="dimmed" fw={600} pl='0.7rem'>
                                             DESCRIPTION
                                         </Text>
                                     }
-                                    pl={10}
-                                    classNames={{ input: 'subtleInput' }}
-                                    variant="unstyled"
                                     placeholder="Add a description"
                                     value={draft.description || ''}
                                     onChange={event => updateDraftField('description', event.currentTarget.value)}
@@ -546,10 +546,10 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
                                 {workoutEquipment.length > 0 && (
                                     <Stack gap="sm">
-                                        <Text size="xs" c="dimmed" fw={600} pl={20} pb={2}>
+                                        <Text size="xs" c="dimmed" fw={600} pl='1.4rem' pb={2}>
                                             EQUIPMENT
                                         </Text>
-                                        <Group gap="xs" pl={20}>
+                                        <Group gap="xs" pl='1.4rem'>
                                             {workoutEquipment.map(equipment => (
                                                 <Badge
                                                     key={equipment}

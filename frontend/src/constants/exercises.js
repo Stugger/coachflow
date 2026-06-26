@@ -1,5 +1,4 @@
 export const EQUIPMENT_OPTIONS = [
-    { value: 'BODYWEIGHT', label: 'Bodyweight' },
     { value: 'BARBELL', label: 'Barbell' },
     { value: 'DUMBBELL', label: 'Dumbbell' },
     { value: 'KETTLEBELL', label: 'Kettlebell' },
@@ -14,6 +13,8 @@ export const EQUIPMENT_OPTIONS = [
     { value: 'BENCH', label: 'Bench' },
     { value: 'BOX', label: 'Box' },
     { value: 'TRX', label: 'TRX / Suspension Trainer' },
+    { value: 'PULL_UP_BAR', label: 'Pullup Bar' },
+    { value: 'GHD', label: 'GHD' },
     { value: 'PLATFORM', label: 'Platform' },
     { value: 'SLED', label: 'Sled' },
     { value: 'TREADMILL', label: 'Treadmill' },
@@ -21,6 +22,8 @@ export const EQUIPMENT_OPTIONS = [
     { value: 'ROWER', label: 'Rower' },
     { value: 'ELLIPTICAL', label: 'Elliptical' },
     { value: 'STAIR_STEPPER', label: 'Stair Stepper' },
+    { value: 'BATTLE_ROPES', label: 'Battle Ropes' },
+    { value: 'DIP_BELT', label: 'Dip Belt' },
     { value: 'FOAM_ROLLER', label: 'Foam Roller' },
     { value: 'YOGA_MAT', label: 'Yoga Mat' },
 ];
@@ -74,7 +77,7 @@ export const EXERCISE_TAG_OPTIONS = [
     { value: 'PUSH', label: 'Push' },
     { value: 'PULL', label: 'Pull' },
     { value: 'INCLINE', label: 'Incline' },
-    { value: 'Decline', label: 'Decline' },
+    { value: 'DECLINE', label: 'Decline' },
     { value: 'ASSESSMENT', label: 'Assessment' },
     { value: 'CONDITIONING', label: 'Conditioning' },
     { value: 'WARMUP', label: 'Warmup' },

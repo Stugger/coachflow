@@ -213,7 +213,7 @@ function addExerciseEquipment(equipment, exercise) {
     }
 
     for (const value of metadata.equipment ?? []) {
-        if (value && value != 'BODYWEIGHT') {
+        if (value) {
             equipment.add(value.replace("_", " "));
         }
     }
