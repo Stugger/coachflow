@@ -25,7 +25,7 @@ import ClientCard from '../components/clients/ClientCard';
 import ClientMobileRow from '../components/clients/ClientMobileRow';
 import ClientTableRow from '../components/clients/ClientTableRow';
 
-function ClientsPage({trainerId}) {
+function ClientsPage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -102,7 +102,7 @@ function ClientsPage({trainerId}) {
 
     function loadClients() {
         setClientsLoaded(false);
-        apiFetch(`/api/clients/trainer/${trainerId}`)
+        apiFetch('/api/clients')
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load clients');
@@ -124,7 +124,7 @@ function ClientsPage({trainerId}) {
 
     function loadIntakes() {
         setIntakesLoaded(false);
-        apiFetch(`/api/client-intakes/trainer/${trainerId}`)
+        apiFetch('/api/client-intakes')
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load intake drafts');

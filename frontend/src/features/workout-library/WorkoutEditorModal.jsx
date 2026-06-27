@@ -96,7 +96,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     const isCopying = mode === 'copy';
     const isCreating = mode === 'new';
 
-    const canLoad = opened && trainerId && (isCreating || templateId);
+    const canLoad = opened && (isCreating || templateId);
 
     const [exitModalOpen, setExitModalOpen] = useState(false);
 
@@ -125,7 +125,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
     const currentSnapshot = useMemo(() => {
         return createSnapshot(draft);
-    }, [draft, trainerId]);
+    }, [draft]);
 
     const hasUnsavedChanges = loaded && draft && currentSnapshot !== savedSnapshot;
     const hasSaveableChanges = isCopying || hasUnsavedChanges;
@@ -253,7 +253,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         setActiveValidationIssueIds([]);
 
         Promise.all([
-            getExercises(trainerId),
+            getExercises(),
             loadInitialDraftState(),
         ])
             .then(([loadedExercises, draftState]) => {
@@ -272,8 +272,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         const savedDraft = readSavedDraft();
 
         if (isEditing) {
-            const template = await getWorkoutTemplate(templateId, trainerId);
-            const backendDraft = normalizeTemplateForDraft(template, trainerId);
+            const template = await getWorkoutTemplate(templateId);
+            const backendDraft = normalizeTemplateForDraft(template);
             const backendSnapshot = createSnapshot(backendDraft);
 
             if (savedDraft) {
@@ -292,8 +292,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         }
 
         if (isCopying) {
-            const template = await getWorkoutTemplate(templateId, trainerId);
-            const copyDraft = normalizeTemplateForCopy(template, trainerId);
+            const template = await getWorkoutTemplate(templateId);
+            const copyDraft = normalizeTemplateForCopy(template);
 
             if (savedDraft) {
                 setDraftRecovered(true);
@@ -310,7 +310,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
             };
         }
 
-        const emptyDraft = createEmptyWorkoutDraft(trainerId);
+        const emptyDraft = createEmptyWorkoutDraft();
 
         if (savedDraft) {
             setDraftRecovered(true);
@@ -356,7 +356,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
             return '';
         }
 
-        return JSON.stringify(buildTemplatePayload(nextDraft, trainerId));
+        return JSON.stringify(buildTemplatePayload(nextDraft));
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -403,7 +403,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
         setSaving(true);
 
-        const payload = buildTemplatePayload(draft, trainerId);
+        const payload = buildTemplatePayload(draft);
 
         const request = isEditing
             ? updateWorkoutTemplate(templateId, payload)
@@ -411,10 +411,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
 
         request
             .then(savedTemplate => {
-                const savedDraft = normalizeTemplateForDraft(
-                    savedTemplate,
-                    trainerId,
-                );
+                const savedDraft = normalizeTemplateForDraft(savedTemplate);
 
                 clearSavedDraft();
                 setDraft(savedDraft);

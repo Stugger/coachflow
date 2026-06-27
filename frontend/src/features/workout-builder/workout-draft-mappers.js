@@ -9,14 +9,13 @@ import {
     stringifyWorkoutConfig,
 } from './workout-draft-factory';
 
-export function normalizeTemplateForDraft(template, trainerId) {
+export function normalizeTemplateForDraft(template) {
     if (!template) {
-        return createEmptyWorkoutDraft(trainerId);
+        return createEmptyWorkoutDraft();
     }
 
     return {
         id: template.id ?? null,
-        trainerId: template.trainerId ?? template.trainer?.id ?? trainerId,
         name: template.name ?? '',
         description: template.description ?? '',
         sections: normalizePositions(template.sections ?? []).map((section, sectionIndex) => ({
@@ -31,8 +30,8 @@ export function normalizeTemplateForDraft(template, trainerId) {
     };
 }
 
-export function normalizeTemplateForCopy(template, trainerId) {
-    const draft = normalizeTemplateForDraft(template, trainerId);
+export function normalizeTemplateForCopy(template) {
+    const draft = normalizeTemplateForDraft(template);
 
     return stripIdsFromDraft({
         ...draft,
@@ -74,9 +73,8 @@ function normalizeConfigJson(configJson) {
     );
 }
 
-export function buildTemplatePayload(draft, trainerId) {
+export function buildTemplatePayload(draft) {
     return {
-        trainerId,
         name: trimToNull(draft.name) ?? '',
         description: trimToNull(draft.description),
         sections: normalizePositions(draft.sections ?? []).map((section, sectionIndex) => ({

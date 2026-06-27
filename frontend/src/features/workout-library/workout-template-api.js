@@ -1,11 +1,11 @@
 import {apiFetch} from '../../utils/api-client.js';
 
-export async function getWorkoutTemplates(trainerId) {
-    return getJson(`/api/workout-templates/trainer/${trainerId}`);
+export async function getWorkoutTemplates() {
+    return getJson('/api/workout-templates');
 }
 
-export async function getWorkoutTemplate(workoutTemplateId, trainerId) {
-    return getJson(`/api/workout-templates/${workoutTemplateId}?trainerId=${trainerId}`);
+export async function getWorkoutTemplate(workoutTemplateId) {
+    return getJson(`/api/workout-templates/${workoutTemplateId}`);
 }
 
 export async function createWorkoutTemplate(payload) {
@@ -16,9 +16,9 @@ export async function updateWorkoutTemplate(workoutTemplateId, payload) {
     return sendJson(`/api/workout-templates/${workoutTemplateId}`, 'PUT', payload);
 }
 
-export async function archiveWorkoutTemplate(workoutTemplateId, trainerId) {
+export async function archiveWorkoutTemplate(workoutTemplateId) {
     const response = await apiFetch(
-        `/api/workout-templates/${workoutTemplateId}?trainerId=${trainerId}`,
+        `/api/workout-templates/${workoutTemplateId}`,
         {method: 'DELETE'}
     );
 
@@ -27,8 +27,8 @@ export async function archiveWorkoutTemplate(workoutTemplateId, trainerId) {
     }
 }
 
-export async function getExercises(trainerId) {
-    return getJson(`/api/exercises/trainer/${trainerId}`);
+export async function getExercises() {
+    return getJson('/api/exercises');
 }
 
 async function getJson(path) {

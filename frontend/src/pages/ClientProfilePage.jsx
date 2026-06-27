@@ -19,7 +19,7 @@ import {ROUTES} from '../constants/routes';
 import * as ClientDetailsFormUtils from '../utils/client-form-utils';
 import * as TextUtils from '../utils/text-utils';
 
-function ClientProfilePage({trainerId}) {
+function ClientProfilePage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -69,9 +69,7 @@ function ClientProfilePage({trainerId}) {
                 return response.json();
             })
             .then(client => {
-                if (client.trainer.id === trainerId) {
-                    applyClient(client);
-                }
+                applyClient(client);
             })
             .catch(error => {
                 console.error('Error loading client:', error);

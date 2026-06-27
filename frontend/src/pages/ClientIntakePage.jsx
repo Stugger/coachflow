@@ -34,7 +34,7 @@ import MedicalHistoryStep, {createEmptyMedicalHistoryForm} from '../components/i
 import LifestyleStep, {createEmptyLifestyleForm, validateLifestyleForm} from '../components/intake/steps/LifestyleStep';
 import TrainingPreferencesStep, {createEmptyTrainingPreferencesForm, validateTrainingPreferencesForm} from '../components/intake/steps/TrainingPreferencesStep';
 
-function ClientIntakePage({trainerId}) {
+function ClientIntakePage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -58,10 +58,7 @@ function ClientIntakePage({trainerId}) {
 
     const [exitModalOpen, setExitModalOpen] = useState(false);
 
-    const [basicInfoForm, setBasicInfoForm] = useState({
-        trainerId,
-        ...ClientDetailsFormUtils.createEmptyClientDetailsForm(),
-    });
+    const [basicInfoForm, setBasicInfoForm] = useState(ClientDetailsFormUtils.createEmptyClientDetailsForm());
     const [parqForm, setParqForm] = useState(createEmptyParqForm());
     const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
     const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
@@ -161,10 +158,7 @@ function ClientIntakePage({trainerId}) {
                 return response.json();
             })
             .then(client => {
-                setBasicInfoForm({
-                    trainerId,
-                    ...ClientDetailsFormUtils.createClientDetailsFormFromClient(client),
-                });
+                setBasicInfoForm(ClientDetailsFormUtils.createClientDetailsFormFromClient(client));
             })
             .catch(error => {
                 console.error('Error loading client:', error)
@@ -210,7 +204,6 @@ function ClientIntakePage({trainerId}) {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        trainerId,
                         clientId: createdClient.id
                     })
                 });

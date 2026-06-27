@@ -59,7 +59,7 @@ const FORM_MODE = {
     VIEW: 'VIEW',
 };
 
-function ExerciseLibraryPage({trainerId}) {
+function ExerciseLibraryPage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -120,7 +120,7 @@ function ExerciseLibraryPage({trainerId}) {
     function loadExercises() {
         setLoaded(false);
 
-        apiFetch(`/api/exercises/trainer/${trainerId}`)
+        apiFetch('/api/exercises')
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load exercises');
@@ -181,7 +181,7 @@ function ExerciseLibraryPage({trainerId}) {
 
         setMessage('');
 
-        apiFetch(`/api/exercises/${exercise.id}?trainerId=${trainerId}`, {
+        apiFetch(`/api/exercises/${exercise.id}`, {
             method: 'DELETE',
         })
             .then(async response => {
@@ -369,7 +369,6 @@ function ExerciseLibraryPage({trainerId}) {
 
     function normalizeForm() {
         return {
-            trainerId,
             name: form.name.trim(),
             details: form.details.trim() || null,
             thumbnailUrl: form.thumbnailUrl.trim() || null,

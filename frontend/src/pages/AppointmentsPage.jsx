@@ -28,7 +28,7 @@ import {
 } from '@tabler/icons-react';
 import * as TimeUtils from '../utils/time-utils';
 
-function AppointmentsPage({trainerId}) {
+function AppointmentsPage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -87,7 +87,6 @@ function AppointmentsPage({trainerId}) {
     const [showCreateForm, setShowCreateForm] = useState(false);
 
     const [createForm, setCreateForm] = useState({
-        trainerId: trainerId,
         clientId: '',
         title: '',
         date: '',
@@ -180,7 +179,7 @@ function AppointmentsPage({trainerId}) {
 
     function loadAppointments() {
         setAppointmentsLoaded(false);
-        apiFetch(`/api/appointments/trainer/${trainerId}`)
+        apiFetch('/api/appointments')
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load appointments');
@@ -202,7 +201,7 @@ function AppointmentsPage({trainerId}) {
 
     function loadClients() {
         setClientsLoaded(false);
-        apiFetch(`/api/clients/trainer/${trainerId}`)
+        apiFetch('/api/clients')
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load clients');
@@ -340,7 +339,6 @@ function AppointmentsPage({trainerId}) {
 
     function resetCreateForm() {
         setCreateForm({
-            trainerId: trainerId,
             clientId: '',
             title: '',
             date: '',
@@ -378,7 +376,6 @@ function AppointmentsPage({trainerId}) {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                trainerId: trainerId,
                 clientId: Number(createForm.clientId),
                 title: createForm.title.trim(),
                 startTime: startTime,
