@@ -89,9 +89,31 @@
     animation: workout-stack-round-feedback 1700ms ease both;
 }
 
+@keyframes auth-password-guidance {
+    from {
+        opacity: 0;
+        transform: translateY(-0.25rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auth-password-guidance {
+    box-shadow: var(--mantine-shadow-xs);
+    border: 1px solid var(--mantine-color-default-border);
+    border-radius: var(--mantine-radius-md);
+    padding: var(--mantine-spacing-xs);
+    animation: auth-password-guidance 180ms ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .workout-builder-created
-    .workout-stack-round-feedback {
+    .workout-builder-created,
+    .workout-stack-round-feedback,
+    .auth-password-guidance {
         animation: none;
     }
+
 }
