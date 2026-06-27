@@ -1,8 +1,12 @@
 import './styles/global.css';
 import './styles/app-shell.css';
 
-import {useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
+
+import {clearStoredAuth, getStoredAuth, saveAuth} from './utils/auth-storage.js';
+
+import {API_UNAUTHORIZED_EVENT} from './utils/api-client.js';
 
 import {ROUTES} from './constants/routes';
 
@@ -29,26 +33,35 @@ function App() {
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const [auth, setAuth] = useState(() => {
-        const savedAuth = localStorage.getItem('coachflow_auth');
-        return savedAuth ? JSON.parse(savedAuth) : null;
-    });
+    const [auth, setAuth] = useState(getStoredAuth);
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Event handlers
+    // Auth event handlers
     // ------------------------------------------------------------------------------------------------------------------------
 
     function handleAuthSuccess(authResponse) {
         setAuth(authResponse);
-        localStorage.setItem('coachflow_auth', JSON.stringify(authResponse));
+        saveAuth(authResponse);
         navigate(ROUTES.HOME, {replace: true});
     }
 
-    function logout() {
+    const logout = useCallback(() => {
         setAuth(null);
-        localStorage.removeItem('coachflow_auth');
+        clearStoredAuth();
         navigate(ROUTES.LOGIN, {replace: true});
-    }
+    }, [navigate]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        window.addEventListener(API_UNAUTHORIZED_EVENT, logout);
+
+        return () => {
+            window.removeEventListener(API_UNAUTHORIZED_EVENT, logout);
+        };
+    }, [logout]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Auth routes

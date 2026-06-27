@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
+import {apiFetch} from '../utils/api-client.js';
 import {
     Badge,
     Button,
@@ -101,7 +102,7 @@ function ClientsPage({trainerId}) {
 
     function loadClients() {
         setClientsLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
+        apiFetch(`/api/clients/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load clients');
@@ -123,7 +124,7 @@ function ClientsPage({trainerId}) {
 
     function loadIntakes() {
         setIntakesLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/trainer/${trainerId}`)
+        apiFetch(`/api/client-intakes/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load intake drafts');

@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
+import {apiFetch} from "../utils/api-client.js";
 import {
     Alert,
     Button,
@@ -59,7 +60,7 @@ function ClientProfilePage({trainerId}) {
 
     function loadClient() {
         setClientLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${clientId}`)
+        apiFetch(`/api/clients/${clientId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load client');
@@ -82,7 +83,7 @@ function ClientProfilePage({trainerId}) {
 
     function loadIntake() {
         setIntakeLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/client/${clientId}`)
+        apiFetch(`/api/client-intakes/client/${clientId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load intake');
@@ -119,7 +120,7 @@ function ClientProfilePage({trainerId}) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${clientId}`, {
+        apiFetch(`/api/clients/${clientId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

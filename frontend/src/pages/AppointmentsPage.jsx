@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
+import {apiFetch} from '../utils/api-client.js';
 import {
     Badge,
     Button,
@@ -179,7 +180,7 @@ function AppointmentsPage({trainerId}) {
 
     function loadAppointments() {
         setAppointmentsLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/trainer/${trainerId}`)
+        apiFetch(`/api/appointments/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load appointments');
@@ -201,7 +202,7 @@ function AppointmentsPage({trainerId}) {
 
     function loadClients() {
         setClientsLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/trainer/${trainerId}`)
+        apiFetch(`/api/clients/trainer/${trainerId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load clients');
@@ -373,7 +374,7 @@ function AppointmentsPage({trainerId}) {
             createForm.durationMinutes
         );
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments`, {
+        apiFetch(`/api/appointments`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -419,7 +420,7 @@ function AppointmentsPage({trainerId}) {
             editForm.durationMinutes
         );
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/${editingAppointmentId}`, {
+        apiFetch(`/api/appointments/${editingAppointmentId}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -463,7 +464,7 @@ function AppointmentsPage({trainerId}) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/appointments/${deleteAppointmentId}`, {
+        apiFetch(`/api/appointments/${deleteAppointmentId}`, {
             method: 'DELETE'
         })
             .then(response => {
