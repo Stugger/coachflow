@@ -10,6 +10,7 @@ import com.stugger.coachflow.entity.person.User;
 import com.stugger.coachflow.entity.person.UserRole;
 import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.repository.person.UserRepository;
+import com.stugger.coachflow.security.JwtTokenService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,12 +26,15 @@ public class AuthService {
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
     private final TrainerService trainerService;
+
+    private final JwtTokenService jwtTokenService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository, TrainerRepository trainerRepository, TrainerService trainerService, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, TrainerRepository trainerRepository, TrainerService trainerService, JwtTokenService jwtTokenService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
         this.trainerService = trainerService;
+        this.jwtTokenService = jwtTokenService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -43,7 +47,11 @@ public class AuthService {
                 request.password()
         ));
 
-        return new AuthResponse(new UserResponse(trainer.getUser()), new TrainerResponse(trainer), null);
+        return new AuthResponse(
+                new UserResponse(trainer.getUser()),
+                new TrainerResponse(trainer),
+                jwtTokenService.createAccessToken(trainer.getUser())
+        );
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -63,6 +71,10 @@ public class AuthService {
         Trainer trainer = trainerRepository.findByUser(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer profile not found."));
 
-        return new AuthResponse(new UserResponse(user), new TrainerResponse(trainer), null);
+        return new AuthResponse(
+                new UserResponse(user),
+                new TrainerResponse(trainer),
+                jwtTokenService.createAccessToken(user)
+        );
     }
 }
