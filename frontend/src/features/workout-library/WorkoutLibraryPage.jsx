@@ -110,7 +110,7 @@ function WorkoutLibraryPage({trainerId}) {
 
         setMessage('');
 
-        getWorkoutTemplates(trainerId)
+        getWorkoutTemplates()
             .then(setTemplates)
             .catch(error => {
                 console.error('Failed to load workout library:', error);
@@ -168,8 +168,8 @@ function WorkoutLibraryPage({trainerId}) {
             return;
         }
 
-        archiveWorkoutTemplate(template.id, trainerId)
-            .then(() => getWorkoutTemplates(trainerId))
+        archiveWorkoutTemplate(template.id)
+            .then(() => getWorkoutTemplates())
             .then(setTemplates)
             .catch(error => {
                 console.error('Failed to archive workout template:', error);

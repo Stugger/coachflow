@@ -1,23 +1,36 @@
 import {useState} from 'react';
 import {
+    useMantineColorScheme,
     Alert,
     Anchor,
+    Box,
     Button,
     Container,
     Group,
     Paper,
     PasswordInput,
+    Stepper,
     Stack,
     Text,
     TextInput,
     Title,
+    Tooltip,
     Divider,
     ActionIcon
 } from '@mantine/core';
-import {IconMoon, IconSun, IconAlertCircle} from '@tabler/icons-react';
-import {useMantineColorScheme} from '@mantine/core';
+
+import {
+    IconAlertCircle,
+    IconCheck,
+    IconMoon,
+    IconSun
+} from '@tabler/icons-react';
 
 import * as TextUtils from '../utils/text-utils.js';
+
+const MIN_PASSWORD_LENGTH = 12;
+const MAX_PASSWORD_LENGTH = 64;
+const MAX_PASSWORD_STORAGE_BYTES = 72;
 
 function AuthPage({onAuthSuccess}) {
 
@@ -138,10 +151,19 @@ function AuthPage({onAuthSuccess}) {
         setErrors({});
         setMessage('');
 
+        const passwordStatus = getPasswordStatus(registerForm.password);
+        const validationErrors = {};
+
+        if (!passwordStatus.isValid) {
+            validationErrors.password = passwordStatus.errorMessage;
+        }
+
         if (registerForm.password !== registerForm.confirmPassword) {
-            setErrors({
-                confirmPassword: 'Passwords do not match'
-            });
+            validationErrors.confirmPassword = 'Passwords do not match';
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
             return;
         }
 
@@ -326,6 +348,8 @@ function AuthPage({onAuthSuccess}) {
                             error={errors.password}
                         />
 
+                        {renderPasswordGuidance()}
+
                         <PasswordInput
                             name="confirmPassword"
                             label="Confirm password"
@@ -357,6 +381,72 @@ function AuthPage({onAuthSuccess}) {
                     </Stack>
                 </form>
             </>
+        );
+    }
+
+    function renderPasswordGuidance() {
+        const status = getPasswordStatus(registerForm.password);
+
+        if (!registerForm.password) {
+            return null;
+        }
+
+        return (
+            <Box className="auth-password-guidance">
+                <Group justify="space-between" gap="xs" mb="xs">
+                    <Text size="xs" fw={600}>
+                        Password strength
+                    </Text>
+
+                    <Text size="xs" fw={600} c={status.color}>
+                        {status.label}
+                    </Text>
+                </Group>
+                <Stepper
+                    active={status.step}
+                    color={status.color}
+                    size="xs"
+                    iconSize={20}
+                    completedIcon={<IconCheck size={12}/>}
+                >
+                    <Stepper.Step
+                        aria-label="Needs more characters"
+                        icon={
+                            <Tooltip label="Needs more characters" withArrow arrowSize={8} events={{ hover: true, focus: false, touch: true }}>
+                                <span>1</span>
+                            </Tooltip>
+                        }
+                    />
+                    <Stepper.Step
+                        aria-label="Meets minimum length"
+                        icon={
+                            <Tooltip label="Meets minimum length" withArrow arrowSize={8} events={{ hover: true, focus: false, touch: true }}>
+                                <span>2</span>
+                            </Tooltip>
+                        }
+                    />
+                    <Stepper.Step
+                        aria-label="Good password length"
+                        icon={
+                            <Tooltip label="Good password length" withArrow arrowSize={8} events={{ hover: true, focus: false, touch: true }}>
+                                <span>3</span>
+                            </Tooltip>
+                        }
+                    />
+                    <Stepper.Step
+                        aria-label="Great password length"
+                        icon={
+                            <Tooltip label="Great password length" withArrow arrowSize={8} events={{ hover: true, focus: false, touch: true }}>
+                                <span>4</span>
+                            </Tooltip>
+                        }
+                    />
+                </Stepper>
+
+                <Text size="xs" c="dimmed" mt="xs">
+                    {status.hint}
+                </Text>
+            </Box>
         );
     }
 
@@ -411,6 +501,68 @@ function AuthPage({onAuthSuccess}) {
     // ------------------------------------------------------------------------------------------------------------------------
     // Utility
     // ------------------------------------------------------------------------------------------------------------------------
+
+    function getPasswordStatus(password) {
+        const characterCount = Array.from(password).length;
+        const storageLimitExceeded =
+            characterCount > MAX_PASSWORD_LENGTH
+            || new TextEncoder().encode(password).length > MAX_PASSWORD_STORAGE_BYTES;
+
+        if (storageLimitExceeded) {
+            return {
+                isValid: false,
+                errorMessage: 'Password is too long',
+                step: 0,
+                color: 'red',
+                label: 'Too long',
+                hint: 'Choose a shorter password.',
+            };
+        }
+
+        if (characterCount < MIN_PASSWORD_LENGTH) {
+            const remainingCharacters = MIN_PASSWORD_LENGTH - characterCount;
+
+            return {
+                isValid: false,
+                errorMessage: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+                step: 0,
+                color: 'red',
+                label: 'Too short',
+                hint: `${remainingCharacters} more ${remainingCharacters === 1 ? 'character' : 'characters'} needed.`,
+            };
+        }
+
+        if (characterCount < 18) {
+            return {
+                isValid: true,
+                errorMessage: null,
+                step: 1,
+                color: colorScheme === 'light' ? 'yellow' : 'orange',
+                label: 'Meets minimum',
+                hint: 'Use a unique password that you do not reuse elsewhere.',
+            };
+        }
+
+        if (characterCount < 26) {
+            return {
+                isValid: true,
+                errorMessage: null,
+                step: 2,
+                color: 'teal',
+                label: 'Strong',
+                hint: 'A password manager can generate a unique password.',
+            };
+        }
+
+        return {
+            isValid: true,
+            errorMessage: null,
+            step: 3,
+            color: 'green',
+            label: 'Very strong',
+            hint: 'A longer unique password is harder to guess.',
+        };
+    }
 
     function normalizeForm(form) {
         return {

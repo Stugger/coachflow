@@ -1,8 +1,12 @@
 import './styles/global.css';
 import './styles/app-shell.css';
 
-import {useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
+
+import {clearStoredAuth, getStoredAuth, saveAuth} from './utils/auth-storage.js';
+
+import {API_UNAUTHORIZED_EVENT} from './utils/api-client.js';
 
 import {ROUTES} from './constants/routes';
 
@@ -29,26 +33,35 @@ function App() {
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const [auth, setAuth] = useState(() => {
-        const savedAuth = localStorage.getItem('coachflow_auth');
-        return savedAuth ? JSON.parse(savedAuth) : null;
-    });
+    const [auth, setAuth] = useState(getStoredAuth);
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Event handlers
+    // Auth event handlers
     // ------------------------------------------------------------------------------------------------------------------------
 
     function handleAuthSuccess(authResponse) {
         setAuth(authResponse);
-        localStorage.setItem('coachflow_auth', JSON.stringify(authResponse));
+        saveAuth(authResponse);
         navigate(ROUTES.HOME, {replace: true});
     }
 
-    function logout() {
+    const logout = useCallback(() => {
         setAuth(null);
-        localStorage.removeItem('coachflow_auth');
+        clearStoredAuth();
         navigate(ROUTES.LOGIN, {replace: true});
-    }
+    }, [navigate]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        window.addEventListener(API_UNAUTHORIZED_EVENT, logout);
+
+        return () => {
+            window.removeEventListener(API_UNAUTHORIZED_EVENT, logout);
+        };
+    }, [logout]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Auth routes
@@ -70,8 +83,8 @@ function App() {
     if (location.pathname.startsWith('/intake')) {
         return (
             <Routes>
-                <Route path={ROUTES.INTAKE_NEW} element={<ClientIntakePage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.INTAKE_BY_ID} element={<ClientIntakePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.INTAKE_NEW} element={<ClientIntakePage/>}/>
+                <Route path={ROUTES.INTAKE_BY_ID} element={<ClientIntakePage/>}/>
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>
             </Routes>
         );
@@ -86,17 +99,17 @@ function App() {
             <Route element={<AppShell auth={auth} onLogout={logout}/>}>
                 <Route path={ROUTES.HOME} element={<DashboardPage/>}/>
 
-                <Route path={ROUTES.CLIENTS} element={<ClientsPage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.CLIENT_BY_ID} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.CLIENT_HISTORY} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.CLIENT_PROGRAMS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.CLIENT_RECORDS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.CLIENT_HABITS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.CLIENTS} element={<ClientsPage/>}/>
+                <Route path={ROUTES.CLIENT_BY_ID} element={<ClientProfilePage/>}/>
+                <Route path={ROUTES.CLIENT_HISTORY} element={<ClientProfilePage/>}/>
+                <Route path={ROUTES.CLIENT_PROGRAMS} element={<ClientProfilePage/>}/>
+                <Route path={ROUTES.CLIENT_RECORDS} element={<ClientProfilePage/>}/>
+                <Route path={ROUTES.CLIENT_HABITS} element={<ClientProfilePage/>}/>
+                <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage/>}/>
 
-                <Route path={ROUTES.EXERCISES} element={<ExerciseLibraryPage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.EXERCISES} element={<ExerciseLibraryPage/>}/>
                 <Route path={ROUTES.WORKOUT_TEMPLATES} element={<WorkoutLibraryPage trainerId={auth.trainer.id}/>}/>
-                <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage trainerId={auth.trainer.id}/>}/>
+                <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage/>}/>
 
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>
             </Route>

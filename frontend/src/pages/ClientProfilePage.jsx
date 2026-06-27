@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
+import {apiFetch} from "../utils/api-client.js";
 import {
     Alert,
     Button,
@@ -18,7 +19,7 @@ import {ROUTES} from '../constants/routes';
 import * as ClientDetailsFormUtils from '../utils/client-form-utils';
 import * as TextUtils from '../utils/text-utils';
 
-function ClientProfilePage({trainerId}) {
+function ClientProfilePage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -59,7 +60,7 @@ function ClientProfilePage({trainerId}) {
 
     function loadClient() {
         setClientLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${clientId}`)
+        apiFetch(`/api/clients/${clientId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load client');
@@ -68,9 +69,7 @@ function ClientProfilePage({trainerId}) {
                 return response.json();
             })
             .then(client => {
-                if (client.trainer.id === trainerId) {
-                    applyClient(client);
-                }
+                applyClient(client);
             })
             .catch(error => {
                 console.error('Error loading client:', error);
@@ -82,7 +81,7 @@ function ClientProfilePage({trainerId}) {
 
     function loadIntake() {
         setIntakeLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/client/${clientId}`)
+        apiFetch(`/api/client-intakes/client/${clientId}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load intake');
@@ -119,7 +118,7 @@ function ClientProfilePage({trainerId}) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${clientId}`, {
+        apiFetch(`/api/clients/${clientId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'

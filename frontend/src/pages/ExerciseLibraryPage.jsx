@@ -1,4 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
+import {apiFetch} from "../utils/api-client.js";
 import {
     Alert,
     Button,
@@ -58,7 +59,7 @@ const FORM_MODE = {
     VIEW: 'VIEW',
 };
 
-function ExerciseLibraryPage({trainerId}) {
+function ExerciseLibraryPage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -119,7 +120,7 @@ function ExerciseLibraryPage({trainerId}) {
     function loadExercises() {
         setLoaded(false);
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/exercises/trainer/${trainerId}`)
+        apiFetch('/api/exercises')
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load exercises');
@@ -143,10 +144,10 @@ function ExerciseLibraryPage({trainerId}) {
 
         const payload = normalizeForm();
         const url = editingExercise
-            ? `${import.meta.env.VITE_API_BASE_URL}/api/exercises/${editingExercise.id}`
-            : `${import.meta.env.VITE_API_BASE_URL}/api/exercises`;
+            ? `/api/exercises/${editingExercise.id}`
+            : `/api/exercises`;
 
-        fetch(url, {
+        apiFetch(url, {
             method: editingExercise ? 'PUT' : 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(payload),
@@ -180,7 +181,7 @@ function ExerciseLibraryPage({trainerId}) {
 
         setMessage('');
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/exercises/${exercise.id}?trainerId=${trainerId}`, {
+        apiFetch(`/api/exercises/${exercise.id}`, {
             method: 'DELETE',
         })
             .then(async response => {
@@ -368,7 +369,6 @@ function ExerciseLibraryPage({trainerId}) {
 
     function normalizeForm() {
         return {
-            trainerId,
             name: form.name.trim(),
             details: form.details.trim() || null,
             thumbnailUrl: form.thumbnailUrl.trim() || null,

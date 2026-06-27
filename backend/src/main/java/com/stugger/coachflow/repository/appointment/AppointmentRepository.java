@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Jake
@@ -13,9 +14,11 @@ import java.util.List;
  */
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
+    Optional<Appointment> findByIdAndTrainer_Id(Long appointmentId, Long trainerId);
+
     List<Appointment> findByTrainerId(Long trainerId, Sort sort);
 
-    List<Appointment> findByClientId(Long clientId, Sort sort);
+    List<Appointment> findByClient_IdAndTrainer_Id(Long clientId, Long trainerId, Sort sort);
 
     List<Appointment> findByTrainerIdAndStatus(Long trainerId, AppointmentStatus status, Sort sort);
 

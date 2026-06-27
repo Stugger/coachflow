@@ -6,12 +6,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Jake
  * @since June 9th, 2026
  */
 public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
+
+    Optional<Exercise> findByIdAndTrainer_Id(Long exerciseId, Long trainerId);
 
     @Query("""
             SELECT exercise
@@ -24,4 +27,5 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
             ORDER BY LOWER(exercise.name) ASC
             """)
     List<Exercise> findAvailableForTrainer(@Param("trainerId") Long trainerId);
+
 }

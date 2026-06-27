@@ -4,6 +4,7 @@ import com.stugger.coachflow.api.dto.request.exercise.CreateExerciseRequest;
 import com.stugger.coachflow.api.dto.request.exercise.UpdateExerciseRequest;
 import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
 import com.stugger.coachflow.service.ExerciseService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.List;
  * @author Jake
  * @since June 9th, 2026
  */
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/exercises")
 public class ExerciseController {
@@ -23,9 +25,9 @@ public class ExerciseController {
         this.exerciseService = exerciseService;
     }
 
-    @GetMapping("/trainer/{trainerId}")
-    public List<ExerciseResponse> getAvailableExercises(@PathVariable Long trainerId) {
-        return exerciseService.getAvailableExercises(trainerId);
+    @GetMapping
+    public List<ExerciseResponse> getAvailableExercises() {
+        return exerciseService.getAvailableExercises();
     }
 
     @PostMapping
@@ -39,8 +41,8 @@ public class ExerciseController {
     }
 
     @DeleteMapping("/{exerciseId}")
-    public void archiveExercise(@PathVariable Long exerciseId, @RequestParam Long trainerId) {
-        exerciseService.archiveExercise(exerciseId, trainerId);
+    public void archiveExercise(@PathVariable Long exerciseId) {
+        exerciseService.archiveExercise(exerciseId);
     }
 
 }

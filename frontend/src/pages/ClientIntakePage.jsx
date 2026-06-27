@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-
+import {apiFetch} from "../utils/api-client.js";
 import {
     LoadingOverlay,
     Container,
@@ -34,7 +34,7 @@ import MedicalHistoryStep, {createEmptyMedicalHistoryForm} from '../components/i
 import LifestyleStep, {createEmptyLifestyleForm, validateLifestyleForm} from '../components/intake/steps/LifestyleStep';
 import TrainingPreferencesStep, {createEmptyTrainingPreferencesForm, validateTrainingPreferencesForm} from '../components/intake/steps/TrainingPreferencesStep';
 
-function ClientIntakePage({trainerId}) {
+function ClientIntakePage() {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -58,10 +58,7 @@ function ClientIntakePage({trainerId}) {
 
     const [exitModalOpen, setExitModalOpen] = useState(false);
 
-    const [basicInfoForm, setBasicInfoForm] = useState({
-        trainerId,
-        ...ClientDetailsFormUtils.createEmptyClientDetailsForm(),
-    });
+    const [basicInfoForm, setBasicInfoForm] = useState(ClientDetailsFormUtils.createEmptyClientDetailsForm());
     const [parqForm, setParqForm] = useState(createEmptyParqForm());
     const [goalsForm, setGoalsForm] = useState(createEmptyGoalsForm());
     const [activityHistoryForm, setActivityHistoryForm] = useState(createEmptyActivityHistoryForm());
@@ -92,7 +89,7 @@ function ClientIntakePage({trainerId}) {
 
     function loadIntake(id) {
         setIntakeLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/${id}`)
+        apiFetch(`/api/client-intakes/${id}`)
             .then(response => response.json())
             .then(intake => {
                 hydrateIntake(intake);
@@ -152,7 +149,7 @@ function ClientIntakePage({trainerId}) {
 
     function loadClient(id) {
         setClientLoaded(false);
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${id}`)
+        apiFetch(`/api/clients/${id}`)
             .then(async response => {
                 if (!response.ok) {
                     throw new Error('Failed to load client');
@@ -161,10 +158,7 @@ function ClientIntakePage({trainerId}) {
                 return response.json();
             })
             .then(client => {
-                setBasicInfoForm({
-                    trainerId,
-                    ...ClientDetailsFormUtils.createClientDetailsFormFromClient(client),
-                });
+                setBasicInfoForm(ClientDetailsFormUtils.createClientDetailsFormFromClient(client));
             })
             .catch(error => {
                 console.error('Error loading client:', error)
@@ -188,7 +182,7 @@ function ClientIntakePage({trainerId}) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients`, {
+        apiFetch(`/api/clients`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -206,11 +200,10 @@ function ClientIntakePage({trainerId}) {
                 return response.json();
             })
             .then(createdClient => {
-                return fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes`, {
+                return apiFetch(`/api/client-intakes`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        trainerId,
                         clientId: createdClient.id
                     })
                 });
@@ -245,7 +238,7 @@ function ClientIntakePage({trainerId}) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/clients/${clientId}`, {
+        apiFetch(`/api/clients/${clientId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -278,7 +271,7 @@ function ClientIntakePage({trainerId}) {
             return;
         }
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/${intakeId}/step/${step}`, {
+        apiFetch(`/api/client-intakes/${intakeId}/step/${step}`, {
             method: 'PUT',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -300,7 +293,7 @@ function ClientIntakePage({trainerId}) {
     }
 
     function completeIntake() {
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/client-intakes/${intakeId}/complete`, {
+        apiFetch(`/api/client-intakes/${intakeId}/complete`, {
             method: 'PATCH'
         })
             .then(response => {

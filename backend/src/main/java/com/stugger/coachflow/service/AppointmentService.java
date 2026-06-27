@@ -9,7 +9,7 @@ import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.repository.appointment.AppointmentRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
-import com.stugger.coachflow.repository.person.TrainerRepository;
+import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -27,24 +27,28 @@ import java.util.List;
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
-    private final TrainerRepository trainerRepository;
+    private final CurrentTrainerService currentTrainerService;
     private final ClientRepository clientRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, TrainerRepository trainerRepository, ClientRepository clientRepository) {
+    public AppointmentService(AppointmentRepository appointmentRepository, CurrentTrainerService currentTrainerService, ClientRepository clientRepository) {
         this.appointmentRepository = appointmentRepository;
-        this.trainerRepository = trainerRepository;
+        this.currentTrainerService = currentTrainerService;
         this.clientRepository = clientRepository;
     }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Appointments
+    //
+    //---------------------------------------------------------------------------------------------------------
 
     public AppointmentResponse createAppointment(CreateAppointmentRequest request) {
         if (!request.endTime().isAfter(request.startTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
         }
-        Trainer trainer = trainerRepository.findById(request.trainerId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
 
-        Client client = clientRepository.findById(request.clientId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found"));
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Client client = getOwnedClientOrThrow(request.clientId(), trainer);
 
         Appointment appointment = new Appointment();
         LocalDateTime now = LocalDateTime.now();
@@ -66,11 +70,10 @@ public class AppointmentService {
         if (!request.endTime().isAfter(request.startTime())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End time must be after start time");
         }
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment with id " + appointmentId + " not found"));
 
-        Client client = clientRepository.findById(request.clientId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found"));
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Appointment appointment = getOwnedAppointmentOrThrow(appointmentId, trainer);
+        Client client = getOwnedClientOrThrow(request.clientId(), trainer);
 
         appointment.setClient(client);
         appointment.setTitle(TextUtils.trimToNull(request.title()));
@@ -84,30 +87,47 @@ public class AppointmentService {
     }
 
     public void deleteAppointment(Long appointmentId) {
-        if (!appointmentRepository.existsById(appointmentId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment with id " + appointmentId + " not found");
-        }
-        appointmentRepository.deleteById(appointmentId);
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Appointment appointment = getOwnedAppointmentOrThrow(appointmentId, trainer);
+
+        appointmentRepository.delete(appointment);
     }
 
-    public List<AppointmentResponse> getAppointmentsByTrainerId(Long trainerId) {
+    public List<AppointmentResponse> getAppointments() {
         Sort sort = Sort.by("startTime").ascending();
-        return appointmentRepository.findByTrainerId(trainerId, sort).stream()
+        return appointmentRepository.findByTrainerId(currentTrainerService.getCurrentTrainer().getId(), sort).stream()
                 .map(AppointmentResponse::new)
                 .toList();
     }
 
     public List<AppointmentResponse> getAppointmentsByClientId(Long clientId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
         Sort sort = Sort.by("startTime").ascending();
-        return appointmentRepository.findByClientId(clientId, sort).stream()
+        return appointmentRepository.findByClient_IdAndTrainer_Id(clientId, trainer.getId(), sort).stream()
                 .map(AppointmentResponse::new)
                 .toList();
     }
 
-    public List<AppointmentResponse> getAppointmentsOfStatusByTrainerId(Long trainerId, AppointmentStatus status) {
+    public List<AppointmentResponse> getAppointmentsOfStatus(AppointmentStatus status) {
         Sort sort = Sort.by("startTime").ascending();
-        return appointmentRepository.findByTrainerIdAndStatus(trainerId, status, sort).stream()
+        return appointmentRepository.findByTrainerIdAndStatus(currentTrainerService.getCurrentTrainer().getId(), status, sort).stream()
                 .map(AppointmentResponse::new)
                 .toList();
+    }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Validation
+    //
+    //---------------------------------------------------------------------------------------------------------
+
+    private Client getOwnedClientOrThrow(Long clientId, Trainer trainer) {
+        return clientRepository.findByIdAndTrainer_Id(clientId, trainer.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found."));
+    }
+
+    private Appointment getOwnedAppointmentOrThrow(Long appointmentId, Trainer trainer) {
+        return appointmentRepository.findByIdAndTrainer_Id(appointmentId, trainer.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Appointment not found."));
     }
 }

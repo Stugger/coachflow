@@ -2,14 +2,14 @@ package com.stugger.coachflow.api.controller;
 
 import com.stugger.coachflow.api.dto.response.person.TrainerResponse;
 import com.stugger.coachflow.service.TrainerService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author Jake
  * @since May 27th, 2026
  */
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/trainers")
 public class TrainerController {
@@ -20,13 +20,9 @@ public class TrainerController {
         this.trainerService = trainerService;
     }
 
-    @GetMapping("/{trainerId}")
-    public TrainerResponse getTrainerById(@PathVariable Long trainerId) {
-        return trainerService.getTrainerById(trainerId);
+    @GetMapping("/current")
+    public TrainerResponse getCurrentTrainer() {
+        return trainerService.getCurrentTrainer();
     }
 
-    @GetMapping
-    public List<TrainerResponse> getAllTrainers() {
-        return trainerService.getAllTrainers();
-    }
 }

@@ -7,7 +7,7 @@ import com.stugger.coachflow.entity.exercise.Exercise;
 import com.stugger.coachflow.entity.exercise.ExerciseVisibility;
 import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
-import com.stugger.coachflow.repository.person.TrainerRepository;
+import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -25,11 +25,11 @@ import java.util.List;
 public class ExerciseService {
 
     private final ExerciseRepository exerciseRepository;
-    private final TrainerRepository trainerRepository;
+    private final CurrentTrainerService currentTrainerService;
 
-    public ExerciseService(ExerciseRepository exerciseRepository, TrainerRepository trainerRepository) {
+    public ExerciseService(ExerciseRepository exerciseRepository, CurrentTrainerService currentTrainerService) {
         this.exerciseRepository = exerciseRepository;
-        this.trainerRepository = trainerRepository;
+        this.currentTrainerService = currentTrainerService;
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ public class ExerciseService {
     //---------------------------------------------------------------------------------------------------------
 
     public ExerciseResponse createTrainerExercise(@Valid CreateExerciseRequest request) {
-        Trainer trainer = getTrainerOrThrow(request.trainerId());
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
         LocalDateTime now = LocalDateTime.now();
 
         Exercise exercise = new Exercise();
@@ -58,9 +58,8 @@ public class ExerciseService {
     }
 
     public ExerciseResponse updateTrainerExercise(Long exerciseId, @Valid UpdateExerciseRequest request) {
-        getTrainerOrThrow(request.trainerId());
-        Exercise exercise = getExerciseOrThrow(exerciseId);
-        validateTrainerCanModifyExercise(exercise, request.trainerId());
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Exercise exercise = getExerciseOrThrow(exerciseId, trainer);
 
         exercise.setName(TextUtils.trimToEmpty(request.name()));
         exercise.setDetails(TextUtils.trimToNull(request.details()));
@@ -72,20 +71,18 @@ public class ExerciseService {
         return new ExerciseResponse(exerciseRepository.save(exercise));
     }
 
-    public void archiveExercise(Long exerciseId, Long trainerId) {
-        getTrainerOrThrow(trainerId);
-        Exercise exercise = getExerciseOrThrow(exerciseId);
-        validateTrainerCanModifyExercise(exercise, trainerId);
+    public void archiveExercise(Long exerciseId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Exercise exercise = getExerciseOrThrow(exerciseId, trainer);
 
         exercise.setArchived(true);
         exercise.setUpdatedAt(LocalDateTime.now());
         exerciseRepository.save(exercise);
     }
 
-    public List<ExerciseResponse> getAvailableExercises(Long trainerId) {
-        getTrainerOrThrow(trainerId);
-
-        return exerciseRepository.findAvailableForTrainer(trainerId).stream()
+    public List<ExerciseResponse> getAvailableExercises() {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        return exerciseRepository.findAvailableForTrainer(trainer.getId()).stream()
                 .map(ExerciseResponse::new)
                 .toList();
     }
@@ -96,22 +93,8 @@ public class ExerciseService {
     //
     //---------------------------------------------------------------------------------------------------------
 
-    private Trainer getTrainerOrThrow(Long trainerId) {
-        return trainerRepository.findById(trainerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + trainerId + " not found"));
-    }
-
-    private Exercise getExerciseOrThrow(Long exerciseId) {
-        return exerciseRepository.findById(exerciseId)
+    private Exercise getExerciseOrThrow(Long exerciseId, Trainer trainer) {
+        return exerciseRepository.findByIdAndTrainer_Id(exerciseId, trainer.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise with id " + exerciseId + " not found"));
-    }
-
-    private void validateTrainerCanModifyExercise(Exercise exercise, Long trainerId) {
-        if (exercise.getVisibility() == ExerciseVisibility.GLOBAL) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Global exercises cannot be edited directly. Copy it to your library first.");
-        }
-        if (exercise.getTrainer() == null || !exercise.getTrainer().getId().equals(trainerId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify exercises in your own library.");
-        }
     }
 }

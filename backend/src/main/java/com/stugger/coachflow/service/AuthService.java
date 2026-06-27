@@ -10,6 +10,8 @@ import com.stugger.coachflow.entity.person.User;
 import com.stugger.coachflow.entity.person.UserRole;
 import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.repository.person.UserRepository;
+import com.stugger.coachflow.security.JwtTokenService;
+import com.stugger.coachflow.util.TextUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,29 +27,26 @@ public class AuthService {
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
     private final TrainerService trainerService;
+
+    private final JwtTokenService jwtTokenService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(UserRepository userRepository, TrainerRepository trainerRepository, TrainerService trainerService, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, TrainerRepository trainerRepository, TrainerService trainerService, JwtTokenService jwtTokenService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
         this.trainerService = trainerService;
+        this.jwtTokenService = jwtTokenService;
         this.passwordEncoder = passwordEncoder;
     }
 
     public AuthResponse registerTrainer(RegisterTrainerRequest request) {
-        Trainer trainer = trainerService.createTrainer(new RegisterTrainerRequest(
-                request.firstName(),
-                request.lastName(),
-                request.birthDate(),
-                request.email(),
-                request.password()
-        ));
+        Trainer trainer = trainerService.createTrainer(request);
 
-        return new AuthResponse(new UserResponse(trainer.getUser()), new TrainerResponse(trainer), null);
+        return createAuthResponse(trainer);
     }
 
     public AuthResponse login(LoginRequest request) {
-        String normalizedEmail = request.email().trim().toLowerCase();
+        String normalizedEmail = TextUtils.normalizeEmail(request.email());
 
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password."));
@@ -63,6 +62,16 @@ public class AuthService {
         Trainer trainer = trainerRepository.findByUser(user)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer profile not found."));
 
-        return new AuthResponse(new UserResponse(user), new TrainerResponse(trainer), null);
+        return createAuthResponse(trainer);
+    }
+
+    private AuthResponse createAuthResponse(Trainer trainer) {
+        User user = trainer.getUser();
+
+        return new AuthResponse(
+                new UserResponse(user),
+                new TrainerResponse(trainer),
+                jwtTokenService.createAccessToken(user)
+        );
     }
 }

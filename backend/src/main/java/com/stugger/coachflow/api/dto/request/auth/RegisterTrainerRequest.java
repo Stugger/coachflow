@@ -1,5 +1,6 @@
 package com.stugger.coachflow.api.dto.request.auth;
 
+import com.stugger.coachflow.validation.ValidPassword;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -23,6 +24,7 @@ public record RegisterTrainerRequest(
         String email,
 
         @NotBlank(message="Password is required")
+        @ValidPassword
         String password
 ) {
 }
