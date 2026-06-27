@@ -5,6 +5,7 @@ import com.stugger.coachflow.api.dto.request.workout.UpdateWorkoutTemplateReques
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateResponse;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateSummaryResponse;
 import com.stugger.coachflow.service.WorkoutTemplateService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
  * @author Jake
  * @since June 15th, 2026
  */
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/workout-templates")
 public class WorkoutTemplateController {
@@ -24,13 +26,13 @@ public class WorkoutTemplateController {
         this.workoutTemplateService = workoutTemplateService;
     }
 
-    @GetMapping("/trainer/{trainerId}")
-    public List<WorkoutTemplateSummaryResponse> getTrainerWorkoutTemplates(@PathVariable Long trainerId) {
-        return workoutTemplateService.getTrainerWorkoutTemplateSummaries(trainerId);
+    @GetMapping
+    public List<WorkoutTemplateSummaryResponse> getWorkoutTemplates() {
+        return workoutTemplateService.getWorkoutTemplateSummaries();
     }
     @GetMapping("/{workoutTemplateId}")
-    public WorkoutTemplateResponse getWorkoutTemplate(@PathVariable Long workoutTemplateId, @RequestParam Long trainerId) {
-        return workoutTemplateService.getWorkoutTemplate(workoutTemplateId, trainerId);
+    public WorkoutTemplateResponse getWorkoutTemplate(@PathVariable Long workoutTemplateId) {
+        return workoutTemplateService.getWorkoutTemplate(workoutTemplateId);
     }
 
     @PostMapping
@@ -44,7 +46,7 @@ public class WorkoutTemplateController {
     }
 
     @DeleteMapping("/{workoutTemplateId}")
-    public void archiveWorkoutTemplate(@PathVariable Long workoutTemplateId, @RequestParam Long trainerId) {
-        workoutTemplateService.archiveWorkoutTemplate(workoutTemplateId, trainerId);
+    public void archiveWorkoutTemplate(@PathVariable Long workoutTemplateId) {
+        workoutTemplateService.archiveWorkoutTemplate(workoutTemplateId);
     }
 }

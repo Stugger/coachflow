@@ -6,6 +6,7 @@ import com.stugger.coachflow.api.dto.response.intake.ClientIntakeResponse;
 import com.stugger.coachflow.entity.intake.IntakeStatus;
 import com.stugger.coachflow.entity.intake.IntakeStep;
 import com.stugger.coachflow.service.ClientIntakeService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import java.util.List;
  * @author Jake
  * @since June 3rd, 2026
  */
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/client-intakes")
 public class ClientIntakeController {
@@ -35,9 +37,9 @@ public class ClientIntakeController {
         return clientIntakeService.getIntakeById(intakeId);
     }
 
-    @GetMapping("/trainer/{trainerId}")
-    public List<ClientIntakeResponse> getIntakesByTrainerId(@PathVariable Long trainerId) {
-        return clientIntakeService.getIntakesByTrainerId(trainerId);
+    @GetMapping
+    public List<ClientIntakeResponse> getIntakes() {
+        return clientIntakeService.getIntakes();
     }
 
     @GetMapping("/client/{clientId}")

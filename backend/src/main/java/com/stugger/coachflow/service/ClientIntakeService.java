@@ -9,8 +9,8 @@ import com.stugger.coachflow.entity.intake.ClientIntake;
 import com.stugger.coachflow.entity.intake.IntakeStatus;
 import com.stugger.coachflow.entity.intake.IntakeStep;
 import com.stugger.coachflow.repository.person.ClientRepository;
-import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.repository.intake.ClientIntakeRepository;
+import com.stugger.coachflow.security.CurrentTrainerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,21 +26,24 @@ import java.util.List;
 public class ClientIntakeService {
 
     private final ClientIntakeRepository clientIntakeRepository;
-    private final TrainerRepository trainerRepository;
+    private final CurrentTrainerService currentTrainerService;
     private final ClientRepository clientRepository;
 
-    public ClientIntakeService(ClientIntakeRepository clientIntakeRepository, TrainerRepository trainerRepository, ClientRepository clientRepository) {
+    public ClientIntakeService(ClientIntakeRepository clientIntakeRepository, CurrentTrainerService currentTrainerService, ClientRepository clientRepository) {
         this.clientIntakeRepository = clientIntakeRepository;
-        this.trainerRepository = trainerRepository;
+        this.currentTrainerService = currentTrainerService;
         this.clientRepository = clientRepository;
     }
 
-    public ClientIntakeResponse createIntake(CreateClientIntakeRequest request) {
-        Trainer trainer = trainerRepository.findById(request.trainerId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer not found"));
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Client Intakes
+    //
+    //---------------------------------------------------------------------------------------------------------
 
-        Client client = clientRepository.findById(request.clientId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found"));
+    public ClientIntakeResponse createIntake(CreateClientIntakeRequest request) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Client client = getOwnedClientOrThrow(request.clientId(), trainer);
 
         ClientIntake intake = new ClientIntake();
         LocalDateTime now = LocalDateTime.now();
@@ -57,7 +60,8 @@ public class ClientIntakeService {
     }
 
     public ClientIntakeResponse updateIntake(Long intakeId, IntakeStep step, UpdateIntakeJsonRequest request) {
-        ClientIntake intake = getIntakeOrThrow(intakeId);
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        ClientIntake intake = getOwnedIntakeOrThrow(intakeId, trainer);
 
         switch (step) {
             case PARQ -> intake.setParqJson(request.json());
@@ -73,7 +77,8 @@ public class ClientIntakeService {
     }
 
     public ClientIntakeResponse completeIntake(Long intakeId) {
-        ClientIntake intake = getIntakeOrThrow(intakeId);
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        ClientIntake intake = getOwnedIntakeOrThrow(intakeId, trainer);
 
         if (intake.getParqJson() == null || intake.getParqJson().isBlank()
                 || intake.getGoalsJson() == null || intake.getGoalsJson().isBlank()
@@ -96,30 +101,54 @@ public class ClientIntakeService {
         return new ClientIntakeResponse(clientIntakeRepository.save(intake));
     }
 
-    private ClientIntake getIntakeOrThrow(Long intakeId) {
-        return clientIntakeRepository.findById(intakeId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Intake not found"));
-    }
-
     public ClientIntakeResponse getIntakeById(Long intakeId) {
-        return new ClientIntakeResponse(getIntakeOrThrow(intakeId));
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        return new ClientIntakeResponse(getOwnedIntakeOrThrow(intakeId, trainer));
     }
 
-    public List<ClientIntakeResponse> getIntakesByTrainerId(Long trainerId) {
-        return clientIntakeRepository.findByTrainerId(trainerId).stream()
+    public List<ClientIntakeResponse> getIntakes() {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        return clientIntakeRepository.findByTrainerId(trainer.getId()).stream()
                 .map(ClientIntakeResponse::new)
                 .toList();
     }
 
     public List<ClientIntakeResponse> getIntakesByClientId(Long clientId) {
-        return clientIntakeRepository.findByClientId(clientId).stream()
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        getOwnedClientOrThrow(clientId, trainer);
+
+        return clientIntakeRepository
+                .findByClient_IdAndTrainer_Id(clientId, trainer.getId())
+                .stream()
                 .map(ClientIntakeResponse::new)
                 .toList();
     }
 
     public List<ClientIntakeResponse> getIntakesOfStatusByClientId(Long clientId, IntakeStatus status) {
-        return clientIntakeRepository.findByClientIdAndStatus(clientId, status).stream()
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        getOwnedClientOrThrow(clientId, trainer);
+
+        return clientIntakeRepository
+                .findByClient_IdAndTrainer_IdAndStatus(clientId, trainer.getId(), status)
+                .stream()
                 .map(ClientIntakeResponse::new)
                 .toList();
     }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Validation
+    //
+    //---------------------------------------------------------------------------------------------------------
+
+    private Client getOwnedClientOrThrow(Long clientId, Trainer trainer) {
+        return clientRepository.findByIdAndTrainer_Id(clientId, trainer.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found."));
+    }
+
+    private ClientIntake getOwnedIntakeOrThrow(Long intakeId, Trainer trainer) {
+        return clientIntakeRepository.findByIdAndTrainer_Id(intakeId, trainer.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Intake not found."));
+    }
+
 }

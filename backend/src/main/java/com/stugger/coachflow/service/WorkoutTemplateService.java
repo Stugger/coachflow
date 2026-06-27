@@ -16,8 +16,8 @@ import com.stugger.coachflow.entity.workout.WorkoutTemplateItemExercise;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateItemType;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateSection;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
-import com.stugger.coachflow.repository.person.TrainerRepository;
 import com.stugger.coachflow.repository.workout.WorkoutTemplateRepository;
+import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -36,12 +36,12 @@ import java.util.*;
 public class WorkoutTemplateService {
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
-    private final TrainerRepository trainerRepository;
+    private final CurrentTrainerService currentTrainerService;
     private final ExerciseRepository exerciseRepository;
 
-    public WorkoutTemplateService(WorkoutTemplateRepository workoutTemplateRepository, TrainerRepository trainerRepository, ExerciseRepository exerciseRepository) {
+    public WorkoutTemplateService(WorkoutTemplateRepository workoutTemplateRepository, CurrentTrainerService currentTrainerService, ExerciseRepository exerciseRepository) {
         this.workoutTemplateRepository = workoutTemplateRepository;
-        this.trainerRepository = trainerRepository;
+        this.currentTrainerService = currentTrainerService;
         this.exerciseRepository = exerciseRepository;
     }
 
@@ -53,7 +53,7 @@ public class WorkoutTemplateService {
 
     @Transactional
     public WorkoutTemplateResponse createWorkoutTemplate(@Valid CreateWorkoutTemplateRequest request) {
-        Trainer trainer = getTrainerOrThrow(request.trainerId());
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
         LocalDateTime now = LocalDateTime.now();
 
         WorkoutTemplate workoutTemplate = new WorkoutTemplate();
@@ -64,16 +64,15 @@ public class WorkoutTemplateService {
         workoutTemplate.setCreatedAt(now);
         workoutTemplate.setUpdatedAt(now);
 
-        setSections(workoutTemplate, request.sections(), request.trainerId(), now);
+        setSections(workoutTemplate, request.sections(), trainer.getId(), now);
 
         return new WorkoutTemplateResponse(workoutTemplateRepository.save(workoutTemplate));
     }
 
     @Transactional
     public WorkoutTemplateResponse updateWorkoutTemplate(Long workoutTemplateId, @Valid UpdateWorkoutTemplateRequest request) {
-        getTrainerOrThrow(request.trainerId());
-        WorkoutTemplate workoutTemplate = getWorkoutTemplateOrThrow(workoutTemplateId);
-        validateTrainerOwnsTemplate(workoutTemplate, request.trainerId());
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        WorkoutTemplate workoutTemplate = getWorkoutTemplateOrThrow(workoutTemplateId, trainer);
 
         workoutTemplate.setName(TextUtils.trimToEmpty(request.name()));
         workoutTemplate.setDescription(TextUtils.trimToNull(request.description()));
@@ -81,16 +80,15 @@ public class WorkoutTemplateService {
 
         workoutTemplate.getSections().clear();
         workoutTemplateRepository.saveAndFlush(workoutTemplate);
-        setSections(workoutTemplate, request.sections(), request.trainerId(), LocalDateTime.now());
+        setSections(workoutTemplate, request.sections(), trainer.getId(), LocalDateTime.now());
 
         return new WorkoutTemplateResponse(workoutTemplateRepository.save(workoutTemplate));
     }
 
     @Transactional
-    public void archiveWorkoutTemplate(Long workoutTemplateId, Long trainerId) {
-        getTrainerOrThrow(trainerId);
-        WorkoutTemplate workoutTemplate = getWorkoutTemplateOrThrow(workoutTemplateId);
-        validateTrainerOwnsTemplate(workoutTemplate, trainerId);
+    public void archiveWorkoutTemplate(Long workoutTemplateId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        WorkoutTemplate workoutTemplate = getWorkoutTemplateOrThrow(workoutTemplateId, trainer);
 
         workoutTemplate.setArchived(true);
         workoutTemplate.setUpdatedAt(LocalDateTime.now());
@@ -98,20 +96,18 @@ public class WorkoutTemplateService {
     }
 
     @Transactional(readOnly = true)
-    public WorkoutTemplateResponse getWorkoutTemplate(Long workoutTemplateId, Long trainerId) {
-        getTrainerOrThrow(trainerId);
-        WorkoutTemplate workoutTemplate = getWorkoutTemplateOrThrow(workoutTemplateId);
-        validateTrainerOwnsTemplate(workoutTemplate, trainerId);
+    public WorkoutTemplateResponse getWorkoutTemplate(Long workoutTemplateId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
 
-        return new WorkoutTemplateResponse(workoutTemplate);
+        return new WorkoutTemplateResponse(getWorkoutTemplateOrThrow(workoutTemplateId, trainer));
     }
 
     @Transactional(readOnly = true)
-    public List<WorkoutTemplateSummaryResponse> getTrainerWorkoutTemplateSummaries(Long trainerId) {
-        getTrainerOrThrow(trainerId);
+    public List<WorkoutTemplateSummaryResponse> getWorkoutTemplateSummaries() {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         return workoutTemplateRepository
-                .findByTrainerIdAndArchivedFalseOrderByUpdatedAtDesc(trainerId)
+                .findByTrainerIdAndArchivedFalseOrderByUpdatedAtDesc(trainer.getId())
                 .stream()
                 .map(this::toWorkoutTemplateSummary)
                 .toList();
@@ -243,13 +239,8 @@ public class WorkoutTemplateService {
     //
     //---------------------------------------------------------------------------------------------------------
 
-    private Trainer getTrainerOrThrow(Long trainerId) {
-        return trainerRepository.findById(trainerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + trainerId + " not found"));
-    }
-
-    private WorkoutTemplate getWorkoutTemplateOrThrow(Long workoutTemplateId) {
-        return workoutTemplateRepository.findById(workoutTemplateId)
+    private WorkoutTemplate getWorkoutTemplateOrThrow(Long workoutTemplateId, Trainer trainer) {
+        return workoutTemplateRepository.findByIdAndTrainer_Id(workoutTemplateId, trainer.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Workout template with id " + workoutTemplateId + " not found"));
     }
 
@@ -270,13 +261,7 @@ public class WorkoutTemplateService {
         if (exercise.getTrainer() != null && exercise.getTrainer().getId().equals(trainerId)) {
             return exercise;
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only use global exercises or exercises in your own library.");
-    }
-
-    private void validateTrainerOwnsTemplate(WorkoutTemplate workoutTemplate, Long trainerId) {
-        if (!workoutTemplate.getTrainer().getId().equals(trainerId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only modify workout templates in your own library.");
-        }
+        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Exercise not found.");
     }
 
     private void validateSectionPositions(List<WorkoutTemplateSectionRequest> sections) {

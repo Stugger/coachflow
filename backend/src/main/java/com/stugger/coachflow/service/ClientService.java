@@ -6,7 +6,7 @@ import com.stugger.coachflow.api.dto.response.person.ClientResponse;
 import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.repository.person.ClientRepository;
-import com.stugger.coachflow.repository.person.TrainerRepository;
+import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Sort;
@@ -25,16 +25,22 @@ import java.util.List;
 public class ClientService {
 
     private final ClientRepository clientRepository;
-    private final TrainerRepository trainerRepository;
+    private final CurrentTrainerService currentTrainerService;
 
-    public ClientService(ClientRepository clientRepository, TrainerRepository trainerRepository) {
+    public ClientService(ClientRepository clientRepository, CurrentTrainerService currentTrainerService) {
         this.clientRepository = clientRepository;
-        this.trainerRepository = trainerRepository;
+        this.currentTrainerService = currentTrainerService;
     }
 
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Clients
+    //
+    //---------------------------------------------------------------------------------------------------------
+
     public Client createClient(CreateClientRequest request) {
-        Trainer trainer = trainerRepository.findById(request.trainerId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + request.trainerId() + " not found"));
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+
         LocalDateTime now = LocalDateTime.now();
         Client client = new Client();
         client.setTrainer(trainer);
@@ -54,8 +60,9 @@ public class ClientService {
     }
 
     public Client updateClient(Long clientId, @Valid UpdateClientRequest request) {
-        Client client = clientRepository.findById(clientId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client with id " + clientId + " not found"));
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Client client = getOwnedClientOrThrow(clientId, trainer);
+
         client.setFirstName(TextUtils.normalizeName(request.firstName()));
         client.setLastName(TextUtils.normalizeName(request.lastName()));
         client.setPreferredName(TextUtils.normalizeName(request.preferredName()));
@@ -72,16 +79,12 @@ public class ClientService {
     }
 
     public ClientResponse getClientById(Long clientId) {
-        Client client = clientRepository.findById(clientId).orElse(null);
-        if (client == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Client with id " + clientId + " not found");
-        }
+        Client client = getOwnedClientOrThrow(clientId, currentTrainerService.getCurrentTrainer());
         return new ClientResponse(client);
     }
 
-    public List<ClientResponse> getClientsByTrainerId(Long trainerId) {
-        Trainer trainer = trainerRepository.findById(trainerId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + trainerId + " not found"));
+    public List<ClientResponse> getClients() {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         Sort sort = Sort.by("lastName").ascending()
                 .and(Sort.by("firstName").ascending());
@@ -89,5 +92,16 @@ public class ClientService {
         return clientRepository.findByTrainerId(trainer.getId(), sort).stream()
                 .map(ClientResponse::new)
                 .toList();
+    }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Validation
+    //
+    //---------------------------------------------------------------------------------------------------------
+
+    private Client getOwnedClientOrThrow(Long clientId, Trainer trainer) {
+        return clientRepository.findByIdAndTrainer_Id(clientId, trainer.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client not found."));
     }
 }

@@ -6,14 +6,11 @@ import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.entity.person.User;
 import com.stugger.coachflow.entity.person.UserRole;
 import com.stugger.coachflow.repository.person.TrainerRepository;
+import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * @author Jake
@@ -23,10 +20,12 @@ import java.util.List;
 public class TrainerService {
 
     private final TrainerRepository trainerRepository;
+    private final CurrentTrainerService currentTrainerService;
     private final UserService userService;
 
-    public TrainerService(TrainerRepository trainerRepository, UserService userService) {
+    public TrainerService(TrainerRepository trainerRepository, CurrentTrainerService currentTrainerService, UserService userService) {
         this.trainerRepository = trainerRepository;
+        this.currentTrainerService = currentTrainerService;
         this.userService = userService;
     }
 
@@ -45,19 +44,8 @@ public class TrainerService {
         return trainerRepository.save(trainer);
     }
 
-    public TrainerResponse getTrainerById(Long trainerId) {
-        Trainer trainer = trainerRepository.findById(trainerId).orElse(null);
-        if (trainer == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Trainer with id " + trainerId + " not found");
-        }
-        return new TrainerResponse(trainer);
+    public TrainerResponse getCurrentTrainer() {
+        return new TrainerResponse(currentTrainerService.getCurrentTrainer());
     }
 
-    public List<TrainerResponse> getAllTrainers() {
-        return trainerRepository.findAll(Sort.by("lastName").ascending()
-                        .and(Sort.by("firstName").ascending()))
-                .stream()
-                .map(TrainerResponse::new)
-                .toList();
-    }
 }

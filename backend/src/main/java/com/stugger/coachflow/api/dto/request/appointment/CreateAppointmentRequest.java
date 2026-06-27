@@ -9,9 +9,6 @@ import java.time.LocalDateTime;
  * @since June 1st, 2026
  */
 public record CreateAppointmentRequest(
-        @NotNull(message = "Trainer is required")
-        Long trainerId,
-
         @NotNull(message = "Client is required")
         Long clientId,
 

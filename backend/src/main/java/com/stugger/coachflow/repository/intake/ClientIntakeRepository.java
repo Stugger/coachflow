@@ -5,6 +5,7 @@ import com.stugger.coachflow.entity.intake.IntakeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Jake
@@ -12,10 +13,12 @@ import java.util.List;
  */
 public interface ClientIntakeRepository extends JpaRepository<ClientIntake, Long> {
 
-    List<ClientIntake> findByClientId(Long clientId);
+    Optional<ClientIntake> findByIdAndTrainer_Id(Long intakeId, Long trainerId);
 
     List<ClientIntake> findByTrainerId(Long trainerId);
 
-    List<ClientIntake> findByClientIdAndStatus(Long clientId, IntakeStatus status);
+    List<ClientIntake> findByClient_IdAndTrainer_Id(Long clientId, Long trainerId);
+
+    List<ClientIntake> findByClient_IdAndTrainer_IdAndStatus(Long clientId, Long trainerId, IntakeStatus status);
 
 }

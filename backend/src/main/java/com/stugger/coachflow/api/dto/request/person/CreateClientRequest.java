@@ -12,9 +12,6 @@ import java.time.LocalDate;
  * @since May 27th, 2026
  */
 public record CreateClientRequest(
-        @NotNull(message = "Trainer is required")
-        Long trainerId,
-
         @NotBlank(message = "First name is required")
         String firstName,
 
