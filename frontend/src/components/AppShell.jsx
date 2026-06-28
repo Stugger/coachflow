@@ -190,16 +190,18 @@ function AppShell({auth, onLogout}) {
                         {renderNavLink(ROUTES.HOME, IconHome, 'Dashboard')}
                         {renderNavLink(ROUTES.CLIENTS, IconUsers, 'Clients')}
                         {renderNavLink(ROUTES.APPOINTMENTS, IconCalendar, 'Appointments')}
-                        <Divider
-                            my="xs"
-                            labelPosition="left"
-                            label={
-                                <Box style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <IconBooks size={16} />
-                                    <span>Libraries</span>
-                                </Box>
-                            }
-                        />
+                        {desktopOpened && (
+                            <Divider
+                                my="xs"
+                                labelPosition="left"
+                                label={
+                                    <Box style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <IconBooks size={16} />
+                                        <span>Libraries</span>
+                                    </Box>
+                                }
+                            />
+                        )}
                         {renderNavLink(ROUTES.EXERCISES, IconBarbell, 'Exercises')}
                         {renderNavLink(ROUTES.WORKOUT_TEMPLATES, IconClipboardList, 'Workouts')}
                     </Stack>
