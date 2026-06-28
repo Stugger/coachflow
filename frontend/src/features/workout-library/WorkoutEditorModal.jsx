@@ -792,7 +792,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                             <Drawer.Title style={{ flex: 1, minWidth: 0 }}>
                                 <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
                                     <IconHammer size={22} style={{ flexShrink: 0 }} />
-                                    <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                    <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0, height: "1.6rem" }}>
                                         {title}
                                     </Text>
                                 </Group>
@@ -853,7 +853,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
                             <Modal.Title style={{ flex: 1, minWidth: 0 }}>
                                 <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
                                     <IconHammer size={22} style={{ flexShrink: 0 }} />
-                                    <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0 }}>
+                                    <Text size="1.5rem" fw={600} truncate="end" style={{ flex: 1, minWidth: 0, height: "1.6rem" }}>
                                         {title}
                                     </Text>
                                 </Group>
