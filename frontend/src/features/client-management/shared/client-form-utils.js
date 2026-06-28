@@ -1,5 +1,5 @@
-import * as PhoneUtils from './phone-utils';
-import * as TextUtils from './text-utils';
+import * as PhoneUtils from '../../../utils/phone-utils.js';
+import * as TextUtils from '../../../utils/text-utils.js';
 
 export function createEmptyClientDetailsForm() {
     return {

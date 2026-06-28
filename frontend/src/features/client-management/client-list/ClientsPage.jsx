@@ -1,8 +1,7 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {apiFetch} from '../utils/api-client.js';
+import {apiFetch} from '../../../utils/api-client.js';
 import {
-    Badge,
     Button,
     Group,
     LoadingOverlay,
@@ -20,10 +19,10 @@ import {
     IconPlus,
 } from '@tabler/icons-react';
 
-import {ROUTES} from '../constants/routes';
-import ClientCard from '../components/clients/ClientCard';
-import ClientMobileRow from '../components/clients/ClientMobileRow';
-import ClientTableRow from '../components/clients/ClientTableRow';
+import {ROUTES} from '../../../constants/routes.js';
+import ClientCard from './ClientCard.jsx';
+import ClientMobileRow from './ClientMobileRow.jsx';
+import ClientTableRow from './ClientTableRow.jsx';
 
 function ClientsPage() {
 

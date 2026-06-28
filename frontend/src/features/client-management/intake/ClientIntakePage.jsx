@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {apiFetch} from "../utils/api-client.js";
+import {apiFetch} from "../../../utils/api-client.js";
 import {
     LoadingOverlay,
     Container,
@@ -19,20 +19,20 @@ import {
     IconCheck,
 } from '@tabler/icons-react';
 
-import {ROUTES} from '../constants/routes';
-import {IntakeSteps} from '../constants/intake';
+import {ROUTES} from '../../../constants/routes.js';
+import {IntakeSteps} from './intake-constants.js';
 
-import IntakeHeader from '../components/intake/IntakeHeader';
+import IntakeHeader from './IntakeHeader';
 
-import ClientDetailsForm from '../components/clients/ClientDetailsForm';
-import * as ClientDetailsFormUtils from '../utils/client-form-utils';
+import ClientDetailsForm from '../shared/ClientDetailsForm.jsx';
+import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
 
-import ParqStep, {createEmptyParqForm, validateParqForm} from '../components/intake/steps/ParqStep';
-import GoalsStep, {createEmptyGoalsForm, validateGoalsForm} from '../components/intake/steps/GoalsStep';
-import ActivityHistoryStep, {createEmptyActivityHistoryForm, validateActivityHistoryForm} from '../components/intake/steps/ActivityHistoryStep';
-import MedicalHistoryStep, {createEmptyMedicalHistoryForm} from '../components/intake/steps/MedicalHistoryStep';
-import LifestyleStep, {createEmptyLifestyleForm, validateLifestyleForm} from '../components/intake/steps/LifestyleStep';
-import TrainingPreferencesStep, {createEmptyTrainingPreferencesForm, validateTrainingPreferencesForm} from '../components/intake/steps/TrainingPreferencesStep';
+import ParqStep, {createEmptyParqForm, validateParqForm} from './steps/ParqStep';
+import GoalsStep, {createEmptyGoalsForm, validateGoalsForm} from './steps/GoalsStep';
+import ActivityHistoryStep, {createEmptyActivityHistoryForm, validateActivityHistoryForm} from './steps/ActivityHistoryStep';
+import MedicalHistoryStep, {createEmptyMedicalHistoryForm} from './steps/MedicalHistoryStep';
+import LifestyleStep, {createEmptyLifestyleForm, validateLifestyleForm} from './steps/LifestyleStep';
+import TrainingPreferencesStep, {createEmptyTrainingPreferencesForm, validateTrainingPreferencesForm} from './steps/TrainingPreferencesStep';
 
 function ClientIntakePage() {
 

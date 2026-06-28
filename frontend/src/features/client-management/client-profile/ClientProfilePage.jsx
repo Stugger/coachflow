@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {apiFetch} from "../utils/api-client.js";
+import {apiFetch} from "../../../utils/api-client.js";
 import {
     Alert,
     Button,
@@ -11,13 +11,13 @@ import {
     Text,
     Group,
 } from '@mantine/core';
-import ClientProfileHeader from '../components/clients/profile/ClientProfileHeader';
-import ClientDetailsForm from "../components/clients/ClientDetailsForm.jsx";
-import ClientProfileTabs from '../components/clients/profile/ClientProfileTabs';
-import ClientReviewAction from '../components/clients/profile/ClientReviewAction';
-import {ROUTES} from '../constants/routes';
-import * as ClientDetailsFormUtils from '../utils/client-form-utils';
-import * as TextUtils from '../utils/text-utils';
+import ClientProfileHeader from './ClientProfileHeader.jsx';
+import ClientDetailsForm from "../shared/ClientDetailsForm.jsx";
+import ClientProfileTabs from './ClientProfileTabs.jsx';
+import ClientProfileReviewAction from './ClientProfileReviewAction.jsx';
+import {ROUTES} from '../../../constants/routes.js';
+import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
+import * as TextUtils from '../../../utils/text-utils.js';
 
 function ClientProfilePage() {
 
@@ -324,7 +324,7 @@ function ClientProfilePage() {
             />
 
             {!client.archived && (
-                <ClientReviewAction
+                <ClientProfileReviewAction
                     client={client}
                     reviewStatus={getClientReviewStatus()}
                     openIntake={openIncompleteIntake}
