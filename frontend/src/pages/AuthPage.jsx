@@ -5,6 +5,7 @@ import {
     Anchor,
     Box,
     Button,
+    Checkbox,
     Container,
     Group,
     Paper,
@@ -28,6 +29,8 @@ import {
 
 import * as TextUtils from '../utils/text-utils.js';
 
+const REMEMBERED_EMAIL_KEY = 'coachflow.remembered-email';
+
 const MIN_PASSWORD_LENGTH = 12;
 const MAX_PASSWORD_LENGTH = 64;
 const MAX_PASSWORD_STORAGE_BYTES = 72;
@@ -46,8 +49,12 @@ function AuthPage({onAuthSuccess}) {
 
     const [mode, setMode] = useState('login');
 
+    const [rememberEmail, setRememberEmail] = useState(
+        () => Boolean(localStorage.getItem(REMEMBERED_EMAIL_KEY))
+    );
+
     const [loginForm, setLoginForm] = useState({
-        email: '',
+        email: localStorage.getItem(REMEMBERED_EMAIL_KEY) ?? '',
         password: ''
     });
 
@@ -140,6 +147,14 @@ function AuthPage({onAuthSuccess}) {
                 return response.json();
             })
             .then(auth => {
+                const normalizedEmail = TextUtils.normalizeEmail(loginForm.email);
+
+                if (rememberEmail) {
+                    localStorage.setItem(REMEMBERED_EMAIL_KEY, normalizedEmail);
+                } else {
+                    localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+                }
+
                 onAuthSuccess(auth);
             })
             .catch(error => console.error(error));
@@ -225,6 +240,7 @@ function AuthPage({onAuthSuccess}) {
                         <TextInput
                             name="email"
                             type="email"
+                            autoComplete="username"
                             label="Email"
                             placeholder="you@example.com"
                             value={loginForm.email}
@@ -234,11 +250,18 @@ function AuthPage({onAuthSuccess}) {
 
                         <PasswordInput
                             name="password"
+                            autoComplete="current-password"
                             label="Password"
                             placeholder="Your password"
                             value={loginForm.password}
                             onChange={updateLoginForm}
                             error={errors.password}
+                        />
+
+                        <Checkbox
+                            label="Remember my email"
+                            checked={rememberEmail}
+                            onChange={(event) => setRememberEmail(event.currentTarget.checked)}
                         />
 
                         <Button type="submit"
