@@ -208,7 +208,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                 >
                                     <Menu.Target>
                                         <UnstyledButton
-                                            className="subtleInput"
+                                            className="subtle-input"
                                             style={{
                                                 background: 'transparent',
                                                 minHeight: '1.5rem',
@@ -403,7 +403,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
 
                     <Box style={{padding: 'var(--mantine-spacing-md)', paddingBottom: 0}}>
                         <Textarea
-                            classNames={{input: 'subtleInput'}}
+                            classNames={{input: 'subtle-input'}}
                             variant="unstyled"
                             placeholder="Add notes for this stack"
                             value={stack.notes || ''}

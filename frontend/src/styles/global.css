@@ -1,15 +1,3 @@
-.mantine-MultiSelect-inputField {
-    &:not(:only-child)::placeholder {
-        font-size: 0.75rem;
-    }
-}
-
-.lossy-placeholder .mantine-MultiSelect-inputField {
-    &:not(:only-child)::placeholder {
-        color: transparent;
-    }
-}
-
 .interactive-card {
     cursor: 'pointer';
     transition:
@@ -27,28 +15,6 @@
 .interactive-card.subtle:hover {
     transform: translateY(-1px);
     box-shadow: var(--mantine-shadow-xs);
-}
-
-.subtleInputContainer,
-.subtleInput {
-    border: 1px solid transparent;
-    border-radius: var(--mantine-radius-md);
-    padding-inline: var(--mantine-spacing-xs);
-    transition: border-color 120ms ease, background-color 120ms ease;
-}
-
-/* outline only while interactive */
-.subtleInputContainer:not([data-locked]):hover,
-.subtleInput:hover:not(:disabled):not(:read-only) {
-    border-color: var(--mantine-color-gray-4);
-}
-
-/* full input while editing */
-.subtleInputContainer:not([data-locked]):focus-within,
-.subtleInput:focus:not(:read-only),
-.subtleInput:focus-within:not(:read-only) {
-    border-color: var(--mantine-primary-color-filled);
-    background-color: var(--mantine-color-body);
 }
 
 @keyframes workout-builder-created {

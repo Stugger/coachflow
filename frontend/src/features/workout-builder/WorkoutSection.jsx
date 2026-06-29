@@ -307,7 +307,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
 
                 <Box style={{padding: 'var(--mantine-spacing-md)', paddingBottom: 0}}>
                     <Textarea
-                        classNames={{input: 'subtleInput'}}
+                        classNames={{input: 'subtle-input'}}
                         variant="unstyled"
                         placeholder="Add instructions or notes for this section"
                         value={section.notes || ''}

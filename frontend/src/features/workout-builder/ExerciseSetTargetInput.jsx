@@ -6,7 +6,7 @@ import {
     TextInput,
 } from '@mantine/core';
 
-import TimeTargetInput from './TimeTargetInput';
+import DurationInput from '../../components/input/DurationInput';
 
 import {TRACKING_FIELD_TYPE} from './workout-builder-constants';
 import {TRACKING_FIELD_DEFINITIONS} from './workout-tracking-fields';
@@ -53,7 +53,7 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
         return (
             <NumberInput
                 readOnly={locked}
-                classNames={{input: 'subtleInput'}}
+                classNames={{input: 'subtle-input'}}
                 variant="unstyled"
                 value={value ?? ''}
                 onChange={onChange}
@@ -81,7 +81,7 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
         return (
             <NumberInput
                 readOnly={locked}
-                classNames={{input: 'subtleInput'}}
+                classNames={{input: 'subtle-input'}}
                 variant="unstyled"
                 value={value ?? ''}
                 onChange={onChange}
@@ -129,7 +129,7 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
             >
                 <NumberInput
                     readOnly={locked}
-                    classNames={{input: 'subtleInput'}}
+                    classNames={{input: 'subtle-input'}}
                     variant="unstyled"
                     value={rangeValue.min ?? ''}
                     onChange={nextValue => updateRange('min', nextValue)}
@@ -152,7 +152,7 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
 
                 <NumberInput
                     readOnly={locked}
-                    classNames={{input: 'subtleInput'}}
+                    classNames={{input: 'subtle-input'}}
                     variant="unstyled"
                     value={rangeValue.max ?? ''}
                     onChange={nextValue => updateRange('max', nextValue)}
@@ -178,11 +178,12 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
 
     if (type === TRACKING_FIELD_TYPE.TIME) {
         return (
-            <TimeTargetInput
+            <DurationInput
                 value={value}
                 locked={locked}
+                variant='subtle'
+                width={inputWidth}
                 onChange={onChange}
-                inputWidth={inputWidth}
             />
         );
     }
@@ -195,7 +196,7 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
         return (
             <TextInput
                 readOnly={locked}
-                classNames={{input: 'subtleInput'}}
+                classNames={{input: 'subtle-input'}}
                 variant="unstyled"
                 value={value ?? ''}
                 onChange={event => onChange(event.currentTarget.value)}
@@ -219,7 +220,7 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
         return (
             <Textarea
                 readOnly={locked}
-                classNames={{input: 'subtleInput'}}
+                classNames={{input: 'subtle-input'}}
                 variant="unstyled"
                 value={value ?? ''}
                 onChange={event => onChange(event.currentTarget.value)}

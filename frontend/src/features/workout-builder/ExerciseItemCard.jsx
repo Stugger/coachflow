@@ -404,7 +404,7 @@ function ExerciseItemCard({
                     </Group>
 
                     <Textarea
-                        classNames={{input: 'subtleInput'}}
+                        classNames={{input: 'subtle-input'}}
                         variant="filled"
                         placeholder="Add notes for this exercise"
                         value={item.notes ?? ''}

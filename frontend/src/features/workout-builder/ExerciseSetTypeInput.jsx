@@ -43,7 +43,7 @@ function ExerciseSetTypeInput({set, locked, onChange}) {
         >
             <Menu.Target>
                 <UnstyledButton
-                    className="subtleInputContainer"
+                    className="subtle-input-container"
                     data-locked={locked || undefined}
                     disabled={locked}
                     onMouseEnter={() => {

@@ -1,5 +1,6 @@
-import './styles/global.css';
 import './styles/app-shell.css';
+import './styles/global.css';
+import './styles/input.css';
 
 import {useCallback, useEffect, useState} from 'react';
 import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';

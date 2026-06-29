@@ -485,7 +485,7 @@ function WorkoutTemplateEditor({opened, mode, templateId, trainerId, onClose, on
                             <Stack gap="lg">
                                 <Group justify="space-between" align="center" wrap="nowrap">
                                     <TextInput
-                                        classNames={{ input: 'subtleInput' }}
+                                        classNames={{ input: 'subtle-input' }}
                                         variant="filled"
                                         ref={inputRef}
                                         size="lg"
@@ -527,7 +527,7 @@ function WorkoutTemplateEditor({opened, mode, templateId, trainerId, onClose, on
                                     </Menu>
                                 </Group>
                                 <Textarea
-                                    classNames={{ input: 'subtleInput' }}
+                                    classNames={{ input: 'subtle-input' }}
                                     variant="unstyled"
                                     pl='0.7rem'
                                     label={
