@@ -13,10 +13,10 @@ import {IconAlertCircle, IconPlus} from '@tabler/icons-react';
 
 import WorkoutSection from './WorkoutSection';
 
-import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, createDraftId, resizeExerciseSetCount} from './workout-draft-factory';
-import {reindexPositions} from './workout-draft-mappers';
+import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, createDraftId, resizeExerciseSetCount} from './draft/workout-draft-factory';
+import {reindexPositions} from './draft/workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from './workout-builder-utils';
-import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
+import {WORKOUT_VALIDATION_SCOPE} from './draft/workout-draft-validation';
 
 function WorkoutBuilder({draft, exercises, validationIssues = [], onChange, onViewExercise}) {
 

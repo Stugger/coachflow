@@ -18,7 +18,7 @@ import {
     IconTrash,
 } from '@tabler/icons-react';
 
-import {reindexTrackingFields} from './workout-draft-mappers';
+import {reindexTrackingFields} from './draft/workout-draft-mappers';
 import {
     TRACKING_FIELD_DEFINITIONS,
     createTrackingField,

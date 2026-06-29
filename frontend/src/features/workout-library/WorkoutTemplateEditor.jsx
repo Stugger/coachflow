@@ -42,23 +42,23 @@ import {
     apiUpdateWorkoutTemplate,
 } from './workout-template-api';
 
-import {createEmptyWorkoutDraft} from '../workout-builder/workout-draft-factory';
+import {createEmptyWorkoutDraft} from '../workout-builder/draft/workout-draft-factory';
 
 import {
     buildTemplatePayload,
     normalizeTemplateForCopy,
     normalizeTemplateForDraft,
     getWorkoutEquipment,
-} from '../workout-builder/workout-draft-mappers';
+} from '../workout-builder/draft/workout-draft-mappers';
 
 import {
     validateWorkoutDraft,
     WORKOUT_VALIDATION_SCOPE,
-} from '../workout-builder/workout-draft-validation';
+} from '../workout-builder/draft/workout-draft-validation';
 
 import ExerciseViewer from '../../components/exercises/ExerciseViewer';
 
-function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSaved}) {
+function WorkoutTemplateEditor({opened, mode, templateId, trainerId, onClose, onSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -881,4 +881,4 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
     );
 }
 
-export default WorkoutEditorModal;
+export default WorkoutTemplateEditor;

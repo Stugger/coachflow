@@ -43,7 +43,7 @@ import ExercisePickerModal from './ExercisePickerModal';
 
 import {getSectionDisplayName, getSectionTypeLabel, getWorkoutItemKey} from './workout-builder-utils';
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
-import {WORKOUT_VALIDATION_SCOPE} from './workout-draft-validation';
+import {WORKOUT_VALIDATION_SCOPE} from './draft/workout-draft-validation';
 
 function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                             highlightedTopLevelItemKey = null, highlightedStackExerciseKey = null,

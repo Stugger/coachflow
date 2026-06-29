@@ -1,5 +1,5 @@
-import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE} from './workout-builder-constants';
-import {trimToNull} from '../../utils/text-utils';
+import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE} from '../workout-builder-constants.js';
+import {trimToNull} from '../../../utils/text-utils.js';
 
 import {
     createDraftId,
@@ -7,7 +7,7 @@ import {
     createEmptyWorkoutConfig,
     parseWorkoutConfig,
     stringifyWorkoutConfig,
-} from './workout-draft-factory';
+} from './workout-draft-factory.js';
 
 export function normalizeTemplateForDraft(template) {
     if (!template) {

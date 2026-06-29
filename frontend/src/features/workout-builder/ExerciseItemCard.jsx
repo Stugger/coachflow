@@ -38,7 +38,7 @@ import {
     parseWorkoutConfig,
     stringifyWorkoutConfig,
     pruneUnusedTargets,
-} from './workout-draft-factory';
+} from './draft/workout-draft-factory';
 
 import {resolveMediaUrl} from '../../utils/media-url-utils';
 

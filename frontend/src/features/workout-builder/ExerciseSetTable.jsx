@@ -18,8 +18,8 @@ import {
 import ExerciseSetTargetInput from './ExerciseSetTargetInput';
 import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
-import {reindexSets} from './workout-draft-mappers';
-import {createDraftId} from './workout-draft-factory';
+import {reindexSets} from './draft/workout-draft-mappers';
+import {createDraftId} from './draft/workout-draft-factory';
 import {TRACKING_FIELD_DEFINITIONS} from './workout-tracking-fields';
 
 // ------------------------------------------------------------------------------------------------------------------------

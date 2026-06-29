@@ -1,10 +1,10 @@
-import {WORKOUT_ITEM_TYPE} from './workout-builder-constants';
-import {getExerciseId} from './workout-draft-mappers';
+import {WORKOUT_ITEM_TYPE} from '../workout-builder-constants.js';
+import {getExerciseId} from './workout-draft-mappers.js';
 import {
     getStackOption,
     getStackRequirement,
     isStackComplete,
-} from './workout-builder-utils';
+} from '../workout-builder-utils.js';
 
 export const WORKOUT_VALIDATION_SCOPE = {
     WORKOUT: 'WORKOUT',
