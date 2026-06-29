@@ -1,6 +1,6 @@
 import {Scroller, Paper, Tabs} from '@mantine/core';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
-import {ROUTES} from '../../../constants/routes';
+import {ROUTES} from '../../../constants/routes.js';
 
 function ClientProfileTabs() {
     const navigate = useNavigate();

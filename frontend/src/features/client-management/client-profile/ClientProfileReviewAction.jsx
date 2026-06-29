@@ -10,7 +10,7 @@ import {
     IconClipboardCheck
 } from '@tabler/icons-react';
 
-function ClientReviewAction({client, reviewStatus, openIntake, openAssessment = null}) { //TODO pass in openAssessment and hook to button
+function ClientProfileReviewAction({client, reviewStatus, openIntake, openAssessment = null}) { //TODO pass in openAssessment and hook to button
 
     return (
         <>
@@ -75,4 +75,4 @@ function ClientReviewAction({client, reviewStatus, openIntake, openAssessment = 
     );
 }
 
-export default ClientReviewAction;
+export default ClientProfileReviewAction;

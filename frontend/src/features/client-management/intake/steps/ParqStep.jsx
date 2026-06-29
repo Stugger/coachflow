@@ -8,7 +8,7 @@ import {
     Textarea,
 } from '@mantine/core';
 import {IconAlertCircle} from '@tabler/icons-react';
-import StepNavigation from '../StepNavigation';
+import StepNavigation from '../StepNavigation.jsx';
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants

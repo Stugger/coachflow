@@ -10,7 +10,7 @@ import {
 import {
     IconX
 } from '@tabler/icons-react';
-import {TOTAL_STEPS} from '../../constants/intake';
+import {TOTAL_STEPS} from './intake-constants.js';
 
 function IntakeHeader({step, stepNumber, exitIntake}) {
     return (

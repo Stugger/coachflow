@@ -1,77 +1,29 @@
-import {apiFetch} from '../../utils/api-client.js';
+import {
+    deleteRequest,
+    getJson,
+    sendJson,
+} from '../../utils/api-client.js';
 
-export async function getWorkoutTemplates() {
+export async function apiGetWorkoutTemplates() {
     return getJson('/api/workout-templates');
 }
 
-export async function getWorkoutTemplate(workoutTemplateId) {
+export async function apiGetWorkoutTemplate(workoutTemplateId) {
     return getJson(`/api/workout-templates/${workoutTemplateId}`);
 }
 
-export async function createWorkoutTemplate(payload) {
+export async function apiCreateWorkoutTemplate(payload) {
     return sendJson('/api/workout-templates', 'POST', payload);
 }
 
-export async function updateWorkoutTemplate(workoutTemplateId, payload) {
+export async function apiUpdateWorkoutTemplate(workoutTemplateId, payload) {
     return sendJson(`/api/workout-templates/${workoutTemplateId}`, 'PUT', payload);
 }
 
-export async function archiveWorkoutTemplate(workoutTemplateId) {
-    const response = await apiFetch(
-        `/api/workout-templates/${workoutTemplateId}`,
-        {method: 'DELETE'}
-    );
-
-    if (!response.ok) {
-        throw await buildError(response);
-    }
+export async function apiArchiveWorkoutTemplate(workoutTemplateId) {
+    return deleteRequest(`/api/workout-templates/${workoutTemplateId}`);
 }
 
-export async function getExercises() {
+export async function apiGetExercises() {
     return getJson('/api/exercises');
-}
-
-async function getJson(path) {
-    const response = await apiFetch(path);
-
-    if (!response.ok) {
-        throw await buildError(response);
-    }
-
-    return response.json();
-}
-
-async function sendJson(path, method, payload) {
-    const response = await apiFetch(path, {
-        method,
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-        throw await buildError(response);
-    }
-
-    return response.json();
-}
-
-async function buildError(response) {
-    let message = `Request failed (${response.status})`;
-
-    try {
-        const text = await response.text();
-
-        if (text) {
-            try {
-                const json = JSON.parse(text);
-                message = json.message || json.error || text;
-            } catch {
-                message = text;
-            }
-        }
-    } catch {
-        // Keep fallback message
-    }
-
-    return new Error(message);
 }

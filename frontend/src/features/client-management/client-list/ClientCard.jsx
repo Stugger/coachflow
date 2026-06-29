@@ -19,7 +19,6 @@ function ClientCard({client, reviewStatus, onClick}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
-    const hasBadge = client.archived || reviewStatus === 'INTAKE' || reviewStatus === 'ASSESS';
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers

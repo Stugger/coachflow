@@ -1,6 +1,5 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {apiFetch} from "../utils/api-client.js";
 import {
     Alert,
     Button,
@@ -11,13 +10,19 @@ import {
     Text,
     Group,
 } from '@mantine/core';
-import ClientProfileHeader from '../components/clients/profile/ClientProfileHeader';
-import ClientDetailsForm from "../components/clients/ClientDetailsForm.jsx";
-import ClientProfileTabs from '../components/clients/profile/ClientProfileTabs';
-import ClientReviewAction from '../components/clients/profile/ClientReviewAction';
-import {ROUTES} from '../constants/routes';
-import * as ClientDetailsFormUtils from '../utils/client-form-utils';
-import * as TextUtils from '../utils/text-utils';
+
+import {ROUTES} from '../../../constants/routes.js';
+
+import {apiGetClient, apiUpdateClient} from '../shared/api/clients-api.js';
+import {apiGetClientIntakesForClient} from '../intake/client-intake-api.js';
+
+import ClientProfileHeader from './ClientProfileHeader.jsx';
+import ClientDetailsForm from "../shared/ClientDetailsForm.jsx";
+import ClientProfileTabs from './ClientProfileTabs.jsx';
+import ClientProfileReviewAction from './ClientProfileReviewAction.jsx';
+
+import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
+import * as TextUtils from '../../../utils/text-utils.js';
 
 function ClientProfilePage() {
 
@@ -60,14 +65,7 @@ function ClientProfilePage() {
 
     function loadClient() {
         setClientLoaded(false);
-        apiFetch(`/api/clients/${clientId}`)
-            .then(async response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load client');
-                }
-
-                return response.json();
-            })
+        apiGetClient(clientId)
             .then(client => {
                 applyClient(client);
             })
@@ -81,14 +79,7 @@ function ClientProfilePage() {
 
     function loadIntake() {
         setIntakeLoaded(false);
-        apiFetch(`/api/client-intakes/client/${clientId}`)
-            .then(async response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load intake');
-                }
-
-                return response.json();
-            })
+        apiGetClientIntakesForClient(clientId)
             .then(intakes => {
                 setIntake(Array.isArray(intakes) ? intakes[0] ?? null : intakes);
             })
@@ -118,26 +109,7 @@ function ClientProfilePage() {
             return;
         }
 
-        apiFetch(`/api/clients/${clientId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ClientDetailsFormUtils.normalizeClientDetailsForm(editForm))
-        })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorBody = await response.json();
-
-                    if (errorBody.fieldErrors) {
-                        setEditErrors(errorBody.fieldErrors);
-                    }
-
-                    throw new Error(errorBody.message || 'Failed to update client');
-                }
-
-                return response.json();
-            })
+        apiUpdateClient(clientId, ClientDetailsFormUtils.normalizeClientDetailsForm(editForm))
             .then(updatedClient => {
                 document.activeElement?.blur(); //close mobile keyboard
 
@@ -150,7 +122,13 @@ function ClientProfilePage() {
                     });
                 }, 200);
             })
-            .catch(error => console.error('Error updating client:', error));
+            .catch(error => {
+                if (error.fieldErrors) {
+                    setEditErrors(error.fieldErrors);
+                }
+
+                console.error('Error updating client:', error);
+            });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -324,7 +302,7 @@ function ClientProfilePage() {
             />
 
             {!client.archived && (
-                <ClientReviewAction
+                <ClientProfileReviewAction
                     client={client}
                     reviewStatus={getClientReviewStatus()}
                     openIntake={openIncompleteIntake}

@@ -11,9 +11,9 @@ import {API_UNAUTHORIZED_EVENT} from './utils/api-client.js';
 import {ROUTES} from './constants/routes';
 
 import AuthPage from './pages/AuthPage';
-import ClientIntakePage from './pages/ClientIntakePage';
-import ClientsPage from './pages/ClientsPage';
-import ClientProfilePage from './pages/ClientProfilePage';
+import ClientIntakePage from './features/client-management/intake/ClientIntakePage';
+import ClientsPage from './features/client-management/client-list/ClientsPage';
+import ClientProfilePage from './features/client-management/client-profile/ClientProfilePage';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
 import WorkoutLibraryPage from './features/workout-library/WorkoutLibraryPage';
