@@ -1,6 +1,5 @@
 import {useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
-import {apiFetch} from '../../../utils/api-client.js';
 import {
     Button,
     Group,
@@ -20,6 +19,10 @@ import {
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
+
+import {apiGetClients} from '../shared/api/clients-api.js';
+import {apiGetClientIntakes} from '../intake/client-intake-api.js';
+
 import ClientCard from './ClientCard.jsx';
 import ClientMobileRow from './ClientMobileRow.jsx';
 import ClientTableRow from './ClientTableRow.jsx';
@@ -101,14 +104,7 @@ function ClientsPage() {
 
     function loadClients() {
         setClientsLoaded(false);
-        apiFetch('/api/clients')
-            .then(async response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load clients');
-                }
-
-                return response.json();
-            })
+        apiGetClients()
             .then(data => {
                 setClients(Array.isArray(data) ? data : []);
             })
@@ -123,14 +119,7 @@ function ClientsPage() {
 
     function loadIntakes() {
         setIntakesLoaded(false);
-        apiFetch('/api/client-intakes')
-            .then(async response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load intake drafts');
-                }
-
-                return response.json();
-            })
+        apiGetClientIntakes()
             .then(intakes => {
                 setIntakes(intakes);
             })

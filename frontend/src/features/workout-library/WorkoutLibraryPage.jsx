@@ -22,8 +22,8 @@ import WorkoutTemplateListRow from './WorkoutTemplateListRow';
 import WorkoutEditorModal from './WorkoutEditorModal';
 
 import {
-    archiveWorkoutTemplate,
-    getWorkoutTemplates,
+    apiArchiveWorkoutTemplate,
+    apiGetWorkoutTemplates,
 } from './workout-template-api';
 
 
@@ -110,7 +110,7 @@ function WorkoutLibraryPage({trainerId}) {
 
         setMessage('');
 
-        getWorkoutTemplates()
+        apiGetWorkoutTemplates()
             .then(setTemplates)
             .catch(error => {
                 console.error('Failed to load workout library:', error);
@@ -168,8 +168,8 @@ function WorkoutLibraryPage({trainerId}) {
             return;
         }
 
-        archiveWorkoutTemplate(template.id)
-            .then(() => getWorkoutTemplates())
+        apiArchiveWorkoutTemplate(template.id)
+            .then(() => apiGetWorkoutTemplates())
             .then(setTemplates)
             .catch(error => {
                 console.error('Failed to archive workout template:', error);

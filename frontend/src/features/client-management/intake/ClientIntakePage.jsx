@@ -1,6 +1,5 @@
 import {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import {apiFetch} from "../../../utils/api-client.js";
 import {
     LoadingOverlay,
     Container,
@@ -20,6 +19,19 @@ import {
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
+
+import {
+    apiGetClient,
+    apiCreateClient,
+    apiUpdateClient
+} from '../shared/api/clients-api.js';
+import {
+    apiGetClientIntake,
+    apiCreateClientIntake,
+    apiSaveClientIntakeStep,
+    apiCompleteClientIntake
+} from './client-intake-api.js';
+
 import {IntakeSteps} from './intake-constants.js';
 
 import IntakeHeader from './IntakeHeader';
@@ -89,8 +101,7 @@ function ClientIntakePage() {
 
     function loadIntake(id) {
         setIntakeLoaded(false);
-        apiFetch(`/api/client-intakes/${id}`)
-            .then(response => response.json())
+        apiGetClientIntake(id)
             .then(intake => {
                 hydrateIntake(intake);
                 loadClient(intake.clientId);
@@ -149,14 +160,7 @@ function ClientIntakePage() {
 
     function loadClient(id) {
         setClientLoaded(false);
-        apiFetch(`/api/clients/${id}`)
-            .then(async response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load client');
-                }
-
-                return response.json();
-            })
+        apiGetClient(id)
             .then(client => {
                 setBasicInfoForm(ClientDetailsFormUtils.createClientDetailsFormFromClient(client));
             })
@@ -182,41 +186,9 @@ function ClientIntakePage() {
             return;
         }
 
-        apiFetch(`/api/clients`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ClientDetailsFormUtils.normalizeClientDetailsForm(basicInfoForm))
-        })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    if (errorBody.fieldErrors) {
-                        setBasicInfoErrors(errorBody.fieldErrors);
-                    }
-                    throw new Error(errorBody.message || 'Failed to create client');
-                }
-                return response.json();
-            })
+        apiCreateClient(ClientDetailsFormUtils.normalizeClientDetailsForm(basicInfoForm))
             .then(createdClient => {
-                return apiFetch(`/api/client-intakes`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        clientId: createdClient.id
-                    })
-                });
-            })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    if (errorBody.fieldErrors) {
-                        setBasicInfoErrors(errorBody.fieldErrors);
-                    }
-                    throw new Error(errorBody.message || 'Failed to create client intake');
-                }
-                return response.json();
+                return apiCreateClientIntake(createdClient.id);
             })
             .then(intake => {
                 setClientId(intake.clientId);
@@ -225,7 +197,13 @@ function ClientIntakePage() {
                 navigate(ROUTES.intake(intake.id), { replace: true });
                 scrollToTop();
             })
-            .catch(error => console.error('Error creating client or intake:', error));
+            .catch(error => {
+                if (error.fieldErrors) {
+                    setBasicInfoErrors(error.fieldErrors);
+                }
+
+                console.error('Error creating client or intake:', error);
+            });
     }
 
     function updateClient(event) {
@@ -238,27 +216,17 @@ function ClientIntakePage() {
             return;
         }
 
-        apiFetch(`/api/clients/${clientId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(ClientDetailsFormUtils.normalizeClientDetailsForm(basicInfoForm))
-        })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    if (errorBody.fieldErrors) {
-                        setBasicInfoErrors(errorBody.fieldErrors);
-                    }
-                    throw new Error(errorBody.message || 'Failed to update client');
-                }
-                return response.json();
-            })
+        apiUpdateClient(clientId, ClientDetailsFormUtils.normalizeClientDetailsForm(basicInfoForm))
             .then(() => {
                 loadIntake(intakeId);
             })
-            .catch(error => console.error('Error updating client:', error));
+            .catch(error => {
+                if (error.fieldErrors) {
+                    setBasicInfoErrors(error.fieldErrors);
+                }
+
+                console.error('Error updating client:', error);
+            });
     }
 
     function saveIntakeStep(step, formData, onSaved) {
@@ -271,20 +239,7 @@ function ClientIntakePage() {
             return;
         }
 
-        apiFetch(`/api/client-intakes/${intakeId}/step/${step}`, {
-            method: 'PUT',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                json: JSON.stringify(formData)
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Failed to save ${step}`);
-                }
-
-                return response.json();
-            })
+        apiSaveClientIntakeStep(intakeId, step, formData)
             .then(intake => {
                 hydrateIntake(intake);
                 onSaved();
@@ -293,16 +248,7 @@ function ClientIntakePage() {
     }
 
     function completeIntake() {
-        apiFetch(`/api/client-intakes/${intakeId}/complete`, {
-            method: 'PATCH'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to complete intake');
-                }
-
-                return response.json();
-            })
+        apiCompleteClientIntake(intakeId)
             .then(intake => {
                 hydrateIntake(intake);
                 setCurrentStep(IntakeSteps.COMPLETED);

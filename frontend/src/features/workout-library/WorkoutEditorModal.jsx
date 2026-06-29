@@ -36,10 +36,10 @@ import {
 import WorkoutBuilder from '../workout-builder/WorkoutBuilder';
 
 import {
-    createWorkoutTemplate,
-    getExercises,
-    getWorkoutTemplate,
-    updateWorkoutTemplate,
+    apiCreateWorkoutTemplate,
+    apiGetExercises,
+    apiGetWorkoutTemplate,
+    apiUpdateWorkoutTemplate,
 } from './workout-template-api';
 
 import {createEmptyWorkoutDraft} from '../workout-builder/workout-draft-factory';
@@ -253,7 +253,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         setActiveValidationIssueIds([]);
 
         Promise.all([
-            getExercises(),
+            apiGetExercises(),
             loadInitialDraftState(),
         ])
             .then(([loadedExercises, draftState]) => {
@@ -272,7 +272,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         const savedDraft = readSavedDraft();
 
         if (isEditing) {
-            const template = await getWorkoutTemplate(templateId);
+            const template = await apiGetWorkoutTemplate(templateId);
             const backendDraft = normalizeTemplateForDraft(template);
             const backendSnapshot = createSnapshot(backendDraft);
 
@@ -292,7 +292,7 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         }
 
         if (isCopying) {
-            const template = await getWorkoutTemplate(templateId);
+            const template = await apiGetWorkoutTemplate(templateId);
             const copyDraft = normalizeTemplateForCopy(template);
 
             if (savedDraft) {
@@ -406,8 +406,8 @@ function WorkoutEditorModal({opened, mode, templateId, trainerId, onClose, onSav
         const payload = buildTemplatePayload(draft);
 
         const request = isEditing
-            ? updateWorkoutTemplate(templateId, payload)
-            : createWorkoutTemplate(payload);
+            ? apiUpdateWorkoutTemplate(templateId, payload)
+            : apiCreateWorkoutTemplate(payload);
 
         request
             .then(savedTemplate => {
