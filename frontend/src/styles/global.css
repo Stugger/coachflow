@@ -1,15 +1,3 @@
-.mantine-MultiSelect-inputField {
-    &:not(:only-child)::placeholder {
-        font-size: 0.75rem;
-    }
-}
-
-.lossy-placeholder .mantine-MultiSelect-inputField {
-    &:not(:only-child)::placeholder {
-        color: transparent;
-    }
-}
-
 .interactive-card {
     cursor: 'pointer';
     transition:
@@ -29,29 +17,7 @@
     box-shadow: var(--mantine-shadow-xs);
 }
 
-.subtleInputContainer,
-.subtleInput {
-    border: 1px solid transparent;
-    border-radius: var(--mantine-radius-md);
-    padding-inline: var(--mantine-spacing-xs);
-    transition: border-color 120ms ease, background-color 120ms ease;
-}
-
-/* outline only while interactive */
-.subtleInputContainer:not([data-locked]):hover,
-.subtleInput:hover:not(:disabled):not(:read-only) {
-    border-color: var(--mantine-color-gray-4);
-}
-
-/* full input while editing */
-.subtleInputContainer:not([data-locked]):focus-within,
-.subtleInput:focus:not(:read-only),
-.subtleInput:focus-within:not(:read-only) {
-    border-color: var(--mantine-primary-color-filled);
-    background-color: var(--mantine-color-body);
-}
-
-@keyframes workout-builder-created {
+@keyframes workout-structure-created {
     from {
         opacity: 0;
         transform: translateY(0.4rem);
@@ -63,8 +29,8 @@
     }
 }
 
-.workout-builder-created {
-    animation: workout-builder-created 400ms ease-out both;
+.workout-structure-created {
+    animation: workout-structure-created 400ms ease-out both;
 }
 
 @keyframes workout-stack-round-feedback {
@@ -110,7 +76,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .workout-builder-created,
+    .workout-structure-created,
     .workout-stack-round-feedback,
     .auth-password-guidance {
         animation: none;

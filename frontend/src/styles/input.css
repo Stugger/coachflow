@@ -1,0 +1,48 @@
+.mantine-MultiSelect-inputField {
+    &:not(:only-child)::placeholder {
+        font-size: 0.75rem;
+    }
+}
+
+.lossy-placeholder .mantine-MultiSelect-inputField {
+    &:not(:only-child)::placeholder {
+        color: transparent;
+    }
+}
+
+/* Subtle Input */
+.subtle-input-container,
+.subtle-input {
+    border: 1px solid transparent;
+    border-radius: var(--mantine-radius-md);
+    padding-inline: var(--mantine-spacing-xs);
+    transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.subtle-input-container:not([data-locked]):hover:not(:focus-within) ,
+.subtle-input:hover:not(:disabled):not(:read-only):not(:focus-within) {
+    border-color: var(--mantine-color-gray-4);
+}
+
+.subtle-input-container:not([data-locked]):focus-within,
+.subtle-input:focus:not(:read-only),
+.subtle-input:focus-within:not(:read-only) {
+    border-color: var(--mantine-primary-color-filled);
+    background-color: var(--mantine-color-body);
+}
+
+/* Duration Input */
+.duration-input {
+    border-radius: var(--mantine-radius-md);
+}
+[data-mantine-color-scheme='light'] .duration-input {
+    border: 1px solid var(--mantine-color-default-border);
+    background-color: var(--mantine-color-white);
+}
+[data-mantine-color-scheme='dark'] .duration-input {
+    border: 1px solid var(--mantine-color-dark-4);
+    background-color: var(--mantine-color-dark-6);
+}
+.duration-input:not([data-locked]):focus-within {
+    border-color: var(--mantine-primary-color-filled);
+}

@@ -41,7 +41,7 @@ function formatTimePart(value) {
     return String(value).padStart(2, '0');
 }
 
-function sanitizeTimePart(value) {
+function sanitizeTimePart(key, value) {
     const digits = String(value)
         .replace(/\D/g, '')
         .slice(0, 2);
@@ -50,7 +50,9 @@ function sanitizeTimePart(value) {
         return '';
     }
 
-    return String(Math.min(Number(digits), 59));
+    const maxValue = key === 'minutes' ? 99 : 59;
+
+    return String(Math.min(Number(digits), maxValue));
 }
 
 function getTotalSeconds(parts) {
@@ -68,7 +70,7 @@ function getTotalSeconds(parts) {
 
 //TODO typing from left input should move caret into right input when maxed, backspacing from second input should bring caret to end of first input when empty, left/right arrows should move between inputs when no more characters left to move between
 
-function TimeTargetInput({value, locked, onChange, inputWidth}) {
+function DurationInput({value, locked, variant = 'default', width, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -95,7 +97,7 @@ function TimeTargetInput({value, locked, onChange, inputWidth}) {
     function updatePart(key, nextValue) {
         const nextParts = {
             ...parts,
-            [key]: sanitizeTimePart(nextValue),
+            [key]: sanitizeTimePart(key, nextValue),
         };
 
         setParts(nextParts);
@@ -149,13 +151,12 @@ function TimeTargetInput({value, locked, onChange, inputWidth}) {
 
     return (
         <Box
-            className="subtleInputContainer"
+            className={variant === 'subtle' ? "subtle-input-container" : "duration-input"}
             data-locked={locked || undefined}
             style={{
-                width: inputWidth,
+                width: width,
                 marginInline: 'auto',
                 paddingInline: 0,
-                borderRadius: 'var(--mantine-radius-md)',
             }}
         >
             <Group gap={0} wrap="nowrap" justify="center">
@@ -211,4 +212,4 @@ function TimeTargetInput({value, locked, onChange, inputWidth}) {
     );
 }
 
-export default TimeTargetInput;
+export default DurationInput;

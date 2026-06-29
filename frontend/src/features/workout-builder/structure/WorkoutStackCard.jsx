@@ -44,8 +44,8 @@ import {
     isStackComplete,
     canAddExerciseToStack,
     getWorkoutItemKey,
-} from './workout-builder-utils';
-import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
+} from '../workout-builder-utils';
+import {WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';
 
 function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                               highlightedStackExerciseKey = null,
@@ -171,7 +171,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                 }}
             >
                 <Paper
-                    className={isNew ? 'workout-builder-created' : undefined}
+                    className={isNew ? 'workout-structure-created' : undefined}
                     withBorder
                     radius="sm"
                     shadow={shadow}
@@ -208,7 +208,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                 >
                                     <Menu.Target>
                                         <UnstyledButton
-                                            className="subtleInput"
+                                            className="subtle-input"
                                             style={{
                                                 background: 'transparent',
                                                 minHeight: '1.5rem',
@@ -403,7 +403,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
 
                     <Box style={{padding: 'var(--mantine-spacing-md)', paddingBottom: 0}}>
                         <Textarea
-                            classNames={{input: 'subtleInput'}}
+                            classNames={{input: 'subtle-input'}}
                             variant="unstyled"
                             placeholder="Add notes for this stack"
                             value={stack.notes || ''}

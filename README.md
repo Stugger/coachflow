@@ -146,19 +146,31 @@ Workout Template
                     └── Configurable exercise targets and tracking fields
 ```
 
+The frontend separates entity-specific workflows from the reusable workout editing experience:
+
+```text
+WorkoutTemplateBuilder
+  └── WorkoutBuilder
+        └── WorkoutStructureEditor
+```
+
+**WorkoutTemplateBuilder** handles template-specific loading, saving, copy behavior, and recovery keys.<br>
+**WorkoutBuilder** owns the shared editing session, including validation, unsaved-change tracking, local draft recovery, and responsive modal/drawer behavior.<br>
+**WorkoutStructureEditor** manages the editable workout structure: sections, exercises, stacks, targets, and tracking fields.
+
 ---
 
 ## Tech stack
 
-| Area | Technologies |
-| --- | --- |
-| Languages | Java 21, JavaScript |
-| Backend | Spring Boot, Spring Web, Spring Security, Spring Data JPA, Bean Validation |
-| Database | PostgreSQL, Flyway, Hibernate |
-| API documentation | OpenAPI / Swagger UI |
-| Frontend | React, Vite, React Router |
-| UI | Mantine, Tabler Icons |
-| Local development & tooling | Docker Compose, DBeaver, Gradle, npm, ESLint |
+| Area                        | Technologies                                                               |
+|-----------------------------|----------------------------------------------------------------------------|
+| Languages                   | Java 21, JavaScript                                                        |
+| Backend                     | Spring Boot, Spring Web, Spring Security, Spring Data JPA, Bean Validation |
+| Database                    | PostgreSQL, Flyway, Hibernate                                              |
+| API documentation           | OpenAPI / Swagger UI                                                       |
+| Frontend                    | React, Vite, React Router                                                  |
+| UI                          | Mantine, Tabler Icons                                                      |
+| Local development & tooling | Docker Compose, DBeaver, Gradle, npm, ESLint                               |
 
 ---
 
@@ -261,8 +273,11 @@ backend/
 
 frontend/
   src/
-    components/      shared application, client, intake, and exercise UI
-    features/        workout library and workout builder feature modules
+    components/      shared application UI and reusable inputs
+    features/
+      client-management/   client records, profiles, and intake workflows
+      workout-library/     reusable workout template library and persistence
+      workout-builder/     shared workout building, structure editing, and draft recovery
     pages/           route-level application pages
     constants/       route and domain option definitions
     utils/           API client, auth storage, validation, and formatting helpers
@@ -279,7 +294,10 @@ Current work is focused on expanding the workout-design workflow and building to
 - Exercise-library domain refactor into a dedicated feature module
 - Larger multi-panel workout-builder layout for desktop workflows
 - Drag-and-drop reordering for sections, workout items, and stacked exercises
-- Measurements, assessments, client program assignments, live workout sessions, and recorded exercise results
+- Assessment workflows that create editable client workout copies from reusable templates
+- Live workout sessions with recorded exercise results and session history
+- Program templates and client-specific program assignment workflows
+- Measurement check-ins with supporting scans and photos
 - A redesigned calendar and scheduling workflow, including trainer availability and client self-booking links
 
 ---

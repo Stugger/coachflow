@@ -9,7 +9,7 @@ import {
     IconChevronDown,
 } from '@tabler/icons-react';
 
-import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from './workout-builder-constants';
+import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from '../workout-builder-constants';
 
 function ExerciseSetTypeInput({set, locked, onChange}) {
 
@@ -43,7 +43,7 @@ function ExerciseSetTypeInput({set, locked, onChange}) {
         >
             <Menu.Target>
                 <UnstyledButton
-                    className="subtleInputContainer"
+                    className="subtle-input-container"
                     data-locked={locked || undefined}
                     disabled={locked}
                     onMouseEnter={() => {

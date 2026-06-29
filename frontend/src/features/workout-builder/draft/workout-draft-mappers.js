@@ -1,5 +1,5 @@
-import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE} from './workout-builder-constants';
-import {trimToNull} from '../../utils/text-utils';
+import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE} from '../workout-builder-constants';
+import {trimToNull} from '../../../utils/text-utils';
 
 import {
     createDraftId,
@@ -9,16 +9,16 @@ import {
     stringifyWorkoutConfig,
 } from './workout-draft-factory';
 
-export function normalizeTemplateForDraft(template) {
-    if (!template) {
+export function normalizeWorkoutDefinitionForDraft(definition) {
+    if (!definition) {
         return createEmptyWorkoutDraft();
     }
 
     return {
-        id: template.id ?? null,
-        name: template.name ?? '',
-        description: template.description ?? '',
-        sections: normalizePositions(template.sections ?? []).map((section, sectionIndex) => ({
+        id: definition.id ?? null,
+        name: definition.name ?? '',
+        description: definition.description ?? '',
+        sections: normalizePositions(definition.sections ?? []).map((section, sectionIndex) => ({
             id: section.id ?? null,
             draftId: createDraftId('section'),
             position: sectionIndex + 1,
@@ -30,8 +30,8 @@ export function normalizeTemplateForDraft(template) {
     };
 }
 
-export function normalizeTemplateForCopy(template) {
-    const draft = normalizeTemplateForDraft(template);
+export function createWorkoutDefinitionCopy(definition) {
+    const draft = normalizeWorkoutDefinitionForDraft(definition);
 
     return stripIdsFromDraft({
         ...draft,
@@ -73,7 +73,7 @@ function normalizeConfigJson(configJson) {
     );
 }
 
-export function buildTemplatePayload(draft) {
+export function buildWorkoutDefinitionPayload(draft) {
     return {
         name: trimToNull(draft.name) ?? '',
         description: trimToNull(draft.description),

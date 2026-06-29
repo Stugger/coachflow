@@ -16,15 +16,15 @@ import {
     IconSearch,
 } from '@tabler/icons-react';
 
-import * as ExerciseMetadataUtils from '../../utils/exercise-metadata-utils';
+import * as ExerciseMetadataUtils from '../../../utils/exercise-metadata-utils';
 
 import {
     EQUIPMENT_OPTIONS,
     MUSCLE_OPTIONS,
     EXERCISE_TAG_OPTIONS
-} from '../../constants/exercises';
+} from '../../../constants/exercises';
 
-import {resolveMediaUrl} from '../../utils/media-url-utils';
+import {resolveMediaUrl} from '../../../utils/media-url-utils';
 
 function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
 
