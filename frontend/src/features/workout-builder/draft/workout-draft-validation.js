@@ -1,5 +1,5 @@
-import {WORKOUT_ITEM_TYPE} from '../workout-builder-constants.js';
-import {getExerciseId} from './workout-draft-mappers.js';
+import {WORKOUT_ITEM_TYPE} from '../workout-builder-constants';
+import {getExerciseId} from './workout-draft-mappers';
 import {
     getStackOption,
     getStackRequirement,

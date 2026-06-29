@@ -44,8 +44,8 @@ import {
     isStackComplete,
     canAddExerciseToStack,
     getWorkoutItemKey,
-} from './workout-builder-utils';
-import {WORKOUT_STACK_OPTIONS} from './workout-builder-constants';
+} from '../workout-builder-utils';
+import {WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';
 
 function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                               highlightedStackExerciseKey = null,
@@ -171,7 +171,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                 }}
             >
                 <Paper
-                    className={isNew ? 'workout-builder-created' : undefined}
+                    className={isNew ? 'workout-structure-created' : undefined}
                     withBorder
                     radius="sm"
                     shadow={shadow}

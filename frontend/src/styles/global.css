@@ -17,7 +17,7 @@
     box-shadow: var(--mantine-shadow-xs);
 }
 
-@keyframes workout-builder-created {
+@keyframes workout-structure-created {
     from {
         opacity: 0;
         transform: translateY(0.4rem);
@@ -29,8 +29,8 @@
     }
 }
 
-.workout-builder-created {
-    animation: workout-builder-created 400ms ease-out both;
+.workout-structure-created {
+    animation: workout-structure-created 400ms ease-out both;
 }
 
 @keyframes workout-stack-round-feedback {
@@ -76,7 +76,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .workout-builder-created,
+    .workout-structure-created,
     .workout-stack-round-feedback,
     .auth-password-guidance {
         animation: none;

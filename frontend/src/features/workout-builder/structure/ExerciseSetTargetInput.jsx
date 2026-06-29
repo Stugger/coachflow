@@ -6,10 +6,10 @@ import {
     TextInput,
 } from '@mantine/core';
 
-import DurationInput from '../../components/input/DurationInput';
+import DurationInput from '../../../components/input/DurationInput';
 
-import {TRACKING_FIELD_TYPE} from './workout-builder-constants';
-import {TRACKING_FIELD_DEFINITIONS} from './workout-tracking-fields';
+import {TRACKING_FIELD_TYPE} from '../workout-builder-constants';
+import {TRACKING_FIELD_DEFINITIONS} from '../workout-tracking-fields';
 
 function ExerciseSetTargetInput({field, value, locked, onChange}) {
 

@@ -19,7 +19,7 @@ import {useMediaQuery} from '@mantine/hooks';
 import {IconAlertCircle, IconBarbell, IconClock, IconPlus, IconSearch, IconClipboardList} from '@tabler/icons-react';
 
 import WorkoutTemplateListRow from './WorkoutTemplateListRow';
-import WorkoutTemplateEditor from './WorkoutTemplateEditor';
+import WorkoutTemplateBuilder from './WorkoutTemplateBuilder';
 
 import {
     apiArchiveWorkoutTemplate,
@@ -186,7 +186,7 @@ function WorkoutLibraryPage({trainerId}) {
             <LoadingOverlay visible={!loaded && !editorOpened} overlayProps={{blur: 2}}/>
 
             {editorOpened && (
-                <WorkoutTemplateEditor
+                <WorkoutTemplateBuilder
                     opened={editorOpened}
                     mode={editorMode}
                     templateId={editorTemplateId}

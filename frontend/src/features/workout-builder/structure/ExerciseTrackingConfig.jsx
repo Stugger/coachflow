@@ -18,11 +18,11 @@ import {
     IconTrash,
 } from '@tabler/icons-react';
 
-import {reindexTrackingFields} from './draft/workout-draft-mappers';
+import {reindexTrackingFields} from '../draft/workout-draft-mappers';
 import {
     TRACKING_FIELD_DEFINITIONS,
     createTrackingField,
-} from './workout-tracking-fields';
+} from '../workout-tracking-fields';
 
 function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
 

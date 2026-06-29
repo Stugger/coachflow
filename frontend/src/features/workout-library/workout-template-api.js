@@ -2,7 +2,7 @@ import {
     deleteRequest,
     getJson,
     sendJson,
-} from '../../utils/api-client.js';
+} from '../../utils/api-client';
 
 export async function apiGetWorkoutTemplates() {
     return getJson('/api/workout-templates');

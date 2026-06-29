@@ -9,7 +9,7 @@ import {
     IconChevronDown,
 } from '@tabler/icons-react';
 
-import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from './workout-builder-constants';
+import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from '../workout-builder-constants';
 
 function ExerciseSetTypeInput({set, locked, onChange}) {
 

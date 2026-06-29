@@ -38,9 +38,9 @@ import {
     parseWorkoutConfig,
     stringifyWorkoutConfig,
     pruneUnusedTargets,
-} from './draft/workout-draft-factory';
+} from '../draft/workout-draft-factory';
 
-import {resolveMediaUrl} from '../../utils/media-url-utils';
+import {resolveMediaUrl} from '../../../utils/media-url-utils';
 
 function ExerciseItemCard({
                               item,
@@ -219,7 +219,7 @@ function ExerciseItemCard({
     return (
         <>
             <Paper
-                className={isNew ? 'workout-builder-created' : undefined}
+                className={isNew ? 'workout-structure-created' : undefined}
                 radius="sm"
                 p={isMobile ? 'md' : 'lg'}
                 shadow={computedColorScheme === 'light' ? "var(--mantine-shadow-md)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"}
