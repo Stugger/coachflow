@@ -38,7 +38,7 @@ public class WorkoutTemplateItem {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "item_type", nullable = false, length = 32)
-    private WorkoutTemplateItemType itemType;
+    private WorkoutItemType itemType;
 
     @ManyToOne
     @JoinColumn(name = "exercise_id")

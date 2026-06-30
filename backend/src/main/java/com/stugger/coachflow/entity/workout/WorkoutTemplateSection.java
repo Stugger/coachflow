@@ -38,7 +38,7 @@ public class WorkoutTemplateSection {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "section_type", nullable = false, length = 32)
-    private WorkoutTemplateSectionType sectionType;
+    private WorkoutSectionType sectionType;
 
     @Column(columnDefinition = "TEXT")
     private String notes;

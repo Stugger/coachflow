@@ -1,7 +1,7 @@
 package com.stugger.coachflow.api.dto.response.workout;
 
 import com.stugger.coachflow.entity.workout.WorkoutTemplateSection;
-import com.stugger.coachflow.entity.workout.WorkoutTemplateSectionType;
+import com.stugger.coachflow.entity.workout.WorkoutSectionType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,24 +10,24 @@ import java.util.List;
  * @author Jake
  * @since June 15th, 2026
  */
-public record WorkoutTemplateSectionResponse(
+public record WorkoutSectionResponse(
         Long id,
         Integer position,
         String name,
-        WorkoutTemplateSectionType sectionType,
+        WorkoutSectionType sectionType,
         String notes,
-        List<WorkoutTemplateItemResponse> items,
+        List<WorkoutItemResponse> items,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public WorkoutTemplateSectionResponse(WorkoutTemplateSection section) {
+    public WorkoutSectionResponse(WorkoutTemplateSection section) {
         this(section.getId(),
             section.getPosition(),
             section.getName(),
             section.getSectionType(),
             section.getNotes(),
             section.getItems().stream()
-                    .map(WorkoutTemplateItemResponse::new)
+                    .map(WorkoutItemResponse::new)
                     .toList(),
             section.getCreatedAt(),
             section.getUpdatedAt()

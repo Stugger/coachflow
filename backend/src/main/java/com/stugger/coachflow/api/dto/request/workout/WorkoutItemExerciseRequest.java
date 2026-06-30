@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
  * @author Jake
  * @since June 15th, 2026
  */
-public record WorkoutTemplateItemExerciseRequest(
+public record WorkoutItemExerciseRequest(
         Long id,
 
         @NotNull(message = "Exercise is required")

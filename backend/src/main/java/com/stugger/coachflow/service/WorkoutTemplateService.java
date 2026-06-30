@@ -2,9 +2,9 @@ package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.workout.CreateWorkoutTemplateRequest;
 import com.stugger.coachflow.api.dto.request.workout.UpdateWorkoutTemplateRequest;
-import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateItemExerciseRequest;
-import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateItemRequest;
-import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateSectionRequest;
+import com.stugger.coachflow.api.dto.request.workout.WorkoutItemExerciseRequest;
+import com.stugger.coachflow.api.dto.request.workout.WorkoutItemRequest;
+import com.stugger.coachflow.api.dto.request.workout.WorkoutSectionRequest;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateResponse;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateSummaryResponse;
 import com.stugger.coachflow.entity.exercise.Exercise;
@@ -13,7 +13,7 @@ import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.entity.workout.WorkoutTemplate;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateItem;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateItemExercise;
-import com.stugger.coachflow.entity.workout.WorkoutTemplateItemType;
+import com.stugger.coachflow.entity.workout.WorkoutItemType;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateSection;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
 import com.stugger.coachflow.repository.workout.WorkoutTemplateRepository;
@@ -152,14 +152,14 @@ public class WorkoutTemplateService {
                 : exercise.getName();
     }
 
-    private void setSections(WorkoutTemplate workoutTemplate, List<WorkoutTemplateSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
+    private void setSections(WorkoutTemplate workoutTemplate, List<WorkoutSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
         validateSectionPositions(sectionRequests);
 
         if (sectionRequests == null) {
             return;
         }
 
-        for (WorkoutTemplateSectionRequest sectionRequest : sectionRequests) {
+        for (WorkoutSectionRequest sectionRequest : sectionRequests) {
             if (sectionRequest.sectionType() == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section type is required.");
             }
@@ -178,14 +178,14 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void setItems(WorkoutTemplateSection section, List<WorkoutTemplateItemRequest> itemRequests, Long trainerId, LocalDateTime now) {
+    private void setItems(WorkoutTemplateSection section, List<WorkoutItemRequest> itemRequests, Long trainerId, LocalDateTime now) {
         validateItemPositions(itemRequests);
 
         if (itemRequests == null) {
             return;
         }
 
-        for (WorkoutTemplateItemRequest itemRequest : itemRequests) {
+        for (WorkoutItemRequest itemRequest : itemRequests) {
             validateItemStructure(itemRequest);
 
             WorkoutTemplateItem item = new WorkoutTemplateItem();
@@ -205,14 +205,14 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void setItemExercises(WorkoutTemplateItem item, List<WorkoutTemplateItemExerciseRequest> itemExerciseRequests, Long trainerId, LocalDateTime now) {
+    private void setItemExercises(WorkoutTemplateItem item, List<WorkoutItemExerciseRequest> itemExerciseRequests, Long trainerId, LocalDateTime now) {
         validateItemExercisePositions(itemExerciseRequests);
 
         if (itemExerciseRequests == null) {
             return;
         }
 
-        for (WorkoutTemplateItemExerciseRequest itemExerciseRequest : itemExerciseRequests) {
+        for (WorkoutItemExerciseRequest itemExerciseRequest : itemExerciseRequests) {
             WorkoutTemplateItemExercise itemExercise = new WorkoutTemplateItemExercise();
             itemExercise.setWorkoutTemplateItem(item);
             itemExercise.setExercise(getAvailableExerciseOrThrow(itemExerciseRequest.exerciseId(), trainerId));
@@ -226,8 +226,8 @@ public class WorkoutTemplateService {
         }
     }
 
-    private Exercise resolveDirectExercise(WorkoutTemplateItemRequest itemRequest, Long trainerId) {
-        if (itemRequest.itemType() != WorkoutTemplateItemType.EXERCISE) {
+    private Exercise resolveDirectExercise(WorkoutItemRequest itemRequest, Long trainerId) {
+        if (itemRequest.itemType() != WorkoutItemType.EXERCISE) {
             return null;
         }
         return getAvailableExerciseOrThrow(itemRequest.exerciseId(), trainerId);
@@ -264,13 +264,13 @@ public class WorkoutTemplateService {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Exercise not found.");
     }
 
-    private void validateSectionPositions(List<WorkoutTemplateSectionRequest> sections) {
+    private void validateSectionPositions(List<WorkoutSectionRequest> sections) {
         if (sections == null) {
             return;
         }
 
         Set<Integer> positions = new HashSet<>();
-        for (WorkoutTemplateSectionRequest section : sections) {
+        for (WorkoutSectionRequest section : sections) {
             validatePositivePosition(section.position(), "Section position");
             if (!positions.add(section.position())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section positions must be unique within a workout template.");
@@ -278,13 +278,13 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void validateItemPositions(List<WorkoutTemplateItemRequest> items) {
+    private void validateItemPositions(List<WorkoutItemRequest> items) {
         if (items == null) {
             return;
         }
 
         Set<Integer> positions = new HashSet<>();
-        for (WorkoutTemplateItemRequest item : items) {
+        for (WorkoutItemRequest item : items) {
             validatePositivePosition(item.position(), "Item position");
             if (!positions.add(item.position())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item positions must be unique within a section.");
@@ -292,13 +292,13 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void validateItemExercisePositions(List<WorkoutTemplateItemExerciseRequest> itemExercises) {
+    private void validateItemExercisePositions(List<WorkoutItemExerciseRequest> itemExercises) {
         if (itemExercises == null) {
             return;
         }
 
         Set<Integer> positions = new HashSet<>();
-        for (WorkoutTemplateItemExerciseRequest itemExercise : itemExercises) {
+        for (WorkoutItemExerciseRequest itemExercise : itemExercises) {
             validatePositivePosition(itemExercise.position(), "Item exercise position");
             if (!positions.add(itemExercise.position())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item exercise positions must be unique within an item.");
@@ -312,7 +312,7 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void validateItemStructure(WorkoutTemplateItemRequest item) {
+    private void validateItemStructure(WorkoutItemRequest item) {
         if (item.itemType() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item type is required.");
         }
@@ -327,7 +327,7 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void validateExerciseItem(WorkoutTemplateItemRequest item, int itemExerciseCount) {
+    private void validateExerciseItem(WorkoutItemRequest item, int itemExerciseCount) {
         if (item.exerciseId() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exercise items require exerciseId.");
         }
@@ -339,7 +339,7 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void validateGroupedItem(WorkoutTemplateItemRequest item, int itemExerciseCount, int minimumExercises, Integer exactExercises, String label) {
+    private void validateGroupedItem(WorkoutItemRequest item, int itemExerciseCount, int minimumExercises, Integer exactExercises, String label) {
         if (item.exerciseId() != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must not set exerciseId.");
         }

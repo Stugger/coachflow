@@ -16,7 +16,7 @@ public record WorkoutTemplateResponse(
         String name,
         String description,
         Boolean archived,
-        List<WorkoutTemplateSectionResponse> sections,
+        List<WorkoutSectionResponse> sections,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -27,7 +27,7 @@ public record WorkoutTemplateResponse(
             workoutTemplate.getDescription(),
             workoutTemplate.getArchived(),
             workoutTemplate.getSections().stream()
-                    .map(WorkoutTemplateSectionResponse::new)
+                    .map(WorkoutSectionResponse::new)
                     .toList(),
             workoutTemplate.getCreatedAt(),
             workoutTemplate.getUpdatedAt()
