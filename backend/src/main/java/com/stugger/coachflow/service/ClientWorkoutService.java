@@ -56,33 +56,6 @@ public class ClientWorkoutService {
     //---------------------------------------------------------------------------------------------------------
 
     @Transactional
-    public ClientWorkoutResponse createAssessmentWorkout(Long clientId, @Valid CreateClientWorkoutRequest request) {
-        Trainer trainer = currentTrainerService.getCurrentTrainer();
-        Client client = getOwnedClientOrThrow(clientId, trainer);
-
-        WorkoutTemplate sourceTemplate = request.sourceWorkoutTemplateId() == null
-                ? null
-                : getAvailableWorkoutTemplateOrThrow(request.sourceWorkoutTemplateId(), trainer);
-
-        LocalDateTime now = LocalDateTime.now();
-
-        ClientWorkout clientWorkout = new ClientWorkout();
-        clientWorkout.setTrainer(trainer);
-        clientWorkout.setClient(client);
-        clientWorkout.setSourceTemplate(sourceTemplate);
-        clientWorkout.setOrigin(ClientWorkoutOrigin.ASSESSMENT);
-        clientWorkout.setName(TextUtils.trimToEmpty(request.name()));
-        clientWorkout.setDescription(TextUtils.trimToNull(request.description()));
-        clientWorkout.setArchivedAt(null);
-        clientWorkout.setCreatedAt(now);
-        clientWorkout.setUpdatedAt(now);
-
-        setSections(clientWorkout, request.sections(), trainer.getId(), now);
-
-        return new ClientWorkoutResponse(clientWorkoutRepository.save(clientWorkout));
-    }
-
-    @Transactional
     public ClientWorkoutResponse updateClientWorkout(Long clientWorkoutId, @Valid UpdateClientWorkoutRequest request) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
@@ -113,6 +86,47 @@ public class ClientWorkoutService {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         return new ClientWorkoutResponse(getClientWorkoutOrThrow(clientWorkoutId, trainer));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ClientWorkoutResponse> getClientWorkoutsOfOriginByClientId(Long clientId, ClientWorkoutOrigin origin) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        getOwnedClientOrThrow(clientId, trainer);
+        return clientWorkoutRepository.findByClientIdAndTrainerIdAndOriginAndArchivedAtNullOrderByUpdatedAtDesc(clientId, trainer.getId(), origin)
+                .stream()
+                .map(ClientWorkoutResponse::new)
+                .toList();
+    }
+
+    /*
+     * Create Workouts
+     */
+
+    @Transactional
+    public ClientWorkoutResponse createAssessmentWorkout(Long clientId, @Valid CreateClientWorkoutRequest request) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        Client client = getOwnedClientOrThrow(clientId, trainer);
+
+        WorkoutTemplate sourceTemplate = request.sourceWorkoutTemplateId() == null
+                ? null
+                : getAvailableWorkoutTemplateOrThrow(request.sourceWorkoutTemplateId(), trainer);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ClientWorkout clientWorkout = new ClientWorkout();
+        clientWorkout.setTrainer(trainer);
+        clientWorkout.setClient(client);
+        clientWorkout.setSourceTemplate(sourceTemplate);
+        clientWorkout.setOrigin(ClientWorkoutOrigin.ASSESSMENT);
+        clientWorkout.setName(TextUtils.trimToEmpty(request.name()));
+        clientWorkout.setDescription(TextUtils.trimToNull(request.description()));
+        clientWorkout.setArchivedAt(null);
+        clientWorkout.setCreatedAt(now);
+        clientWorkout.setUpdatedAt(now);
+
+        setSections(clientWorkout, request.sections(), trainer.getId(), now);
+
+        return new ClientWorkoutResponse(clientWorkoutRepository.save(clientWorkout));
     }
 
     //---------------------------------------------------------------------------------------------------------
