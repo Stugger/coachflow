@@ -41,24 +41,27 @@ import {
     writeWorkoutDraftRecovery,
 } from './draft/workout-draft-recovery';
 
+import {WORKOUT_BUILDER_SOURCE} from "../workout-builder/workout-builder-constants";
+
 function WorkoutBuilder({
-                           opened,
-                           loaded,
-                           loadError,
-                           initialDraft,
-                           exercises = [],
-                           recoveryKey,
-                           isDraft = false,
-                           isNew = false,
-                           allowSaveWithoutChanges = false,
-                           autoFocusName = false,
-                           contextLabel,
-                           headerActions,
-                           discardTitle = 'Discard unsaved changes?',
-                           onSave,
-                           onSaved,
-                           onClose,
-                       }) {
+                        opened,
+                        loaded,
+                        loadError,
+                        initialDraft,
+                        exercises = [],
+                        recoveryKey,
+                        isDraft = false,
+                        isNew = false,
+                        allowSaveWithoutChanges = false,
+                        autoFocusName = false,
+                        source,
+                        clientName = null,
+                        headerActions,
+                        discardTitle = 'Discard unsaved changes?',
+                        onSave,
+                        onSaved,
+                        onClose,
+                    }) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -370,7 +373,7 @@ function WorkoutBuilder({
                                         variant="filled"
                                         ref={inputRef}
                                         size="lg"
-                                        placeholder="Name your workout"
+                                        placeholder={`Name ${source === WORKOUT_BUILDER_SOURCE.TEMPLATE ? 'your' : 'this'} workout`}
                                         value={draft.name}
                                         maxLength={255}
                                         onChange={event => updateDraftField('name', event.currentTarget.value)}
@@ -459,7 +462,7 @@ function WorkoutBuilder({
         return (
             <Box
                 style={{
-                    padding: 'var(--mantine-spacing-md)',
+                    padding: isMobile ? 'var(--mantine-spacing-sm)' : 'var(--mantine-spacing-md)',
                     borderTop: '1px solid var(--color-border)',
                     backgroundColor: computedColorScheme === 'dark'
                         ? 'var(--color-surface)'
@@ -483,7 +486,7 @@ function WorkoutBuilder({
 
                     <Group justify={editorStatus ? 'space-between' : 'flex-end'} wrap="nowrap">
                         {editorStatus && (
-                            <Group gap={editorStatus.icon ? 4 : 8} wrap="nowrap">
+                            <Group gap={editorStatus.icon ? 4 : 8} wrap="nowrap" pl={isMobile && !editorStatus.icon ? 2 : 0}>
                                 {editorStatus.loading ? (
                                     <Loader size={14} color="gray"/>
                                 ) : editorStatus.icon ? (
@@ -507,7 +510,7 @@ function WorkoutBuilder({
                             </Group>
                         )}
 
-                        <Group wrap="nowrap">
+                        <Group wrap="nowrap" pr={isMobile ? 2 : 0}>
                             <Button
                                 variant="default"
                                 size={isMobile ? 'xs' : 'sm'}
@@ -621,30 +624,38 @@ function WorkoutBuilder({
     }
 
     function renderHeaderTitle() {
+        const sourceLabel = source
+            ? `${source}${clientName ? ` for ${clientName}` : ''}`
+            : null;
+
         return (
-            <Group gap="0.5rem" wrap="nowrap" style={{minWidth: 0}}>
-                <IconHammer size={22} style={{flexShrink: 0}} />
-
-                <Stack gap={0} style={{flex: 1, minWidth: 0}}>
-                    {contextLabel && (
-                        <Text size="xs" c="dimmed" fw={600} tt="uppercase" truncate="end">
-                            {contextLabel}
-                        </Text>
-                    )}
-
-                    <Text
-                        size="1.5rem"
-                        fw={600}
-                        truncate="end"
-                        style={{
-                            minWidth: 0,
-                            lineHeight: 1.1,
-                        }}
-                    >
-                        {title}
-                    </Text>
-                </Stack>
-            </Group>
+            <Stack gap={4}>
+                {sourceLabel && (
+                    <Group gap="0.2rem" wrap="nowrap" style={{minWidth: 0}}>
+                        <IconHammer size={16} color="gray" style={{flexShrink: 0, paddingBottom: 1}} />
+                            <Text
+                                size="xs"
+                                c="dimmed"
+                                fw={600}
+                                tt="uppercase"
+                                truncate="end"
+                            >
+                                {sourceLabel}
+                            </Text>
+                    </Group>
+                )}
+                <Text
+                    size={isMobile ? '1.3rem' : '1.4rem'}
+                    fw={600}
+                    truncate="end"
+                    style={{
+                        minWidth: 0,
+                        lineHeight: 1.2,
+                    }}
+                >
+                    {title}
+                </Text>
+        </Stack>
         );
     }
 
@@ -682,6 +693,8 @@ function WorkoutBuilder({
                         <Drawer.Header
                             style={{
                                 flexShrink: 0,
+                                paddingTop: '0.8rem',
+                                paddingBottom: '0.8rem',
                                 borderBottom: '1px solid var(--color-border)',
                                 backgroundColor: computedColorScheme === 'dark'
                                     ? 'var(--color-surface)'
@@ -737,6 +750,8 @@ function WorkoutBuilder({
                         <Modal.Header
                             style={{
                                 flexShrink: 0,
+                                paddingTop: '0.8rem',
+                                paddingBottom: '0.8rem',
                                 borderBottom: '1px solid var(--color-border)',
                                 backgroundColor: computedColorScheme === 'dark'
                                     ? 'var(--color-surface)'

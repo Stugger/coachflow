@@ -26,6 +26,8 @@ import {
     normalizeWorkoutDefinitionForDraft,
 } from '../workout-builder/draft/workout-draft-mappers';
 
+import {WORKOUT_BUILDER_SOURCE} from "../workout-builder/workout-builder-constants";
+
 function WorkoutTemplateBuilder({opened, mode, templateId, trainerId, onClose, onSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -186,6 +188,7 @@ function WorkoutTemplateBuilder({opened, mode, templateId, trainerId, onClose, o
             isNew={isCreating}
             allowSaveWithoutChanges={isCopying}
             autoFocusName={!isEditing}
+            source={WORKOUT_BUILDER_SOURCE.TEMPLATE}
             headerActions={headerActions}
             discardTitle={isEditing
                 ? 'Discard unsaved changes?'

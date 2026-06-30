@@ -4,6 +4,13 @@ import {
     IconStack3,
 } from '@tabler/icons-react';
 
+export const WORKOUT_BUILDER_SOURCE = {
+    TEMPLATE: 'Workout Template',
+    ASSESSMENT: 'Assessment Workout',
+    PROGRAM: 'Program Workout',
+    ASSIGNMENT: 'Workout Assignment',
+};
+
 export const WORKOUT_SECTION_TYPE = {
     REGULAR: 'REGULAR',
     WARMUP: 'WARMUP',
