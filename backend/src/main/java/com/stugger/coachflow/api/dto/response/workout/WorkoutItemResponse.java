@@ -1,6 +1,7 @@
 package com.stugger.coachflow.api.dto.response.workout;
 
 import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
+import com.stugger.coachflow.entity.workout.ClientWorkoutItem;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateItem;
 import com.stugger.coachflow.entity.workout.WorkoutItemType;
 
@@ -24,7 +25,25 @@ public record WorkoutItemResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
+
     public WorkoutItemResponse(WorkoutTemplateItem item) {
+        this(item.getId(),
+            item.getPosition(),
+            item.getItemType(),
+            item.getExercise() == null ? null : new ExerciseResponse(item.getExercise()),
+            item.getName(),
+            item.getRounds(),
+            item.getNotes(),
+            item.getConfigJson(),
+            item.getItemExercises().stream()
+                    .map(WorkoutItemExerciseResponse::new)
+                    .toList(),
+            item.getCreatedAt(),
+            item.getUpdatedAt()
+        );
+    }
+
+    public WorkoutItemResponse(ClientWorkoutItem item) {
         this(item.getId(),
             item.getPosition(),
             item.getItemType(),

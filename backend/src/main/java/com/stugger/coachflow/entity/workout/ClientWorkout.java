@@ -44,10 +44,6 @@ public class ClientWorkout {
     @Column(nullable = false, length = 32)
     private ClientWorkoutOrigin origin;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 16)
-    private ClientWorkoutStatus status = ClientWorkoutStatus.DRAFT;
-
     @Column(nullable = false)
     private String name;
 

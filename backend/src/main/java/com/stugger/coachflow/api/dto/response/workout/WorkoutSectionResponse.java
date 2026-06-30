@@ -1,5 +1,6 @@
 package com.stugger.coachflow.api.dto.response.workout;
 
+import com.stugger.coachflow.entity.workout.ClientWorkoutSection;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateSection;
 import com.stugger.coachflow.entity.workout.WorkoutSectionType;
 
@@ -20,7 +21,22 @@ public record WorkoutSectionResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
+
     public WorkoutSectionResponse(WorkoutTemplateSection section) {
+        this(section.getId(),
+            section.getPosition(),
+            section.getName(),
+            section.getSectionType(),
+            section.getNotes(),
+            section.getItems().stream()
+                    .map(WorkoutItemResponse::new)
+                    .toList(),
+            section.getCreatedAt(),
+            section.getUpdatedAt()
+        );
+    }
+
+    public WorkoutSectionResponse(ClientWorkoutSection section) {
         this(section.getId(),
             section.getPosition(),
             section.getName(),

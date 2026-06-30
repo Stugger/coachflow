@@ -11,7 +11,6 @@ CREATE TABLE client_workouts (
     source_workout_template_id BIGINT REFERENCES workout_templates(id) ON DELETE SET NULL,
 
     origin VARCHAR(32) NOT NULL,
-    status VARCHAR(16) NOT NULL DEFAULT 'DRAFT',
 
     name VARCHAR(255) NOT NULL,
     description TEXT,
@@ -22,9 +21,6 @@ CREATE TABLE client_workouts (
 
     CONSTRAINT chk_client_workout_origin CHECK (
         origin IN ('ASSESSMENT', 'PROGRAM', 'ASSIGNMENT')
-    ),
-    CONSTRAINT chk_client_workout_status CHECK (
-        status IN ('DRAFT', 'READY')
     )
 );
 
