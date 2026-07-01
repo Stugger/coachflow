@@ -1,7 +1,8 @@
 import {useEffect, useState} from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {
     Alert,
+    Box,
     Button,
     LoadingOverlay,
     Modal,
@@ -12,6 +13,12 @@ import {
 } from '@mantine/core';
 
 import {ROUTES} from '../../../constants/routes.js';
+
+import {
+    CLIENT_PROFILE_TABS,
+    getClientProfileActiveTab,
+    getClientProfileTabPath,
+} from './client-profile-tab-utils.js';
 
 import {apiGetClient, apiUpdateClient} from '../shared/api/clients-api.js';
 import {apiGetClientIntakesForClient} from '../intake/client-intake-api.js';
@@ -30,6 +37,7 @@ function ClientProfilePage() {
     // Route state
     // ------------------------------------------------------------------------------------------------------------------------
 
+    const location = useLocation();
     const navigate = useNavigate();
     const {clientId} = useParams();
 
@@ -45,6 +53,10 @@ function ClientProfilePage() {
 
     const loading = !clientLoaded || !intakeLoaded;
 
+    const activeTab = getClientProfileActiveTab(location.pathname);
+
+    const [visitedTabs, setVisitedTabs] = useState(() => [activeTab]);
+
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
 
@@ -57,7 +69,19 @@ function ClientProfilePage() {
     useEffect(() => {
         loadClient();
         loadIntake();
-    }, []);
+    }, [clientId]);
+
+    useEffect(() => {
+        setVisitedTabs(currentTabs =>
+            currentTabs.includes(activeTab)
+                ? currentTabs
+                : [...currentTabs, activeTab]
+        );
+    }, [activeTab]);
+
+    useEffect(() => {
+        setVisitedTabs([activeTab]);
+    }, [clientId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // API loading
@@ -139,6 +163,10 @@ function ClientProfilePage() {
         navigate(ROUTES.intake(intake.id));
     }
 
+    function changeProfileTab(tabValue) {
+        navigate(getClientProfileTabPath(clientId, tabValue));
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Client applied
     // ------------------------------------------------------------------------------------------------------------------------
@@ -182,14 +210,6 @@ function ClientProfilePage() {
     // Utility
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function getActiveTab() {
-        if (location.pathname.endsWith('/programs')) return 'programs';
-        if (location.pathname.endsWith('/records')) return 'records';
-        if (location.pathname.endsWith('/habits')) return 'habits';
-        if (location.pathname.endsWith('/measurements')) return 'measurements';
-        return 'history';
-    }
-
     function getClientReviewStatus() {
         if (!intake || intake.status !== 'COMPLETED') {
             return 'INTAKE';
@@ -204,11 +224,11 @@ function ClientProfilePage() {
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function renderActiveTabContent() {
+    function renderTabContent(tab) {
         //TODO temp content, will be replaced with their own components
         return (
             <>
-                {getActiveTab() === 'history' && (
+                {tab === 'history' && (
                     <Stack gap="sm">
                         <Text fw={700}>
                             History
@@ -219,7 +239,7 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'programs' && (
+                {tab === 'programs' && (
                     <Stack gap="sm">
                         <Text fw={700}>
                             Programs
@@ -230,7 +250,7 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'records' && (
+                {tab === 'records' && (
                     <Stack gap="sm">
                         <Text fw={700}>
                             Records
@@ -241,7 +261,7 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'habits' && (
+                {tab === 'habits' && (
                     <Stack gap="sm">
                         <Text fw={700}>
                             Habits
@@ -252,7 +272,7 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'measurements' && (
+                {tab === 'measurements' && (
                     <Stack gap="sm">
                         <Text fw={700}>
                             Measurements
@@ -309,9 +329,27 @@ function ClientProfilePage() {
                 />
             )}
 
-            <ClientProfileTabs />
+            <ClientProfileTabs
+                activeTab={activeTab}
+                onChange={changeProfileTab}
+            />
 
-            {renderActiveTabContent()}
+            {CLIENT_PROFILE_TABS.map(tab => {
+                if (!visitedTabs.includes(tab.value)) {
+                    return null;
+                }
+
+                return (
+                    <Box
+                        key={`${clientId}-${tab.value}`}
+                        style={{
+                            display: activeTab === tab.value ? 'block' : 'none',
+                        }}
+                    >
+                        {renderTabContent(tab.value)}
+                    </Box>
+                );
+            })}
 
             <Modal
                 opened={editingDetails}
