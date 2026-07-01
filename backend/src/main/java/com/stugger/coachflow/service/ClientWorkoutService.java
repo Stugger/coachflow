@@ -88,24 +88,18 @@ public class ClientWorkoutService {
         return new ClientWorkoutResponse(getClientWorkoutOrThrow(clientWorkoutId, trainer));
     }
 
-    @Transactional(readOnly = true)
-    public List<ClientWorkoutResponse> getClientWorkoutsOfOriginByClientId(Long clientId, ClientWorkoutOrigin origin) {
-        Trainer trainer = currentTrainerService.getCurrentTrainer();
-        getOwnedClientOrThrow(clientId, trainer);
-        return clientWorkoutRepository.findByClientIdAndTrainerIdAndOriginAndArchivedAtNullOrderByUpdatedAtDesc(clientId, trainer.getId(), origin)
-                .stream()
-                .map(ClientWorkoutResponse::new)
-                .toList();
-    }
-
     /*
-     * Create Workouts
+     * Initial Assessment Workout
      */
 
     @Transactional
-    public ClientWorkoutResponse createAssessmentWorkout(Long clientId, @Valid CreateClientWorkoutRequest request) {
+    public ClientWorkoutResponse createInitialAssessmentWorkout(Long clientId, @Valid CreateClientWorkoutRequest request) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         Client client = getOwnedClientOrThrow(clientId, trainer);
+
+        if (clientWorkoutRepository.existsByClientIdAndTrainerIdAndOriginAndArchivedAtNull(clientId, trainer.getId(), ClientWorkoutOrigin.INITIAL_ASSESSMENT)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An initial assessment workout already exists.");
+        }
 
         WorkoutTemplate sourceTemplate = request.sourceWorkoutTemplateId() == null
                 ? null
@@ -117,7 +111,7 @@ public class ClientWorkoutService {
         clientWorkout.setTrainer(trainer);
         clientWorkout.setClient(client);
         clientWorkout.setSourceTemplate(sourceTemplate);
-        clientWorkout.setOrigin(ClientWorkoutOrigin.ASSESSMENT);
+        clientWorkout.setOrigin(ClientWorkoutOrigin.INITIAL_ASSESSMENT);
         clientWorkout.setName(TextUtils.trimToEmpty(request.name()));
         clientWorkout.setDescription(TextUtils.trimToNull(request.description()));
         clientWorkout.setArchivedAt(null);
@@ -127,6 +121,17 @@ public class ClientWorkoutService {
         setSections(clientWorkout, request.sections(), trainer.getId(), now);
 
         return new ClientWorkoutResponse(clientWorkoutRepository.save(clientWorkout));
+    }
+
+    @Transactional(readOnly = true)
+    public ClientWorkoutResponse getInitialAssessmentWorkout(Long clientId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        getOwnedClientOrThrow(clientId, trainer);
+
+        ClientWorkout clientWorkout = clientWorkoutRepository.findFirstByClientIdAndTrainerIdAndOriginAndArchivedAtNullOrderByUpdatedAtDesc(clientId, trainer.getId(), ClientWorkoutOrigin.INITIAL_ASSESSMENT)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Initial assessment workout not found."));
+
+        return new ClientWorkoutResponse(clientWorkout);
     }
 
     //---------------------------------------------------------------------------------------------------------

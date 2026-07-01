@@ -5,7 +5,7 @@ package com.stugger.coachflow.entity.workout;
  * @since June 29th, 2026
  */
 public enum ClientWorkoutOrigin {
-    ASSESSMENT,
+    INITIAL_ASSESSMENT,
     PROGRAM,
     ASSIGNMENT
 }

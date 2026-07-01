@@ -3,14 +3,11 @@ package com.stugger.coachflow.api.controller;
 import com.stugger.coachflow.api.dto.request.workout.CreateClientWorkoutRequest;
 import com.stugger.coachflow.api.dto.request.workout.UpdateClientWorkoutRequest;
 import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutResponse;
-import com.stugger.coachflow.entity.workout.ClientWorkoutOrigin;
 import com.stugger.coachflow.service.ClientWorkoutService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author Jake
@@ -47,15 +44,15 @@ public class ClientWorkoutController {
      * Assessment Workouts
      */
 
-    @PostMapping("/clients/{clientId}/assessment-workouts")
+    @PostMapping("/clients/{clientId}/initial-assessment-workout")
     @ResponseStatus(HttpStatus.CREATED)
-    public ClientWorkoutResponse createAssessmentWorkout(@PathVariable Long clientId, @Valid @RequestBody CreateClientWorkoutRequest request) {
-        return clientWorkoutService.createAssessmentWorkout(clientId, request);
+    public ClientWorkoutResponse createInitialAssessmentWorkout(@PathVariable Long clientId, @Valid @RequestBody CreateClientWorkoutRequest request) {
+        return clientWorkoutService.createInitialAssessmentWorkout(clientId, request);
     }
 
-    @GetMapping("/clients/{clientId}/assessment-workouts")
-    public List<ClientWorkoutResponse> getAssessmentWorkoutsByClientId(@PathVariable Long clientId) {
-        return clientWorkoutService.getClientWorkoutsOfOriginByClientId(clientId, ClientWorkoutOrigin.ASSESSMENT);
+    @GetMapping("/clients/{clientId}/initial-assessment-workout")
+    public ClientWorkoutResponse getInitialAssessmentWorkout(@PathVariable Long clientId) {
+        return clientWorkoutService.getInitialAssessmentWorkout(clientId);
     }
 
 }

@@ -20,7 +20,7 @@ CREATE TABLE client_workouts (
     archived_at TIMESTAMP NULL,
 
     CONSTRAINT chk_client_workout_origin CHECK (
-        origin IN ('ASSESSMENT', 'PROGRAM', 'ASSIGNMENT')
+        origin IN ('INITIAL_ASSESSMENT', 'PROGRAM', 'ASSIGNMENT')
     )
 );
 
@@ -30,6 +30,8 @@ CREATE INDEX idx_client_workouts_client_active_origin_updated ON client_workouts
     WHERE archived_at IS NULL;
 CREATE INDEX idx_client_workouts_source_template_id ON client_workouts(source_workout_template_id)
     WHERE source_workout_template_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_client_workouts_active_initial_assessment ON client_workouts (client_id)
+    WHERE origin = 'INITIAL_ASSESSMENT' AND archived_at IS NULL;
 
 
 -- -----------------------------------------------------------------------------------------------------------------
