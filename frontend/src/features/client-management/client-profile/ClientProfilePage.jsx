@@ -11,6 +11,10 @@ import {
     Text,
     Group,
 } from '@mantine/core';
+import {
+    IconAlertTriangle,
+    IconClipboardCheck,
+} from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
 
@@ -21,7 +25,6 @@ import {
 } from './client-profile-tab-utils.js';
 
 import {apiGetClient, apiUpdateClient} from '../shared/api/clients-api.js';
-import {apiGetClientIntakesForClient} from '../intake/client-intake-api.js';
 
 import ClientProfileHeader from './ClientProfileHeader.jsx';
 import ClientDetailsForm from "../shared/ClientDetailsForm.jsx";
@@ -46,20 +49,16 @@ function ClientProfilePage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const [client, setClient] = useState();
-    const [intake, setIntake] = useState();
 
     const [clientLoaded, setClientLoaded] = useState(false);
-    const [intakeLoaded, setIntakeLoaded] = useState(false);
 
-    const loading = !clientLoaded || !intakeLoaded;
+    const loading = !clientLoaded;
 
     const activeTab = getClientProfileActiveTab(location.pathname);
-
     const [visitedTabs, setVisitedTabs] = useState(() => [activeTab]);
 
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
-
     const [editingDetails, setEditingDetails] = useState(false);
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -68,7 +67,6 @@ function ClientProfilePage() {
 
     useEffect(() => {
         loadClient();
-        loadIntake();
     }, [clientId]);
 
     useEffect(() => {
@@ -101,20 +99,6 @@ function ClientProfilePage() {
             });
     }
 
-    function loadIntake() {
-        setIntakeLoaded(false);
-        apiGetClientIntakesForClient(clientId)
-            .then(intakes => {
-                setIntake(Array.isArray(intakes) ? intakes[0] ?? null : intakes);
-            })
-            .catch(error => {
-                console.error('Error loading intake:', error);
-            })
-            .finally(() => {
-                setIntakeLoaded(true);
-            });
-    }
-
     // ------------------------------------------------------------------------------------------------------------------------
     // Client CRUD
     // ------------------------------------------------------------------------------------------------------------------------
@@ -138,7 +122,6 @@ function ClientProfilePage() {
                 document.activeElement?.blur(); //close mobile keyboard
 
                 applyClient(updatedClient);
-                loadClient();
                 setTimeout(() => {
                     window.scrollTo({
                         top: 0,
@@ -159,8 +142,18 @@ function ClientProfilePage() {
     // Route/query param helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function openIncompleteIntake() {
-        navigate(ROUTES.intake(intake.id));
+    function openIntakeAction() {
+        const intakeId = client.reviewStatus?.inProgressIntakeId;
+
+        if (!intakeId) {
+            return;
+        }
+
+        navigate(ROUTES.intake(intakeId));
+    }
+
+    function openInitialAssessmentRecords() {
+        navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
     }
 
     function changeProfileTab(tabValue) {
@@ -204,20 +197,6 @@ function ClientProfilePage() {
             'phone',
             value
         );
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Utility
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function getClientReviewStatus() {
-        if (!intake || intake.status !== 'COMPLETED') {
-            return 'INTAKE';
-        }
-        if (intake.status === "COMPLETED") { //TODO would need to check if initial assessment is not completed
-            return 'ASSESS';
-        }
-        return null;
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -287,11 +266,73 @@ function ClientProfilePage() {
         );
     }
 
+    function renderReviewActions() {
+        if (client.archived) {
+            return null;
+        }
+
+        const reviewStatus = client.reviewStatus;
+
+        if (!reviewStatus) {
+            return null;
+        }
+
+        const intakeNeedsAction = reviewStatus.intakeStatus === 'IN_PROGRESS';
+
+        const assessmentNeedsAction = reviewStatus.initialAssessmentStatus === 'MISSING' || reviewStatus.initialAssessmentStatus === 'READY';
+
+        return (
+            <>
+                {intakeNeedsAction && (
+                    <ClientProfileReviewAction
+                        color="red"
+                        icon={<IconAlertTriangle size={18}/>}
+                        title="Action Required"
+                        description={
+                            reviewStatus.intakeStatus === 'IN_PROGRESS'
+                                ? `${client.firstName} has an intake in progress.`
+                                : `${client.firstName} needs an intake.`
+                        }
+                        actionLabel={
+                            reviewStatus.intakeStatus === 'IN_PROGRESS'
+                                ? 'Resume Intake'
+                                : 'Start Intake'
+                        }
+                        onAction={openIntakeAction}
+                    />
+                )}
+
+                {assessmentNeedsAction && (
+                    <ClientProfileReviewAction
+                        color="yellow"
+                        icon={<IconClipboardCheck size={18}/>}
+                        title={
+                            reviewStatus.initialAssessmentStatus === 'READY'
+                                ? 'Initial Assessment Ready'
+                                : 'Action Needed'
+                        }
+                        description={
+                            reviewStatus.initialAssessmentStatus === 'READY'
+                                ? `${client.firstName}'s initial assessment workout is ready to review.`
+                                : `${client.firstName} needs an initial assessment workout.`
+                        }
+                        actionLabel={
+                            reviewStatus.initialAssessmentStatus === 'READY'
+                                ? 'View Assessment'
+                                : 'Set Up Assessment'
+                        }
+                        onAction={openInitialAssessmentRecords}
+                    />
+                )}
+            </>
+        );
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------
 
-    if (!client || !editForm || !intake) {
+    if (!client || !editForm) {
         return (
             <Stack pos="relative" mih={300}>
                 <LoadingOverlay visible overlayProps={{blur: 2}}/>
@@ -320,13 +361,7 @@ function ClientProfilePage() {
                 onArchiveClient={() => console.log('Toggle archive client coming soon')}
             />
 
-            {!client.archived && (
-                <ClientProfileReviewAction
-                    client={client}
-                    reviewStatus={getClientReviewStatus()}
-                    openIntake={openIncompleteIntake}
-                />
-            )}
+            {renderReviewActions()}
 
             <ClientProfileTabs
                 activeTab={activeTab}
