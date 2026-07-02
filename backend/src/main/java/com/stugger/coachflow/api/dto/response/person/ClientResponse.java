@@ -22,10 +22,11 @@ public record ClientResponse(
         LocalDate birthDate,
         ClientGender gender,
         Boolean archived,
+        ClientReviewStatusResponse reviewStatus,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public ClientResponse(Client client) {
+    public ClientResponse(Client client, ClientReviewStatusResponse reviewStatus) {
         this(client.getId(),
             client.getUser() == null ? null : new UserResponse(client.getUser()),
             new TrainerSummaryResponse(client.getTrainer()),
@@ -37,6 +38,7 @@ public record ClientResponse(
             client.getBirthDate(),
             client.getGender(),
             client.getArchived(),
+            reviewStatus,
             client.getCreatedAt(),
             client.getUpdatedAt()
         );

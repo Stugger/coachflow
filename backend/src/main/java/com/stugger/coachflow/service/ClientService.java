@@ -3,9 +3,17 @@ package com.stugger.coachflow.service;
 import com.stugger.coachflow.api.dto.request.person.CreateClientRequest;
 import com.stugger.coachflow.api.dto.request.person.UpdateClientRequest;
 import com.stugger.coachflow.api.dto.response.person.ClientResponse;
+import com.stugger.coachflow.api.dto.response.person.ClientReviewStatusResponse;
+import com.stugger.coachflow.api.dto.response.person.InitialAssessmentReviewStatus;
+import com.stugger.coachflow.api.dto.response.person.IntakeReviewStatus;
+import com.stugger.coachflow.entity.intake.ClientIntake;
+import com.stugger.coachflow.entity.intake.IntakeStatus;
 import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.entity.person.Trainer;
+import com.stugger.coachflow.entity.workout.ClientWorkoutOrigin;
+import com.stugger.coachflow.repository.intake.ClientIntakeRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
+import com.stugger.coachflow.repository.workout.ClientWorkoutRepository;
 import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import jakarta.validation.Valid;
@@ -15,7 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Jake
@@ -27,9 +35,14 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final CurrentTrainerService currentTrainerService;
 
-    public ClientService(ClientRepository clientRepository, CurrentTrainerService currentTrainerService) {
+    private final ClientIntakeRepository clientIntakeRepository;
+    private final ClientWorkoutRepository clientWorkoutRepository;
+
+    public ClientService(ClientRepository clientRepository, CurrentTrainerService currentTrainerService, ClientIntakeRepository clientIntakeRepository, ClientWorkoutRepository clientWorkoutRepository) {
         this.clientRepository = clientRepository;
         this.currentTrainerService = currentTrainerService;
+        this.clientIntakeRepository = clientIntakeRepository;
+        this.clientWorkoutRepository = clientWorkoutRepository;
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -38,7 +51,7 @@ public class ClientService {
     //
     //---------------------------------------------------------------------------------------------------------
 
-    public Client createClient(CreateClientRequest request) {
+    public ClientResponse createClient(CreateClientRequest request) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         LocalDateTime now = LocalDateTime.now();
@@ -56,10 +69,10 @@ public class ClientService {
         client.setArchived(false);
         client.setCreatedAt(now);
         client.setUpdatedAt(now);
-        return clientRepository.save(client);
+        return toClientResponse(clientRepository.save(client));
     }
 
-    public Client updateClient(Long clientId, @Valid UpdateClientRequest request) {
+    public ClientResponse updateClient(Long clientId, @Valid UpdateClientRequest request) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         Client client = getOwnedClientOrThrow(clientId, trainer);
 
@@ -75,12 +88,12 @@ public class ClientService {
         client.setBirthDate(request.birthDate());
         client.setGender(request.gender());
         client.setUpdatedAt(LocalDateTime.now());
-        return clientRepository.save(client);
+        return toClientResponse(clientRepository.save(client));
     }
 
     public ClientResponse getClientById(Long clientId) {
         Client client = getOwnedClientOrThrow(clientId, currentTrainerService.getCurrentTrainer());
-        return new ClientResponse(client);
+        return toClientResponse(client);
     }
 
     public List<ClientResponse> getClients() {
@@ -89,9 +102,63 @@ public class ClientService {
         Sort sort = Sort.by("lastName").ascending()
                 .and(Sort.by("firstName").ascending());
 
-        return clientRepository.findByTrainerId(trainer.getId(), sort).stream()
-                .map(ClientResponse::new)
+        List<Client> clients = clientRepository.findByTrainerId(trainer.getId(), sort);
+
+        Map<Long, ClientReviewStatusResponse> reviewStatuses = getReviewStatuses(clients.stream().map(Client::getId).toList(), trainer.getId());
+
+        return clients.stream()
+                .map(client -> new ClientResponse(client, reviewStatuses.get(client.getId())))
                 .toList();
+    }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Mapping
+    //
+    //---------------------------------------------------------------------------------------------------------
+
+    private ClientResponse toClientResponse(Client client) {
+        ClientReviewStatusResponse reviewStatus = getReviewStatuses(List.of(client.getId()), client.getTrainer().getId()).get(client.getId());
+        return new ClientResponse(client, reviewStatus);
+    }
+
+    private Map<Long, ClientReviewStatusResponse> getReviewStatuses(Collection<Long> clientIds, Long trainerId) {
+        if (clientIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<ClientIntake> intakes = clientIntakeRepository.findByTrainer_IdAndClient_IdIn(trainerId, clientIds);
+
+        Map<Long, ClientIntake> intakesByClientId = new HashMap<>();
+
+        for (ClientIntake intake : intakes) { //list should only have one entry at most
+            intakesByClientId.put(intake.getClient().getId(), intake);
+        }
+
+        Set<Long> initialAssessmentClientIds = clientWorkoutRepository.findClientIdsByTrainerIdAndClientIdInAndOriginAndArchivedAtNull(trainerId, clientIds, ClientWorkoutOrigin.INITIAL_ASSESSMENT);
+
+        Map<Long, ClientReviewStatusResponse> reviewStatuses = new HashMap<>();
+
+        for (Long clientId : clientIds) {
+            ClientIntake intake = intakesByClientId.get(clientId);
+
+            IntakeReviewStatus intakeStatus = intake == null
+                    ? IntakeReviewStatus.MISSING
+                    : intake.getStatus() == IntakeStatus.COMPLETED
+                      ? IntakeReviewStatus.COMPLETED
+                      : IntakeReviewStatus.IN_PROGRESS;
+
+            Long inProgressIntakeId = intakeStatus == IntakeReviewStatus.IN_PROGRESS ? intake.getId() : null;
+
+            InitialAssessmentReviewStatus initialAssessmentStatus =
+                    initialAssessmentClientIds.contains(clientId)
+                            ? InitialAssessmentReviewStatus.READY
+                            : InitialAssessmentReviewStatus.MISSING;
+
+            reviewStatuses.put(clientId, new ClientReviewStatusResponse(intakeStatus, inProgressIntakeId, initialAssessmentStatus));
+        }
+
+        return reviewStatuses;
     }
 
     //---------------------------------------------------------------------------------------------------------

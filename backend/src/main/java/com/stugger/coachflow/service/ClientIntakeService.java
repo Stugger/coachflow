@@ -13,6 +13,7 @@ import com.stugger.coachflow.repository.intake.ClientIntakeRepository;
 import com.stugger.coachflow.security.CurrentTrainerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ import java.util.List;
  * @since June 3rd, 2026
  */
 @Service
+@Transactional(readOnly = true)
 public class ClientIntakeService {
 
     private final ClientIntakeRepository clientIntakeRepository;
@@ -41,9 +43,14 @@ public class ClientIntakeService {
     //
     //---------------------------------------------------------------------------------------------------------
 
+    @Transactional
     public ClientIntakeResponse createIntake(CreateClientIntakeRequest request) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         Client client = getOwnedClientOrThrow(request.clientId(), trainer);
+
+        if (clientIntakeRepository.existsByClient_IdAndTrainer_Id(client.getId(), trainer.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "An intake already exists.");
+        }
 
         ClientIntake intake = new ClientIntake();
         LocalDateTime now = LocalDateTime.now();
@@ -59,6 +66,7 @@ public class ClientIntakeService {
         return new ClientIntakeResponse(clientIntakeRepository.save(intake));
     }
 
+    @Transactional
     public ClientIntakeResponse updateIntake(Long intakeId, IntakeStep step, UpdateIntakeJsonRequest request) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientIntake intake = getOwnedIntakeOrThrow(intakeId, trainer);
@@ -76,6 +84,7 @@ public class ClientIntakeService {
         return saveUpdatedIntake(intake, step);
     }
 
+    @Transactional
     public ClientIntakeResponse completeIntake(Long intakeId) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientIntake intake = getOwnedIntakeOrThrow(intakeId, trainer);
