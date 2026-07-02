@@ -1,7 +1,6 @@
 import {
     ActionIcon,
     Avatar,
-    Badge,
     Button,
     Group,
     Menu,
@@ -21,39 +20,12 @@ import {
     IconUserCog,
 } from '@tabler/icons-react';
 
-function ClientProfileHeader({client, reviewStatus, onEditDetails, onArchiveClient}) {
+import ClientReviewBadge from '../shared/review/ClientReviewBadge.jsx';
+
+function ClientProfileHeader({client, onEditDetails, onArchiveClient}) {
 
     const fullName = `${client.firstName} ${client.lastName}`;
     const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
-
-    function renderStatusBadge() {
-        if (client.archived) {
-            return (
-                <Badge color="gray" variant="light">
-                    Archived
-                </Badge>
-            );
-        }
-        if (reviewStatus === 'INTAKE') {
-            return (
-                <Badge color="red" variant="light">
-                    Intake
-                </Badge>
-            );
-        }
-        if (reviewStatus === 'ASSESS') {
-            return (
-                <Badge color="yellow" variant="light">
-                    Assess
-                </Badge>
-            );
-        }
-        return (
-            <Badge color="green" variant="light">
-                Active
-            </Badge>
-        );
-    }
 
     function renderContactInfo() {
         return (
@@ -171,7 +143,7 @@ function ClientProfileHeader({client, reviewStatus, onEditDetails, onArchiveClie
                             {fullName}
                         </Title>
 
-                        {renderStatusBadge()}
+                        <ClientReviewBadge client={client}/>
                     </Group>
 
                     {client.preferredName && (

@@ -1,6 +1,5 @@
 import {
     Avatar,
-    Badge,
     Group,
     Table,
     Text
@@ -10,39 +9,12 @@ import {
     IconChevronRight
 } from '@tabler/icons-react';
 
-function ClientTableRow({client, reviewStatus, onClick}) {
+import ClientReviewBadge from '../shared/review/ClientReviewBadge.jsx';
+
+function ClientTableRow({client, onClick}) {
 
     const fullName = `${client.firstName} ${client.lastName}`;
     const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
-
-    function renderReviewBadge() {
-        if (client.archived) {
-            return (
-                <Badge color="gray" variant="light">
-                    Archived
-                </Badge>
-            );
-        }
-        if (reviewStatus === 'INTAKE') {
-            return (
-                <Badge color="red" variant="light">
-                    Intake
-                </Badge>
-            );
-        }
-        if (reviewStatus === 'ASSESS') {
-            return (
-                <Badge color="yellow" variant="light">
-                    Assess
-                </Badge>
-            );
-        }
-        return (
-            <Badge color="green" variant="light">
-                Active
-            </Badge>
-        );
-    }
 
     return (
         <Table.Tr
@@ -70,7 +42,7 @@ function ClientTableRow({client, reviewStatus, onClick}) {
             </Table.Td>
 
             <Table.Td>
-                {renderReviewBadge()}
+                <ClientReviewBadge client={client}/>
             </Table.Td>
 
             <Table.Td>

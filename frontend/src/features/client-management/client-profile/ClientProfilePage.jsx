@@ -316,7 +316,6 @@ function ClientProfilePage() {
 
             <ClientProfileHeader
                 client={client}
-                reviewStatus={getClientReviewStatus()}
                 onEditDetails={() => setEditingDetails(true)}
                 onArchiveClient={() => console.log('Toggle archive client coming soon')}
             />
