@@ -30,7 +30,7 @@ import {
 import IntakeRecordCard from './IntakeRecordCard';
 import InitialAssessmentRecordCard from './InitialAssessmentRecordCard';
 
-function ClientRecordsTab({client, refreshKey, onOpenIntake, onCreateInitialAssessment, onEditInitialAssessment, onInitialAssessmentDeleted}) {
+function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -79,6 +79,14 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onCreateInitialAsse
 
     useEffect(() => {
         const recordId = location.hash.replace('#', '');
+
+        if (![
+            'intake',
+            'initial-assessment',
+            'initial-measurements',
+        ].includes(recordId)) {
+            return;
+        }
 
         setExpandedRecords(currentRecords => (
             currentRecords.includes(recordId)
@@ -268,7 +276,8 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onCreateInitialAsse
                                 loaded={initialAssessmentLoaded}
                                 error={initialAssessmentError}
                                 deleting={deletingInitialAssessment}
-                                onCreate={onCreateInitialAssessment}
+                                onNewWorkout={onNewInitialAssessment}
+                                onFromTemplate={onInitialAssessmentFromTemplate}
                                 onEdit={onEditInitialAssessment}
                                 onDelete={() => setDeleteConfirmationOpen(true)}
                             />

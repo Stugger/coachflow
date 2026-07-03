@@ -9,11 +9,12 @@ import {
 } from '@mantine/core';
 import {
     IconEdit,
-    IconPlus,
     IconTrash,
 } from '@tabler/icons-react';
 
-function InitialAssessmentRecordCard({workout, loaded, error, deleting, onCreate, onEdit, onDelete}) {
+import InitialAssessmentSetupMenu from '../../initial-assessment/InitialAssessmentSetupMenu';
+
+function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete}) {
 
     if (!loaded) {
         return (
@@ -42,12 +43,10 @@ function InitialAssessmentRecordCard({workout, loaded, error, deleting, onCreate
                 </Text>
 
                 <Group>
-                    <Button
-                        leftSection={<IconPlus size={16}/>}
-                        onClick={onCreate}
-                    >
-                        Set Up Assessment
-                    </Button>
+                    <InitialAssessmentSetupMenu
+                        onNewWorkout={onNewWorkout}
+                        onFromTemplate={onFromTemplate}
+                    />
                 </Group>
             </Stack>
         );

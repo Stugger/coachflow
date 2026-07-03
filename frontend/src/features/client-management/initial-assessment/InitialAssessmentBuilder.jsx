@@ -8,18 +8,22 @@ import {
     apiUpdateClientWorkout,
 } from '../client-workouts/client-workout-api';
 
-import {apiGetExercises} from '../../workout-library/workout-template-api';
+import {
+    apiGetExercises,
+    apiGetWorkoutTemplate,
+} from '../../workout-library/workout-template-api';
 
 import {createEmptyWorkoutDraft} from '../../workout-builder/draft/workout-draft-factory';
 
 import {
     buildWorkoutDefinitionPayload,
+    createWorkoutDefinitionDraftFromTemplate,
     normalizeWorkoutDefinitionForDraft,
 } from '../../workout-builder/draft/workout-draft-mappers';
 
 import {WORKOUT_BUILDER_SOURCE} from '../../workout-builder/workout-builder-constants';
 
-function InitialAssessmentBuilder({opened, client, clientWorkoutId, onClose, onSaved}) {
+function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkoutTemplateId = null, onClose, onSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -47,8 +51,12 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, onClose, onS
             return `coachflow.workoutDraft.initial-assessment.edit.${trainerKey}.${clientWorkoutId}`;
         }
 
+        if (sourceWorkoutTemplateId) {
+            return `coachflow.workoutDraft.initial-assessment.template.${trainerKey}.${client?.id}.${sourceWorkoutTemplateId}`;
+        }
+
         return `coachflow.workoutDraft.initial-assessment.new.${trainerKey}.${client?.id}`;
-    }, [client?.id, clientWorkoutId, trainerId]);
+    }, [client?.id, clientWorkoutId, sourceWorkoutTemplateId, trainerId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -66,7 +74,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, onClose, onS
 
         setPersistedWorkoutId(clientWorkoutId ?? null);
         loadBuilderData();
-    }, [opened, client?.id, clientWorkoutId]);
+    }, [opened, client?.id, clientWorkoutId, sourceWorkoutTemplateId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Loading & event handlers
@@ -96,18 +104,33 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, onClose, onS
     }
 
     async function loadInitialDraft() {
-        if (!isEditing) {
-            return createEmptyWorkoutDraft();
+        if (isEditing) {
+            const clientWorkout = await apiGetClientWorkout(clientWorkoutId);
+            return normalizeWorkoutDefinitionForDraft(clientWorkout);
         }
 
-        const clientWorkout = await apiGetClientWorkout(clientWorkoutId);
+        if (sourceWorkoutTemplateId) {
+            const template = await apiGetWorkoutTemplate(sourceWorkoutTemplateId);
+            return createWorkoutDefinitionDraftFromTemplate(template);
+        }
 
-        return normalizeWorkoutDefinitionForDraft(clientWorkout);
+        return createEmptyWorkoutDraft();
     }
 
     async function saveInitialAssessmentDraft(draft) {
-        const payload = buildWorkoutDefinitionPayload(draft);
         const workoutId = persistedWorkoutId ?? clientWorkoutId;
+
+        const definitionPayload = buildWorkoutDefinitionPayload(draft);
+
+        const payload = workoutId
+            ? definitionPayload
+            : {
+                ...definitionPayload,
+                sourceWorkoutTemplateId:
+                    draft.sourceWorkoutTemplateId
+                    ?? sourceWorkoutTemplateId
+                    ?? null,
+            };
 
         const savedWorkout = workoutId
             ? await apiUpdateClientWorkout(workoutId, payload)
@@ -148,7 +171,8 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, onClose, onS
             exercises={exercises}
             recoveryKey={recoveryKey}
             isDraft={!isPersisted}
-            isNew={!isPersisted}
+            isNew={!isPersisted && !Boolean(sourceWorkoutTemplateId)}
+            allowSaveWithoutChanges={Boolean(sourceWorkoutTemplateId) && !isEditing}
             autoFocusName={!isPersisted}
             source={WORKOUT_BUILDER_SOURCE.INITIAL_ASSESSMENT}
             clientName={client.firstName}

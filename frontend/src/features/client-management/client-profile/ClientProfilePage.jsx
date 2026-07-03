@@ -1,12 +1,10 @@
 import {useEffect, useState} from 'react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {
-    Alert,
     Box,
     Button,
     LoadingOverlay,
     Modal,
-    Paper,
     Stack,
     Text,
     Group,
@@ -34,10 +32,18 @@ import ClientDetailsForm from "../shared/ClientDetailsForm.jsx";
 import ClientProfileTabs from './ClientProfileTabs.jsx';
 import ClientProfileReviewAction from './ClientProfileReviewAction.jsx';
 import ClientRecordsTab from './records/ClientRecordsTab';
+
 import InitialAssessmentBuilder from '../initial-assessment/InitialAssessmentBuilder';
+import InitialAssessmentSetupMenu from '../initial-assessment/InitialAssessmentSetupMenu';
+import WorkoutTemplatePicker from '../../workout-library/WorkoutTemplatePicker';
+
+import {
+    getInitialAssessmentBuilderRouteConfig,
+    INITIAL_ASSESSMENT_BUILDER_MODE,
+    INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM,
+} from '../initial-assessment/initial-assessment-builder-route-state';
 
 import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
-import * as TextUtils from '../../../utils/text-utils.js';
 
 function ClientProfilePage() {
 
@@ -66,7 +72,9 @@ function ClientProfilePage() {
     const [editErrors, setEditErrors] = useState({});
     const [editingDetails, setEditingDetails] = useState(false);
 
-    const [initialAssessmentBuilder, setInitialAssessmentBuilder] = useState(null);
+    const initialAssessmentBuilder = getInitialAssessmentBuilderRouteConfig(location.search);
+    const [initialAssessmentTemplatePickerOpen, setInitialAssessmentTemplatePickerOpen] = useState(false);
+
     const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -175,6 +183,32 @@ function ClientProfilePage() {
         navigate(ROUTES.intake(intakeId));
     }
 
+    function viewInitialAssessment() {
+        navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
+    }
+
+    function navigateInitialAssessmentBuilder(params, {replace = false} = {}) {
+        const nextParams = new URLSearchParams(location.search);
+
+        nextParams.delete(INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.MODE);
+        nextParams.delete(INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.TEMPLATE_ID);
+        nextParams.delete(INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.CLIENT_WORKOUT_ID);
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                nextParams.set(key, String(value));
+            }
+        });
+
+        navigate({
+            pathname: location.pathname,
+            search: nextParams.toString()
+                ? `?${nextParams.toString()}`
+                : '',
+            hash: location.hash,
+        }, {replace});
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Edit form helpers
     // ------------------------------------------------------------------------------------------------------------------------
@@ -207,30 +241,33 @@ function ClientProfilePage() {
     // Initial assessment helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function openInitialAssessmentBuilder(clientWorkoutId = null, {returnToRecordsOnClose = false} = {}) {
-        setInitialAssessmentBuilder({clientWorkoutId, returnToRecordsOnClose});
+    function createBlankInitialAssessment() {
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.NEW,
+        });
     }
 
-    function openInitialAssessmentAction() {
-        if (client.reviewStatus?.initialAssessmentStatus === 'MISSING') {
-            openInitialAssessmentBuilder(null, {
-                returnToRecordsOnClose: true,
-            });
-            return;
-        }
+    function selectInitialAssessmentTemplate(template) {
+        setInitialAssessmentTemplatePickerOpen(false);
 
-        navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.TEMPLATE,
+            templateId: template.id,
+        });
+    }
+
+    function editInitialAssessment(clientWorkoutId) {
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
+            clientWorkoutId,
+        });
     }
 
     function handleInitialAssessmentSaved(savedWorkout) {
-        setInitialAssessmentBuilder(currentBuilder => (
-            currentBuilder
-                ? {
-                    ...currentBuilder,
-                    clientWorkoutId: savedWorkout.id,
-                }
-                : currentBuilder
-        ));
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
+            clientWorkoutId: savedWorkout.id,
+        }, {replace: true});
 
         setRecordsRefreshKey(currentKey => currentKey + 1);
 
@@ -247,16 +284,14 @@ function ClientProfilePage() {
     }
 
     function closeInitialAssessmentBuilder({hasSavedWorkout} = {}) {
-        const returnToRecords = Boolean(
-            initialAssessmentBuilder?.returnToRecordsOnClose
-            && hasSavedWorkout
-        );
-
-        setInitialAssessmentBuilder(null);
-
-        if (returnToRecords) {
-            navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
+        if (hasSavedWorkout) {
+            navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`, {
+                replace: true,
+            });
+            return;
         }
+
+        navigateInitialAssessmentBuilder({}, {replace: true});
     }
 
     function handleInitialAssessmentDeleted() {
@@ -310,12 +345,9 @@ function ClientProfilePage() {
                         client={client}
                         refreshKey={recordsRefreshKey}
                         onOpenIntake={intakeId => navigate(ROUTES.intake(intakeId))}
-                        onCreateInitialAssessment={() => {
-                            openInitialAssessmentBuilder();
-                        }}
-                        onEditInitialAssessment={clientWorkoutId => {
-                            openInitialAssessmentBuilder(clientWorkoutId);
-                        }}
+                        onNewInitialAssessment={createBlankInitialAssessment}
+                        onInitialAssessmentFromTemplate={() => setInitialAssessmentTemplatePickerOpen(true)}
+                        onEditInitialAssessment={editInitialAssessment}
                         onInitialAssessmentDeleted={handleInitialAssessmentDeleted}
                     />
                 )}
@@ -398,16 +430,18 @@ function ClientProfilePage() {
                                 ? `${client.firstName}'s initial assessment workout is ready to review.`
                                 : `${client.firstName} needs an initial assessment workout.`
                         }
-                        actionLabel={
-                            reviewStatus.initialAssessmentStatus === 'READY'
-                                ? 'View Assessment'
-                                : 'Set Up Assessment'
+                        actionLabel="View Assessment"
+                        actionIcon={<IconEye size={16}/>}
+                        onAction={viewInitialAssessment}
+                        action={
+                            reviewStatus.initialAssessmentStatus === 'MISSING' ? (
+                                <InitialAssessmentSetupMenu
+                                    variant='light'
+                                    onNewWorkout={createBlankInitialAssessment}
+                                    onFromTemplate={() => setInitialAssessmentTemplatePickerOpen(true)}
+                                />
+                            ) : null
                         }
-                        actionIcon={reviewStatus.initialAssessmentStatus === 'READY'
-                            ? <IconEye size={16}/>
-                            : <IconPlus size={16}/>
-                        }
-                        onAction={openInitialAssessmentAction}
                     />
                 )}
             </>
@@ -488,11 +522,20 @@ function ClientProfilePage() {
                 />
             </Modal>
 
+            {initialAssessmentBuilder === null && (
+                <WorkoutTemplatePicker
+                    opened={initialAssessmentTemplatePickerOpen}
+                    onClose={() => setInitialAssessmentTemplatePickerOpen(false)}
+                    onSelect={selectInitialAssessmentTemplate}
+                />
+            )}
+
             {initialAssessmentBuilder !== null && (
                 <InitialAssessmentBuilder
                     opened
                     client={client}
                     clientWorkoutId={initialAssessmentBuilder?.clientWorkoutId ?? null}
+                    sourceWorkoutTemplateId={initialAssessmentBuilder?.sourceWorkoutTemplateId ?? null}
                     onClose={closeInitialAssessmentBuilder}
                     onSaved={handleInitialAssessmentSaved}
                 />

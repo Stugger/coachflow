@@ -6,7 +6,7 @@ import {
     Text,
 } from '@mantine/core';
 
-function ClientProfileReviewAction({color, icon, title, description, actionLabel, actionIcon, onAction, loading = false}) {
+function ClientProfileReviewAction({color, icon, title, description, actionLabel, actionIcon, onAction, action, loading = false}) {
     return (
         <Paper
             withBorder
@@ -28,14 +28,16 @@ function ClientProfileReviewAction({color, icon, title, description, actionLabel
                     </Text>
                 </Stack>
 
-                <Button
-                    variant='light'
-                    leftSection={actionIcon}
-                    loading={loading}
-                    onClick={onAction}
-                >
-                    {actionLabel}
-                </Button>
+                {action ?? (
+                    <Button
+                        variant="light"
+                        leftSection={actionIcon}
+                        loading={loading}
+                        onClick={onAction}
+                    >
+                        {actionLabel}
+                    </Button>
+                )}
             </Group>
         </Paper>
     );

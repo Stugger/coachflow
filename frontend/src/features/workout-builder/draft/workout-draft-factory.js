@@ -12,6 +12,7 @@ export function createDraftId(prefix) {
 export function createEmptyWorkoutDraft() {
     return {
         id: null,
+        sourceWorkoutTemplateId: null,
         name: '',
         description: '',
         sections: [],

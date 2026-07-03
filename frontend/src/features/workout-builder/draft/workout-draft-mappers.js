@@ -16,6 +16,7 @@ export function normalizeWorkoutDefinitionForDraft(definition) {
 
     return {
         id: definition.id ?? null,
+        sourceWorkoutTemplateId: definition.sourceWorkoutTemplateId ?? null,
         name: definition.name ?? '',
         description: definition.description ?? '',
         sections: normalizePositions(definition.sections ?? []).map((section, sectionIndex) => ({
@@ -38,6 +39,15 @@ export function createWorkoutDefinitionCopy(definition) {
         id: null,
         name: draft.name ? `Copy of ${draft.name}` : '',
     });
+}
+
+export function createWorkoutDefinitionDraftFromTemplate(template) {
+    return {
+        ...stripIdsFromDraft(
+            normalizeWorkoutDefinitionForDraft(template),
+        ),
+        sourceWorkoutTemplateId: template.id ?? null,
+    };
 }
 
 function normalizeItemForDraft(item, itemIndex) {
@@ -212,7 +222,7 @@ function addExerciseEquipment(equipment, exercise) {
 
     for (const value of metadata.equipment ?? []) {
         if (value) {
-            equipment.add(value.replace("_", " "));
+            equipment.add(value.replaceAll("_", " "));
         }
     }
 }
