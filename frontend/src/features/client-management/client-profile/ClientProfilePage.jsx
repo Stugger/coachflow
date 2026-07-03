@@ -14,6 +14,9 @@ import {
 import {
     IconAlertTriangle,
     IconClipboardCheck,
+    IconEye,
+    IconPlayerPlay,
+    IconPlus,
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
@@ -30,6 +33,8 @@ import ClientProfileHeader from './ClientProfileHeader.jsx';
 import ClientDetailsForm from "../shared/ClientDetailsForm.jsx";
 import ClientProfileTabs from './ClientProfileTabs.jsx';
 import ClientProfileReviewAction from './ClientProfileReviewAction.jsx';
+import ClientRecordsTab from './records/ClientRecordsTab';
+import InitialAssessmentBuilder from '../initial-assessment/InitialAssessmentBuilder';
 
 import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
 import * as TextUtils from '../../../utils/text-utils.js';
@@ -60,6 +65,9 @@ function ClientProfilePage() {
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
     const [editingDetails, setEditingDetails] = useState(false);
+
+    const [initialAssessmentBuilder, setInitialAssessmentBuilder] = useState(null);
+    const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -139,28 +147,6 @@ function ClientProfilePage() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Route/query param helpers
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function openIntakeAction() {
-        const intakeId = client.reviewStatus?.inProgressIntakeId;
-
-        if (!intakeId) {
-            return;
-        }
-
-        navigate(ROUTES.intake(intakeId));
-    }
-
-    function openInitialAssessmentRecords() {
-        navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
-    }
-
-    function changeProfileTab(tabValue) {
-        navigate(getClientProfileTabPath(clientId, tabValue));
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
     // Client applied
     // ------------------------------------------------------------------------------------------------------------------------
 
@@ -172,7 +158,25 @@ function ClientProfilePage() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Form helpers
+    // Route/query param helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function changeProfileTab(tabValue) {
+        navigate(getClientProfileTabPath(clientId, tabValue));
+    }
+
+    function openIntakeAction() {
+        const intakeId = client.reviewStatus?.inProgressIntakeId;
+
+        if (!intakeId) {
+            return;
+        }
+
+        navigate(ROUTES.intake(intakeId));
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Edit form helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
     function updateEditForm(event) {
@@ -200,14 +204,85 @@ function ClientProfilePage() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
+    // Initial assessment helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function openInitialAssessmentBuilder(clientWorkoutId = null, {returnToRecordsOnClose = false} = {}) {
+        setInitialAssessmentBuilder({clientWorkoutId, returnToRecordsOnClose});
+    }
+
+    function openInitialAssessmentAction() {
+        if (client.reviewStatus?.initialAssessmentStatus === 'MISSING') {
+            openInitialAssessmentBuilder(null, {
+                returnToRecordsOnClose: true,
+            });
+            return;
+        }
+
+        navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
+    }
+
+    function handleInitialAssessmentSaved(savedWorkout) {
+        setInitialAssessmentBuilder(currentBuilder => (
+            currentBuilder
+                ? {
+                    ...currentBuilder,
+                    clientWorkoutId: savedWorkout.id,
+                }
+                : currentBuilder
+        ));
+
+        setRecordsRefreshKey(currentKey => currentKey + 1);
+
+        apiGetClient(clientId)
+            .then(updatedClient => {
+                setClient(currentClient => ({
+                    ...currentClient,
+                    reviewStatus: updatedClient.reviewStatus,
+                }));
+            })
+            .catch(error => {
+                console.error('Failed to refresh client review status:', error);
+            });
+    }
+
+    function closeInitialAssessmentBuilder({hasSavedWorkout} = {}) {
+        const returnToRecords = Boolean(
+            initialAssessmentBuilder?.returnToRecordsOnClose
+            && hasSavedWorkout
+        );
+
+        setInitialAssessmentBuilder(null);
+
+        if (returnToRecords) {
+            navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
+        }
+    }
+
+    function handleInitialAssessmentDeleted() {
+        setRecordsRefreshKey(currentKey => currentKey + 1);
+
+        apiGetClient(clientId)
+            .then(updatedClient => {
+                setClient(currentClient => ({
+                    ...currentClient,
+                    reviewStatus: updatedClient.reviewStatus,
+                }));
+            })
+            .catch(error => {
+                console.error('Failed to refresh client review status:', error);
+            });
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
     function renderTabContent(tab) {
-        //TODO temp content, will be replaced with their own components
         return (
             <>
                 {tab === 'history' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             History
@@ -219,6 +294,7 @@ function ClientProfilePage() {
                     </Stack>
                 )}
                 {tab === 'programs' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             Programs
@@ -230,17 +306,21 @@ function ClientProfilePage() {
                     </Stack>
                 )}
                 {tab === 'records' && (
-                    <Stack gap="sm">
-                        <Text fw={700}>
-                            Records
-                        </Text>
-
-                        <Text size="sm" c="dimmed">
-                            Client intake, assessments, records will appear here.
-                        </Text>
-                    </Stack>
+                    <ClientRecordsTab
+                        client={client}
+                        refreshKey={recordsRefreshKey}
+                        onOpenIntake={intakeId => navigate(ROUTES.intake(intakeId))}
+                        onCreateInitialAssessment={() => {
+                            openInitialAssessmentBuilder();
+                        }}
+                        onEditInitialAssessment={clientWorkoutId => {
+                            openInitialAssessmentBuilder(clientWorkoutId);
+                        }}
+                        onInitialAssessmentDeleted={handleInitialAssessmentDeleted}
+                    />
                 )}
                 {tab === 'habits' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             Habits
@@ -252,6 +332,7 @@ function ClientProfilePage() {
                     </Stack>
                 )}
                 {tab === 'measurements' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             Measurements
@@ -298,6 +379,7 @@ function ClientProfilePage() {
                                 ? 'Resume Intake'
                                 : 'Start Intake'
                         }
+                        actionIcon={<IconPlayerPlay size={16}/>}
                         onAction={openIntakeAction}
                     />
                 )}
@@ -321,7 +403,11 @@ function ClientProfilePage() {
                                 ? 'View Assessment'
                                 : 'Set Up Assessment'
                         }
-                        onAction={openInitialAssessmentRecords}
+                        actionIcon={reviewStatus.initialAssessmentStatus === 'READY'
+                            ? <IconEye size={16}/>
+                            : <IconPlus size={16}/>
+                        }
+                        onAction={openInitialAssessmentAction}
                     />
                 )}
             </>
@@ -401,6 +487,16 @@ function ClientProfilePage() {
                     submitLabel="Save Changes"
                 />
             </Modal>
+
+            {initialAssessmentBuilder !== null && (
+                <InitialAssessmentBuilder
+                    opened
+                    client={client}
+                    clientWorkoutId={initialAssessmentBuilder?.clientWorkoutId ?? null}
+                    onClose={closeInitialAssessmentBuilder}
+                    onSaved={handleInitialAssessmentSaved}
+                />
+            )}
         </Stack>
     );
 }

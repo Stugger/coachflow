@@ -6,7 +6,7 @@ import {
 
 export const WORKOUT_BUILDER_SOURCE = {
     TEMPLATE: 'Workout Template',
-    ASSESSMENT: 'Assessment Workout',
+    INITIAL_ASSESSMENT: 'Initial Assessment',
     PROGRAM: 'Program Workout',
     ASSIGNMENT: 'Workout Assignment',
 };
