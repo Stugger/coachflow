@@ -14,7 +14,6 @@ import {
     IconClipboardCheck,
     IconEye,
     IconPlayerPlay,
-    IconPlus,
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
@@ -173,6 +172,17 @@ function ClientProfilePage() {
         navigate(getClientProfileTabPath(clientId, tabValue));
     }
 
+    function navigateToClientRecord(recordId, {scroll = false, replace = false} = {}) {
+        navigate(`${ROUTES.clientRecords(clientId)}#${recordId}`, {
+            replace,
+            state: scroll
+                ? {
+                    scrollToRecord: recordId,
+                }
+                : null,
+        });
+    }
+
     function openIntakeAction() {
         const intakeId = client.reviewStatus?.inProgressIntakeId;
 
@@ -184,7 +194,9 @@ function ClientProfilePage() {
     }
 
     function viewInitialAssessment() {
-        navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`);
+        navigateToClientRecord('initial-assessment', {
+            scroll: true,
+        });
     }
 
     function navigateInitialAssessmentBuilder(params, {replace = false} = {}) {
@@ -264,10 +276,16 @@ function ClientProfilePage() {
     }
 
     function handleInitialAssessmentSaved(savedWorkout) {
-        navigateInitialAssessmentBuilder({
-            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
-            clientWorkoutId: savedWorkout.id,
-        }, {replace: true});
+        const alreadyEditingSavedWorkout =
+            initialAssessmentBuilder?.clientWorkoutId === savedWorkout.id
+            && initialAssessmentBuilder?.sourceWorkoutTemplateId === null;
+
+        if (!alreadyEditingSavedWorkout) {
+            navigateInitialAssessmentBuilder({
+                initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
+                clientWorkoutId: savedWorkout.id,
+            }, {replace: true});
+        }
 
         setRecordsRefreshKey(currentKey => currentKey + 1);
 
@@ -283,9 +301,10 @@ function ClientProfilePage() {
             });
     }
 
-    function closeInitialAssessmentBuilder({hasSavedWorkout} = {}) {
-        if (hasSavedWorkout) {
-            navigate(`${ROUTES.clientRecords(clientId)}#initial-assessment`, {
+    function closeInitialAssessmentBuilder({hasSavedWorkout, createdDuringOpen,} = {}) {
+        if (hasSavedWorkout && createdDuringOpen) {
+            navigateToClientRecord('initial-assessment', {
+                scroll: true,
                 replace: true,
             });
             return;

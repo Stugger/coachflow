@@ -283,7 +283,11 @@ function ClientIntakePage() {
                 saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.clientProfile(clientId)));
                 break;
             case IntakeSteps.COMPLETED:
-                navigate(`${ROUTES.clientRecords(clientId)}#intake`);
+                navigate(`${ROUTES.clientRecords(clientId)}#intake`, {
+                    state: {
+                        scrollToRecord: 'intake',
+                    },
+                });
                 break;
             default:
                 if (clientId) {

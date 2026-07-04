@@ -34,6 +34,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
     const [loaded, setLoaded] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [persistedWorkoutId, setPersistedWorkoutId] = useState(null);
+    const [createdDuringOpen, setCreatedDuringOpen] = useState(false);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -119,6 +120,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
 
     async function saveInitialAssessmentDraft(draft) {
         const workoutId = persistedWorkoutId ?? clientWorkoutId;
+        const isCreating = !workoutId;
 
         const definitionPayload = buildWorkoutDefinitionPayload(draft);
 
@@ -136,6 +138,10 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             ? await apiUpdateClientWorkout(workoutId, payload)
             : await apiCreateInitialAssessmentWorkout(client.id, payload);
 
+        if (isCreating) {
+            setCreatedDuringOpen(true);
+        }
+
         setPersistedWorkoutId(savedWorkout.id);
 
         return {
@@ -147,6 +153,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
     function handleClose() {
         onClose({
             hasSavedWorkout: isPersisted,
+            createdDuringOpen,
         });
     }
 
@@ -156,6 +163,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         setLoaded(false);
         setLoadError('');
         setPersistedWorkoutId(null);
+        setCreatedDuringOpen(false);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

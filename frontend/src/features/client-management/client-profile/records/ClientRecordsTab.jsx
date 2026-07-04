@@ -17,8 +17,6 @@ import {
     IconRulerMeasure,
 } from '@tabler/icons-react';
 
-import {ROUTES} from '../../../../constants/routes';
-
 import {
     apiGetClientIntakesForClient,
 } from '../../intake/client-intake-api';
@@ -30,6 +28,16 @@ import {
 
 import IntakeRecordCard from './IntakeRecordCard';
 import InitialAssessmentRecordCard from './InitialAssessmentRecordCard';
+
+const RECORD_IDS = [
+    'intake',
+    'initial-assessment',
+    'initial-measurements',
+];
+
+function isRecordId(recordId) {
+    return RECORD_IDS.includes(recordId);
+}
 
 function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
 
@@ -69,6 +77,12 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
         }
 
         loadIntake();
+    }, [client?.id]);
+
+    useEffect(() => {
+        if (!client?.id) {
+            return;
+        }
 
         if (client.reviewStatus?.initialAssessmentStatus === 'MISSING') {
             setInitialAssessmentWorkout(null);
@@ -78,16 +92,30 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
         }
 
         loadInitialAssessmentWorkout();
-    }, [client?.id, client.reviewStatus?.initialAssessmentStatus, refreshKey]);
+    }, [
+        client?.id,
+        client.reviewStatus?.initialAssessmentStatus,
+        refreshKey,
+    ]);
 
     useEffect(() => {
         const recordId = location.hash.replace('#', '');
 
-        if (![
-            'intake',
-            'initial-assessment',
-            'initial-measurements',
-        ].includes(recordId)) {
+        if (!isRecordId(recordId)) {
+            return;
+        }
+
+        setExpandedRecords(currentRecords => (
+            currentRecords.includes(recordId)
+                ? currentRecords
+                : [...currentRecords, recordId]
+        ));
+    }, [location.hash]);
+
+    useEffect(() => {
+        const recordId = location.state?.scrollToRecord;
+
+        if (!isRecordId(recordId)) {
             return;
         }
 
@@ -97,18 +125,30 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                 : [...currentRecords, recordId]
         ));
 
+        const scrollDelay =
+            (isMobile ? 125 : 225)
+            + (intakeLoaded && initialAssessmentLoaded ? 0 : 250);
+
         const timeoutId = window.setTimeout(() => {
             document.getElementById(recordId)?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'start',
             });
-        }, 125);
+
+            navigate({
+                pathname: location.pathname,
+                search: location.search,
+                hash: location.hash,
+            }, {
+                replace: true,
+                state: null,
+            });
+        }, scrollDelay);
 
         return () => window.clearTimeout(timeoutId);
     }, [
-        location.hash,
-        intakeLoaded,
-        initialAssessmentLoaded,
+        location.key,
+        location.state?.scrollToRecord,
     ]);
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -134,19 +174,25 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
     }
 
     function loadInitialAssessmentWorkout() {
-        setInitialAssessmentLoaded(false);
+        const shouldShowInitialLoader = !initialAssessmentLoaded;
+
+        if (shouldShowInitialLoader) {
+            setInitialAssessmentLoaded(false);
+        }
+
         setInitialAssessmentError('');
 
         apiGetInitialAssessmentWorkout(client.id)
-            .then(setInitialAssessmentWorkout)
+            .then(workout => {
+                setInitialAssessmentWorkout(workout);
+            })
             .catch(error => {
                 if (error.status === 404) {
                     setInitialAssessmentWorkout(null);
                     return;
                 }
                 console.error('Failed to load initial assessment workout:', error);
-                setInitialAssessmentWorkout(null);
-                setInitialAssessmentError(error.message || 'Failed to load the initial assessment workout.');
+                setInitialAssessmentError(error.message || 'Failed to refresh the initial assessment workout.');
             })
             .finally(() => {
                 setInitialAssessmentLoaded(true);
@@ -186,19 +232,18 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
 
         setExpandedRecords(nextExpandedRecords);
 
-        if (newlyOpenedRecord) {
-            navigate(
-                `${ROUTES.clientRecords(client.id)}#${newlyOpenedRecord}`,
-                {replace: true}
-            );
-            return;
-        }
+        const nextHash = newlyOpenedRecord
+            ? `#${newlyOpenedRecord}`
+            : '';
 
-        const currentHashRecord = location.hash.replace('#', '');
-
-        if (currentHashRecord && !nextExpandedRecords.includes(currentHashRecord)) {
-            navigate(ROUTES.clientRecords(client.id), {replace: true});
-        }
+        navigate({
+            pathname: location.pathname,
+            search: location.search,
+            hash: nextHash,
+        }, {
+            replace: true,
+            state: null,
+        });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -226,7 +271,7 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                     <Accordion.Item
                         value="intake"
                         id="intake"
-                        style={{scrollMarginTop: '1rem'}}
+                        style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
                         bg='var(--color-surface)'
                     >
                         <Accordion.Control icon={<IconClipboardText size={18}/>}>
@@ -258,7 +303,7 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                     <Accordion.Item
                         value="initial-assessment"
                         id="initial-assessment"
-                        style={{scrollMarginTop: '1rem'}}
+                        style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
                         bg='var(--color-surface)'
                     >
                         <Accordion.Control icon={<IconClipboardCheck size={18}/>}>
@@ -290,7 +335,9 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
 
                     <Accordion.Item
                         value="initial-measurements"
-                        bg='var(--color-surface)'
+                        id="initial-measurements"
+                        style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
+                        bg="var(--color-surface)"
                     >
                         <Accordion.Control icon={<IconRulerMeasure size={18}/>}>
                             <Group justify="space-between" pr="sm" wrap="nowrap">
