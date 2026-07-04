@@ -12,6 +12,7 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconAlertTriangle,
     IconPhoto,
 } from '@tabler/icons-react';
 
@@ -54,7 +55,12 @@ function ExercisePreview({item, stacked = false}) {
     const isMobile = useMediaQuery('(max-width: 48em)');
 
     const exercise = item.exercise;
-    const {eachSide, setGroups} = getExercisePreviewSummary(item.configJson, {stackControlled: stacked});
+
+    const {
+        eachSide,
+        setGroups,
+        noTargetTrackingFields,
+    } = getExercisePreviewSummary(item.configJson, {stackControlled: stacked});
 
     const thumbnailSize = (stacked ? 38 : 48) / (isMobile ? 1.2 : 1.0);
 
@@ -125,15 +131,30 @@ function ExercisePreview({item, stacked = false}) {
                         ))}
                     </Stack>
 
-                    {item.notes?.trim() && (
-                        <Text
-                            size="xs"
-                            c="dimmed"
-                            fs="italic"
-                            style={{whiteSpace: 'pre-wrap'}}
-                        >
-                            {item.notes}
+                    {noTargetTrackingFields.length > 0 && (
+                        <Text size={isMobile ? '0.6rem' : 'xs'} c="dimmed">
+                            <strong>No default target:</strong>
+                            {' '}
+                            {noTargetTrackingFields
+                                .map(field => field.label)
+                                .join(' · ')}
                         </Text>
+                    )}
+
+                    {item.notes?.trim() && (
+                        <Box bg="rgba(255, 209, 0, 0.1)" style={{borderRadius: 'var(--mantine-radius-md)'}}>
+                            <Text
+                                size="xs"
+                                c="dimmed"
+                                fs="italic"
+                                p='0.4rem'
+                                style={{
+                                    whiteSpace: 'pre-wrap',
+                                }}
+                            >
+                                {item.notes}
+                            </Text>
+                        </Box>
                     )}
                 </Stack>
             </Group>
@@ -210,7 +231,7 @@ function WorkoutStackPreview({stack}) {
                 <Stack gap="xs" p={isMobile ? "xs" : "sm"}>
                     {stack.notes?.trim() && (
                         <Text
-                            size="xs"
+                            size="sm"
                             c="dimmed"
                             fs="italic"
                             style={{whiteSpace: 'pre-wrap'}}

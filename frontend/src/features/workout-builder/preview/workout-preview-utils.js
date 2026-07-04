@@ -58,13 +58,18 @@ export function getExerciseDisplayName(item) {
 export function getExercisePreviewSummary(configJson, {stackControlled = false} = {}) {
     const config = parseWorkoutConfig(configJson);
     const trackingFields = sortWorkoutPreviewItems(config.trackingFields ?? []);
+    const sets = config.sets ?? [];
 
     return {
         eachSide: config.eachSide,
         setGroups: createSetGroups(
-            config.sets ?? [],
+            sets,
             trackingFields,
             stackControlled,
+        ),
+        noTargetTrackingFields: getNoTargetTrackingFields(
+            sets,
+            trackingFields,
         ),
     };
 }
@@ -132,6 +137,60 @@ function createSetGroups(sets, trackingFields, stackControlled) {
     }));
 }
 
+function getNoTargetTrackingFields(sets, trackingFields) {
+    const representedFieldKeys = new Set();
+
+    for (const set of sets) {
+        for (const field of trackingFields) {
+            if (field.key === TRACKING_FIELD_KEY.NOTES) {
+                continue;
+            }
+
+            const targetLabel = formatTrackingTarget(
+                field,
+                set.targets?.[field.key],
+            );
+
+            if (targetLabel) {
+                representedFieldKeys.add(field.key);
+            }
+        }
+    }
+
+    return trackingFields
+        .filter(field =>
+            field.key !== TRACKING_FIELD_KEY.NOTES
+            && !representedFieldKeys.has(field.key)
+        )
+        .map(field => ({
+            key: field.key,
+            label: formatTrackingFieldLabel(field),
+        }));
+}
+
+function formatTrackingFieldLabel(field) {
+    const definition = TRACKING_FIELD_DEFINITIONS[field.key];
+
+    if (!definition) {
+        return field.key;
+    }
+
+    const activeMode = getActiveTrackingFieldMode(definition, field);
+    const unit = getUnitLabel(field, definition, activeMode);
+
+    const detail = unit ?? activeMode?.label;
+
+    return detail
+        ? `${definition.label} (${String(detail).toLowerCase()})`
+        : definition.label;
+}
+
+function getActiveTrackingFieldMode(definition, field) {
+    return definition.modes?.find(
+        mode => mode.value === field.mode,
+    ) ?? definition.modes?.[0] ?? null;
+}
+
 function formatSetGroupLead(setType, count, stackControlled) {
     const unit = stackControlled ? 'round' : 'set';
 
@@ -175,9 +234,7 @@ function formatTrackingTarget(field, value) {
         return null;
     }
 
-    const activeMode = definition.modes?.find(
-        mode => mode.value === field.mode,
-    ) ?? definition.modes?.[0];
+    const activeMode = getActiveTrackingFieldMode(definition, field);
 
     const type = activeMode?.type ?? definition.type;
     const unit = getUnitLabel(field, definition, activeMode);
@@ -301,7 +358,11 @@ function getUnitLabel(field, definition, activeMode) {
         return null;
     }
 
-    return definition.units?.find(
+    const availableUnits = activeMode?.units
+        ?? definition.units
+        ?? [];
+
+    return availableUnits.find(
         option => option.value === unit,
     )?.label ?? String(unit).toLowerCase();
 }
