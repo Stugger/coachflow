@@ -1,20 +1,89 @@
 import {
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from 'react';
+import {
     Alert,
+    Box,
     Button,
     Group,
     Loader,
-    Paper,
     Stack,
     Text,
 } from '@mantine/core';
+import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconChevronDown,
+    IconChevronUp,
     IconEdit,
     IconTrash,
 } from '@tabler/icons-react';
 
-import InitialAssessmentSetupMenu from '../../initial-assessment/InitialAssessmentSetupMenu';
+import InitialAssessmentSetupMenu
+    from '../../initial-assessment/InitialAssessmentSetupMenu';
+
+import WorkoutStructurePreview
+    from '../../../workout-builder/preview/WorkoutStructurePreview';
+
+import {
+    getWorkoutStructureCounts,
+} from '../../../workout-builder/preview/workout-preview-utils';
 
 function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Mantine state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const isMobile = useMediaQuery('(max-width: 48em)');
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const previewContentRef = useRef(null);
+
+    const [previewExpanded, setPreviewExpanded] = useState(false);
+    const [previewOverflows, setPreviewOverflows] = useState(false);
+
+    const collapsedPreviewHeight = isMobile ? 420 : 512;
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        setPreviewExpanded(false);
+    }, [workout?.id]);
+
+    useLayoutEffect(() => {
+        if (!workout || !previewContentRef.current) {
+            setPreviewOverflows(false);
+            return undefined;
+        }
+
+        const content = previewContentRef.current;
+
+        function measurePreview() {
+            setPreviewOverflows(
+                content.scrollHeight > collapsedPreviewHeight + 1,
+            );
+        }
+
+        measurePreview();
+
+        const observer = new ResizeObserver(measurePreview);
+
+        observer.observe(content);
+
+        return () => observer.disconnect();
+    }, [workout, collapsedPreviewHeight]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Conditional return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     if (!loaded) {
         return (
@@ -39,7 +108,8 @@ function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWor
         return (
             <Stack gap="sm">
                 <Text size="sm" c="dimmed">
-                    Create an assessment workout plan before the client's first assessment.
+                    Create an assessment workout plan before the client&apos;s
+                    first assessment.
                 </Text>
 
                 <Group>
@@ -52,124 +122,122 @@ function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWor
         );
     }
 
-    const summary = getWorkoutSummary(workout);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const counts = getWorkoutStructureCounts(workout);
+
+    const shouldClipPreview = previewOverflows && !previewExpanded;
 
     return (
         <Stack gap="md">
-            <Group justify="space-between" align="flex-start">
-                <Stack gap={2}>
-                    <Text fw={700}>
-                        {workout.name}
+            <Stack gap={4}>
+                <Text fw={700}>
+                    {workout.name}
+                </Text>
+
+                <Text size="sm" c="dimmed">
+                    {counts.exerciseCount} exercise{counts.exerciseCount === 1 ? '' : 's'}
+                    {' · '}
+                    {counts.sectionCount} section{counts.sectionCount === 1 ? '' : 's'}
+                </Text>
+
+                {workout.description?.trim() && (
+                    <Text
+                        size="sm"
+                        c="dimmed"
+                        style={{whiteSpace: 'pre-wrap'}}
+                    >
+                        {workout.description}
                     </Text>
+                )}
+            </Stack>
 
-                    <Text size="sm" c="dimmed">
-                        {summary.exerciseCount} exercise{summary.exerciseCount === 1 ? '' : 's'}
-                        {' · '}
-                        {summary.sectionCount} section{summary.sectionCount === 1 ? '' : 's'}
-                    </Text>
+            <Box pos="relative">
+                <Box
+                    style={{
+                        maxHeight: shouldClipPreview
+                            ? `${collapsedPreviewHeight}px`
+                            : undefined,
+                        overflow: shouldClipPreview
+                            ? 'hidden'
+                            : undefined,
+                    }}
+                >
+                    <Box ref={previewContentRef}>
+                        <WorkoutStructurePreview workout={workout}/>
+                    </Box>
+                </Box>
 
-                    {workout.description && (
-                        <Text size="sm" c="dimmed">
-                            {workout.description}
-                        </Text>
-                    )}
-                </Stack>
-            </Group>
+                {shouldClipPreview && (
+                    <Box
+                        aria-hidden
+                        style={{
+                            position: 'absolute',
+                            right: 0,
+                            bottom: 0,
+                            left: 0,
+                            height: '7rem',
+                            pointerEvents: 'none',
+                            background: `
+                                linear-gradient(
+                                    to bottom,
+                                    transparent,
+                                    var(--color-background) 78%
+                                )
+                            `,
+                        }}
+                    />
+                )}
+            </Box>
 
-            {summary.sections.length > 0 && (
-                <Stack gap="xs">
-                    {summary.sections.map(section => (
-                        <Paper
-                            key={section.key}
-                            withBorder
-                            radius="sm"
-                            p="sm"
-                        >
-                            <Stack gap={4}>
-                                <Text size="sm" fw={600}>
-                                    {section.name}
-                                </Text>
-
-                                {section.items.map(item => (
-                                    <Text
-                                        key={item.key}
-                                        size="sm"
-                                        c="dimmed"
-                                    >
-                                        {item.label}
-                                    </Text>
-                                ))}
-                            </Stack>
-                        </Paper>
-                    ))}
-                </Stack>
+            {previewOverflows && (
+                <Group justify="center">
+                    <Button
+                        variant="subtle"
+                        size="sm"
+                        rightSection={
+                            previewExpanded
+                                ? <IconChevronUp size={16}/>
+                                : <IconChevronDown size={16}/>
+                        }
+                        onClick={() => {
+                            setPreviewExpanded(current => !current);
+                        }}
+                    >
+                        {previewExpanded ? 'Show less' : 'Show more'}
+                    </Button>
+                </Group>
             )}
 
-            <Group>
-                <Button
-                    leftSection={<IconEdit size={16}/>}
-                    onClick={() => onEdit(workout.id)}
-                >
-                    Edit
-                </Button>
+            <Box
+                pt="md"
+                style={{
+                    borderTop: '1px solid var(--color-border)',
+                }}
+            >
+                <Group justify="flex-end">
+                    <Button
+                        leftSection={<IconEdit size={16}/>}
+                        onClick={() => onEdit(workout.id)}
+                    >
+                        Edit
+                    </Button>
 
-                <Button
-                    variant="light"
-                    color="red"
-                    leftSection={<IconTrash size={16}/>}
-                    loading={deleting}
-                    onClick={onDelete}
-                >
-                    Delete
-                </Button>
-            </Group>
+                    <Button
+                        variant="light"
+                        color="red"
+                        leftSection={<IconTrash size={16}/>}
+                        loading={deleting}
+                        onClick={onDelete}
+                    >
+                        Delete
+                    </Button>
+                </Group>
+            </Box>
         </Stack>
     );
-}
-
-function getWorkoutSummary(workout) {
-    const sections = workout.sections ?? [];
-
-    return {
-        sectionCount: sections.length,
-        exerciseCount: sections.reduce((count, section) => {
-            return count + (section.items ?? []).reduce((sectionCount, item) => {
-                return sectionCount + (item.exercise
-                        ? 1
-                        : item.itemExercises?.length ?? 0
-                );
-            }, 0);
-        }, 0),
-        sections: sections.map((section, sectionIndex) => ({
-            key: section.id ?? `section-${sectionIndex}`,
-            name: section.name?.trim() || formatLabel(section.sectionType),
-            items: (section.items ?? []).map((item, itemIndex) => ({
-                key: item.id ?? `item-${itemIndex}`,
-                label: getItemLabel(item),
-            })),
-        })),
-    };
-}
-
-function getItemLabel(item) {
-    if (item.exercise) {
-        return item.name?.trim() || item.exercise.name;
-    }
-
-    const exercises = (item.itemExercises ?? [])
-        .map(itemExercise => itemExercise.name?.trim() || itemExercise.exercise?.name)
-        .filter(Boolean)
-        .join(' + ');
-
-    return `${formatLabel(item.itemType)}: ${exercises}`;
-}
-
-function formatLabel(value) {
-    return String(value ?? '')
-        .toLowerCase()
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
 }
 
 export default InitialAssessmentRecordCard;

@@ -10,6 +10,7 @@ import {
     Stack,
     Text,
 } from '@mantine/core';
+import {useMediaQuery} from '@mantine/hooks';
 import {
     IconClipboardCheck,
     IconClipboardText,
@@ -31,6 +32,8 @@ import IntakeRecordCard from './IntakeRecordCard';
 import InitialAssessmentRecordCard from './InitialAssessmentRecordCard';
 
 function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
+
+    const isMobile = useMediaQuery('(max-width: 48em)');
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -218,6 +221,7 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                     onChange={handleExpandedRecordsChange}
                     variant="separated"
                     radius="md"
+                    transitionDuration={isMobile ? 100 : 200}
                 >
                     <Accordion.Item
                         value="intake"
