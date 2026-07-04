@@ -1,6 +1,5 @@
 import {
     Avatar,
-    Badge,
     Card,
     Group,
     Stack,
@@ -12,46 +11,15 @@ import {
     IconUser
 } from '@tabler/icons-react';
 
-function ClientCard({client, reviewStatus, onClick}) {
+import ClientReviewBadge from '../shared/review/ClientReviewBadge.jsx';
+
+function ClientCard({client, onClick}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
 
     const initials = `${client.firstName?.charAt(0) || ''}${client.lastName?.charAt(0) || ''}`.toUpperCase();
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Render helpers
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function renderReviewBadge() {
-        if (client.archived) {
-            return (
-                <Badge color="gray" variant="light">
-                    Archived
-                </Badge>
-            );
-        }
-        if (reviewStatus === 'INTAKE') {
-            return (
-                <Badge color="red" variant="light">
-                    Intake
-                </Badge>
-            );
-        }
-        if (reviewStatus === 'ASSESS') {
-            return (
-                <Badge color="yellow" variant="light">
-                    Assess
-                </Badge>
-            );
-        }
-        return (
-            <Badge color="green" variant="light">
-                Active
-            </Badge>
-        );
-    }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
@@ -125,7 +93,7 @@ function ClientCard({client, reviewStatus, onClick}) {
                         </Stack>
                     </Group>
 
-                    {renderReviewBadge()}
+                    <ClientReviewBadge client={client}/>
                 </Group>
 
                 <Stack gap={4}>

@@ -18,6 +18,6 @@ public record CreateWorkoutTemplateRequest(
         String description,
 
         @Valid
-        List<WorkoutTemplateSectionRequest> sections
+        List<WorkoutSectionRequest> sections
 ) {
 }

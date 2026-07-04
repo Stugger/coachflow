@@ -1,7 +1,7 @@
 package com.stugger.coachflow.api.dto.response.workout;
 
 import com.stugger.coachflow.api.dto.response.exercise.ExerciseResponse;
-import com.stugger.coachflow.entity.workout.WorkoutTemplateItemExercise;
+import com.stugger.coachflow.entity.workout.AbstractWorkoutItemExercise;
 
 import java.time.LocalDateTime;
 
@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * @author Jake
  * @since June 15th, 2026
  */
-public record WorkoutTemplateItemExerciseResponse(
+public record WorkoutItemExerciseResponse(
         Long id,
         ExerciseResponse exercise,
         Integer position,
@@ -19,7 +19,8 @@ public record WorkoutTemplateItemExerciseResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public WorkoutTemplateItemExerciseResponse(WorkoutTemplateItemExercise itemExercise) {
+
+    public WorkoutItemExerciseResponse(AbstractWorkoutItemExercise itemExercise) {
         this(itemExercise.getId(),
             new ExerciseResponse(itemExercise.getExercise()),
             itemExercise.getPosition(),

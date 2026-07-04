@@ -1,28 +1,48 @@
 import {useEffect, useState} from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {
-    Alert,
+    Box,
     Button,
     LoadingOverlay,
     Modal,
-    Paper,
     Stack,
     Text,
     Group,
 } from '@mantine/core';
+import {
+    IconAlertTriangle,
+    IconClipboardCheck,
+    IconEye,
+    IconPlayerPlay,
+} from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
 
+import {
+    CLIENT_PROFILE_TABS,
+    getClientProfileActiveTab,
+    getClientProfileTabPath,
+} from './client-profile-tab-utils.js';
+
 import {apiGetClient, apiUpdateClient} from '../shared/api/clients-api.js';
-import {apiGetClientIntakesForClient} from '../intake/client-intake-api.js';
 
 import ClientProfileHeader from './ClientProfileHeader.jsx';
 import ClientDetailsForm from "../shared/ClientDetailsForm.jsx";
 import ClientProfileTabs from './ClientProfileTabs.jsx';
 import ClientProfileReviewAction from './ClientProfileReviewAction.jsx';
+import ClientRecordsTab from './records/ClientRecordsTab';
+
+import InitialAssessmentBuilder from '../initial-assessment/InitialAssessmentBuilder';
+import InitialAssessmentSetupMenu from '../initial-assessment/InitialAssessmentSetupMenu';
+import WorkoutTemplatePicker from '../../workout-library/WorkoutTemplatePicker';
+
+import {
+    getInitialAssessmentBuilderRouteConfig,
+    INITIAL_ASSESSMENT_BUILDER_MODE,
+    INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM,
+} from '../initial-assessment/initial-assessment-builder-route-state';
 
 import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
-import * as TextUtils from '../../../utils/text-utils.js';
 
 function ClientProfilePage() {
 
@@ -30,6 +50,7 @@ function ClientProfilePage() {
     // Route state
     // ------------------------------------------------------------------------------------------------------------------------
 
+    const location = useLocation();
     const navigate = useNavigate();
     const {clientId} = useParams();
 
@@ -38,17 +59,22 @@ function ClientProfilePage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const [client, setClient] = useState();
-    const [intake, setIntake] = useState();
 
     const [clientLoaded, setClientLoaded] = useState(false);
-    const [intakeLoaded, setIntakeLoaded] = useState(false);
 
-    const loading = !clientLoaded || !intakeLoaded;
+    const loading = !clientLoaded;
+
+    const activeTab = getClientProfileActiveTab(location.pathname);
+    const [visitedTabs, setVisitedTabs] = useState(() => [activeTab]);
 
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
-
     const [editingDetails, setEditingDetails] = useState(false);
+
+    const initialAssessmentBuilder = getInitialAssessmentBuilderRouteConfig(location.search);
+    const [initialAssessmentTemplatePickerOpen, setInitialAssessmentTemplatePickerOpen] = useState(false);
+
+    const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -56,8 +82,19 @@ function ClientProfilePage() {
 
     useEffect(() => {
         loadClient();
-        loadIntake();
-    }, []);
+    }, [clientId]);
+
+    useEffect(() => {
+        setVisitedTabs(currentTabs =>
+            currentTabs.includes(activeTab)
+                ? currentTabs
+                : [...currentTabs, activeTab]
+        );
+    }, [activeTab]);
+
+    useEffect(() => {
+        setVisitedTabs([activeTab]);
+    }, [clientId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // API loading
@@ -74,20 +111,6 @@ function ClientProfilePage() {
             })
             .finally(() => {
                 setClientLoaded(true);
-            });
-    }
-
-    function loadIntake() {
-        setIntakeLoaded(false);
-        apiGetClientIntakesForClient(clientId)
-            .then(intakes => {
-                setIntake(Array.isArray(intakes) ? intakes[0] ?? null : intakes);
-            })
-            .catch(error => {
-                console.error('Error loading intake:', error);
-            })
-            .finally(() => {
-                setIntakeLoaded(true);
             });
     }
 
@@ -114,7 +137,6 @@ function ClientProfilePage() {
                 document.activeElement?.blur(); //close mobile keyboard
 
                 applyClient(updatedClient);
-                loadClient();
                 setTimeout(() => {
                     window.scrollTo({
                         top: 0,
@@ -132,14 +154,6 @@ function ClientProfilePage() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Route/query param helpers
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function openIncompleteIntake() {
-        navigate(ROUTES.intake(intake.id));
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
     // Client applied
     // ------------------------------------------------------------------------------------------------------------------------
 
@@ -151,7 +165,64 @@ function ClientProfilePage() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Form helpers
+    // Route/query param helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function changeProfileTab(tabValue) {
+        navigate(getClientProfileTabPath(clientId, tabValue));
+    }
+
+    function navigateToClientRecord(recordId, {scroll = false, replace = false} = {}) {
+        navigate(`${ROUTES.clientRecords(clientId)}#${recordId}`, {
+            replace,
+            state: scroll
+                ? {
+                    scrollToRecord: recordId,
+                }
+                : null,
+        });
+    }
+
+    function openIntakeAction() {
+        const intakeId = client.reviewStatus?.inProgressIntakeId;
+
+        if (!intakeId) {
+            return;
+        }
+
+        navigate(ROUTES.intake(intakeId));
+    }
+
+    function viewInitialAssessment() {
+        navigateToClientRecord('initial-assessment', {
+            scroll: true,
+        });
+    }
+
+    function navigateInitialAssessmentBuilder(params, {replace = false} = {}) {
+        const nextParams = new URLSearchParams(location.search);
+
+        nextParams.delete(INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.MODE);
+        nextParams.delete(INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.TEMPLATE_ID);
+        nextParams.delete(INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.CLIENT_WORKOUT_ID);
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== null && value !== undefined) {
+                nextParams.set(key, String(value));
+            }
+        });
+
+        navigate({
+            pathname: location.pathname,
+            search: nextParams.toString()
+                ? `?${nextParams.toString()}`
+                : '',
+            hash: location.hash,
+        }, {replace});
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Edit form helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
     function updateEditForm(event) {
@@ -179,36 +250,93 @@ function ClientProfilePage() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Utility
+    // Initial assessment helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function getActiveTab() {
-        if (location.pathname.endsWith('/programs')) return 'programs';
-        if (location.pathname.endsWith('/records')) return 'records';
-        if (location.pathname.endsWith('/habits')) return 'habits';
-        if (location.pathname.endsWith('/measurements')) return 'measurements';
-        return 'history';
+    function createBlankInitialAssessment() {
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.NEW,
+        });
     }
 
-    function getClientReviewStatus() {
-        if (!intake || intake.status !== 'COMPLETED') {
-            return 'INTAKE';
+    function selectInitialAssessmentTemplate(template) {
+        setInitialAssessmentTemplatePickerOpen(false);
+
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.TEMPLATE,
+            templateId: template.id,
+        });
+    }
+
+    function editInitialAssessment(clientWorkoutId) {
+        navigateInitialAssessmentBuilder({
+            initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
+            clientWorkoutId,
+        });
+    }
+
+    function handleInitialAssessmentSaved(savedWorkout) {
+        const alreadyEditingSavedWorkout =
+            initialAssessmentBuilder?.clientWorkoutId === savedWorkout.id
+            && initialAssessmentBuilder?.sourceWorkoutTemplateId === null;
+
+        if (!alreadyEditingSavedWorkout) {
+            navigateInitialAssessmentBuilder({
+                initialAssessment: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
+                clientWorkoutId: savedWorkout.id,
+            }, {replace: true});
         }
-        if (intake.status === "COMPLETED") { //TODO would need to check if initial assessment is not completed
-            return 'ASSESS';
+
+        setRecordsRefreshKey(currentKey => currentKey + 1);
+
+        apiGetClient(clientId)
+            .then(updatedClient => {
+                setClient(currentClient => ({
+                    ...currentClient,
+                    reviewStatus: updatedClient.reviewStatus,
+                }));
+            })
+            .catch(error => {
+                console.error('Failed to refresh client review status:', error);
+            });
+    }
+
+    function closeInitialAssessmentBuilder({hasSavedWorkout, createdDuringOpen,} = {}) {
+        if (hasSavedWorkout && createdDuringOpen) {
+            navigateToClientRecord('initial-assessment', {
+                scroll: true,
+                replace: true,
+            });
+            return;
         }
-        return null;
+
+        navigateInitialAssessmentBuilder({}, {replace: true});
+    }
+
+    function handleInitialAssessmentDeleted() {
+        setRecordsRefreshKey(currentKey => currentKey + 1);
+
+        apiGetClient(clientId)
+            .then(updatedClient => {
+                setClient(currentClient => ({
+                    ...currentClient,
+                    reviewStatus: updatedClient.reviewStatus,
+                }));
+            })
+            .catch(error => {
+                console.error('Failed to refresh client review status:', error);
+            });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function renderActiveTabContent() {
-        //TODO temp content, will be replaced with their own components
+    function renderTabContent(tab) {
         return (
             <>
-                {getActiveTab() === 'history' && (
+                {tab === 'history' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             History
@@ -219,7 +347,8 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'programs' && (
+                {tab === 'programs' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             Programs
@@ -230,18 +359,19 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'records' && (
-                    <Stack gap="sm">
-                        <Text fw={700}>
-                            Records
-                        </Text>
-
-                        <Text size="sm" c="dimmed">
-                            Client intake, assessments, records will appear here.
-                        </Text>
-                    </Stack>
+                {tab === 'records' && (
+                    <ClientRecordsTab
+                        client={client}
+                        refreshKey={recordsRefreshKey}
+                        onOpenIntake={intakeId => navigate(ROUTES.intake(intakeId))}
+                        onNewInitialAssessment={createBlankInitialAssessment}
+                        onInitialAssessmentFromTemplate={() => setInitialAssessmentTemplatePickerOpen(true)}
+                        onEditInitialAssessment={editInitialAssessment}
+                        onInitialAssessmentDeleted={handleInitialAssessmentDeleted}
+                    />
                 )}
-                {getActiveTab() === 'habits' && (
+                {tab === 'habits' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             Habits
@@ -252,7 +382,8 @@ function ClientProfilePage() {
                         </Text>
                     </Stack>
                 )}
-                {getActiveTab() === 'measurements' && (
+                {tab === 'measurements' && (
+                    //TODO temp content, will be replaced with own component
                     <Stack gap="sm">
                         <Text fw={700}>
                             Measurements
@@ -267,11 +398,80 @@ function ClientProfilePage() {
         );
     }
 
+    function renderReviewActions() {
+        if (client.archived) {
+            return null;
+        }
+
+        const reviewStatus = client.reviewStatus;
+
+        if (!reviewStatus) {
+            return null;
+        }
+
+        const intakeNeedsAction = reviewStatus.intakeStatus === 'IN_PROGRESS';
+
+        const assessmentNeedsAction = reviewStatus.initialAssessmentStatus === 'MISSING' || reviewStatus.initialAssessmentStatus === 'READY';
+
+        return (
+            <>
+                {intakeNeedsAction && (
+                    <ClientProfileReviewAction
+                        color="red"
+                        icon={<IconAlertTriangle size={18}/>}
+                        title="Action Required"
+                        description={
+                            reviewStatus.intakeStatus === 'IN_PROGRESS'
+                                ? `${client.firstName} has an intake in progress.`
+                                : `${client.firstName} needs an intake.`
+                        }
+                        actionLabel={
+                            reviewStatus.intakeStatus === 'IN_PROGRESS'
+                                ? 'Resume Intake'
+                                : 'Start Intake'
+                        }
+                        actionIcon={<IconPlayerPlay size={16}/>}
+                        onAction={openIntakeAction}
+                    />
+                )}
+
+                {assessmentNeedsAction && (
+                    <ClientProfileReviewAction
+                        color="yellow"
+                        icon={<IconClipboardCheck size={18}/>}
+                        title={
+                            reviewStatus.initialAssessmentStatus === 'READY'
+                                ? 'Initial Assessment Ready'
+                                : 'Action Needed'
+                        }
+                        description={
+                            reviewStatus.initialAssessmentStatus === 'READY'
+                                ? `${client.firstName}'s initial assessment workout is ready.`
+                                : `${client.firstName} needs an initial assessment workout.`
+                        }
+                        actionLabel="View Assessment"
+                        actionIcon={<IconEye size={16}/>}
+                        onAction={viewInitialAssessment}
+                        action={
+                            reviewStatus.initialAssessmentStatus === 'MISSING' ? (
+                                <InitialAssessmentSetupMenu
+                                    variant='light'
+                                    onNewWorkout={createBlankInitialAssessment}
+                                    onFromTemplate={() => setInitialAssessmentTemplatePickerOpen(true)}
+                                />
+                            ) : null
+                        }
+                    />
+                )}
+            </>
+        );
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------
 
-    if (!client || !editForm || !intake) {
+    if (!client || !editForm) {
         return (
             <Stack pos="relative" mih={300}>
                 <LoadingOverlay visible overlayProps={{blur: 2}}/>
@@ -296,22 +496,33 @@ function ClientProfilePage() {
 
             <ClientProfileHeader
                 client={client}
-                reviewStatus={getClientReviewStatus()}
                 onEditDetails={() => setEditingDetails(true)}
                 onArchiveClient={() => console.log('Toggle archive client coming soon')}
             />
 
-            {!client.archived && (
-                <ClientProfileReviewAction
-                    client={client}
-                    reviewStatus={getClientReviewStatus()}
-                    openIntake={openIncompleteIntake}
-                />
-            )}
+            {renderReviewActions()}
 
-            <ClientProfileTabs />
+            <ClientProfileTabs
+                activeTab={activeTab}
+                onChange={changeProfileTab}
+            />
 
-            {renderActiveTabContent()}
+            {CLIENT_PROFILE_TABS.map(tab => {
+                if (!visitedTabs.includes(tab.value)) {
+                    return null;
+                }
+
+                return (
+                    <Box
+                        key={`${clientId}-${tab.value}`}
+                        style={{
+                            display: activeTab === tab.value ? 'block' : 'none',
+                        }}
+                    >
+                        {renderTabContent(tab.value)}
+                    </Box>
+                );
+            })}
 
             <Modal
                 opened={editingDetails}
@@ -329,6 +540,25 @@ function ClientProfilePage() {
                     submitLabel="Save Changes"
                 />
             </Modal>
+
+            {initialAssessmentBuilder === null && (
+                <WorkoutTemplatePicker
+                    opened={initialAssessmentTemplatePickerOpen}
+                    onClose={() => setInitialAssessmentTemplatePickerOpen(false)}
+                    onSelect={selectInitialAssessmentTemplate}
+                />
+            )}
+
+            {initialAssessmentBuilder !== null && (
+                <InitialAssessmentBuilder
+                    opened
+                    client={client}
+                    clientWorkoutId={initialAssessmentBuilder?.clientWorkoutId ?? null}
+                    sourceWorkoutTemplateId={initialAssessmentBuilder?.sourceWorkoutTemplateId ?? null}
+                    onClose={closeInitialAssessmentBuilder}
+                    onSaved={handleInitialAssessmentSaved}
+                />
+            )}
         </Stack>
     );
 }

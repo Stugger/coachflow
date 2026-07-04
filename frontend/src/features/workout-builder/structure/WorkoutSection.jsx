@@ -188,7 +188,6 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                 radius="md"
                 bg="var(--color-background)"
                 style={{
-                    overflow: 'hidden',
                     outline: hasSectionValidationIssues
                         ? '2px solid var(--mantine-color-red-5)'
                         : undefined,
@@ -200,6 +199,8 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                         borderBottom: '1px solid var(--color-border)',
                         background: headerGradient,
                         color: 'white',
+                        borderTopLeftRadius: 'var(--mantine-radius-md)',
+                        borderTopRightRadius: 'var(--mantine-radius-md)',
                     }}
                 >
                     <Group justify="space-between" wrap="nowrap" px="md" py="sm">

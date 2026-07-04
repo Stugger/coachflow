@@ -7,6 +7,7 @@ import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateSummaryResp
 import com.stugger.coachflow.service.WorkoutTemplateService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,12 +31,14 @@ public class WorkoutTemplateController {
     public List<WorkoutTemplateSummaryResponse> getWorkoutTemplates() {
         return workoutTemplateService.getWorkoutTemplateSummaries();
     }
+
     @GetMapping("/{workoutTemplateId}")
     public WorkoutTemplateResponse getWorkoutTemplate(@PathVariable Long workoutTemplateId) {
         return workoutTemplateService.getWorkoutTemplate(workoutTemplateId);
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public WorkoutTemplateResponse createWorkoutTemplate(@Valid @RequestBody CreateWorkoutTemplateRequest request) {
         return workoutTemplateService.createWorkoutTemplate(request);
     }
@@ -46,6 +49,7 @@ public class WorkoutTemplateController {
     }
 
     @DeleteMapping("/{workoutTemplateId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void archiveWorkoutTemplate(@PathVariable Long workoutTemplateId) {
         workoutTemplateService.archiveWorkoutTemplate(workoutTemplateId);
     }

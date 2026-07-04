@@ -173,10 +173,9 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                 <Paper
                     className={isNew ? 'workout-structure-created' : undefined}
                     withBorder
-                    radius="sm"
+                    radius="md"
                     shadow={shadow}
                     style={{
-                        overflow: 'hidden',
                         backgroundColor: 'var(--color-background)',
                         border: 'none',
                         borderTop: '1px solid var(--color-border)',
@@ -194,6 +193,11 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                         pr="md"
                         bg={headerGradient}
                         c="white"
+                        style={{
+                            borderBottom: '1px solid var(--color-border)',
+                            borderTopLeftRadius: 'var(--mantine-radius-sm)',
+                            borderTopRightRadius: 'var(--mantine-radius-md)',
+                        }}
                     >
                         <Group gap={0} justify="space-between" wrap="nowrap">
                             <Group gap={2} wrap="nowrap">

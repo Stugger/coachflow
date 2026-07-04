@@ -2,9 +2,9 @@ package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.workout.CreateWorkoutTemplateRequest;
 import com.stugger.coachflow.api.dto.request.workout.UpdateWorkoutTemplateRequest;
-import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateItemExerciseRequest;
-import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateItemRequest;
-import com.stugger.coachflow.api.dto.request.workout.WorkoutTemplateSectionRequest;
+import com.stugger.coachflow.api.dto.request.workout.WorkoutItemExerciseRequest;
+import com.stugger.coachflow.api.dto.request.workout.WorkoutItemRequest;
+import com.stugger.coachflow.api.dto.request.workout.WorkoutSectionRequest;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateResponse;
 import com.stugger.coachflow.api.dto.response.workout.WorkoutTemplateSummaryResponse;
 import com.stugger.coachflow.entity.exercise.Exercise;
@@ -13,12 +13,13 @@ import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.entity.workout.WorkoutTemplate;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateItem;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateItemExercise;
-import com.stugger.coachflow.entity.workout.WorkoutTemplateItemType;
+import com.stugger.coachflow.entity.workout.WorkoutItemType;
 import com.stugger.coachflow.entity.workout.WorkoutTemplateSection;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
 import com.stugger.coachflow.repository.workout.WorkoutTemplateRepository;
 import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
+import com.stugger.coachflow.validation.WorkoutStructureValidator;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -39,10 +40,14 @@ public class WorkoutTemplateService {
     private final CurrentTrainerService currentTrainerService;
     private final ExerciseRepository exerciseRepository;
 
-    public WorkoutTemplateService(WorkoutTemplateRepository workoutTemplateRepository, CurrentTrainerService currentTrainerService, ExerciseRepository exerciseRepository) {
+    private final WorkoutStructureValidator workoutStructureValidator;
+
+    public WorkoutTemplateService(WorkoutTemplateRepository workoutTemplateRepository, CurrentTrainerService currentTrainerService, ExerciseRepository exerciseRepository,
+                                  WorkoutStructureValidator workoutStructureValidator) {
         this.workoutTemplateRepository = workoutTemplateRepository;
         this.currentTrainerService = currentTrainerService;
         this.exerciseRepository = exerciseRepository;
+        this.workoutStructureValidator = workoutStructureValidator;
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -74,13 +79,15 @@ public class WorkoutTemplateService {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         WorkoutTemplate workoutTemplate = getWorkoutTemplateOrThrow(workoutTemplateId, trainer);
 
+        LocalDateTime now = LocalDateTime.now();
+
         workoutTemplate.setName(TextUtils.trimToEmpty(request.name()));
         workoutTemplate.setDescription(TextUtils.trimToNull(request.description()));
-        workoutTemplate.setUpdatedAt(LocalDateTime.now());
+        workoutTemplate.setUpdatedAt(now);
 
         workoutTemplate.getSections().clear();
         workoutTemplateRepository.saveAndFlush(workoutTemplate);
-        setSections(workoutTemplate, request.sections(), trainer.getId(), LocalDateTime.now());
+        setSections(workoutTemplate, request.sections(), trainer.getId(), now);
 
         return new WorkoutTemplateResponse(workoutTemplateRepository.save(workoutTemplate));
     }
@@ -152,18 +159,14 @@ public class WorkoutTemplateService {
                 : exercise.getName();
     }
 
-    private void setSections(WorkoutTemplate workoutTemplate, List<WorkoutTemplateSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
-        validateSectionPositions(sectionRequests);
+    private void setSections(WorkoutTemplate workoutTemplate, List<WorkoutSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
+        workoutStructureValidator.validate(sectionRequests);
 
         if (sectionRequests == null) {
             return;
         }
 
-        for (WorkoutTemplateSectionRequest sectionRequest : sectionRequests) {
-            if (sectionRequest.sectionType() == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section type is required.");
-            }
-
+        for (WorkoutSectionRequest sectionRequest : sectionRequests) {
             WorkoutTemplateSection section = new WorkoutTemplateSection();
             section.setWorkoutTemplate(workoutTemplate);
             section.setPosition(sectionRequest.position());
@@ -178,16 +181,12 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void setItems(WorkoutTemplateSection section, List<WorkoutTemplateItemRequest> itemRequests, Long trainerId, LocalDateTime now) {
-        validateItemPositions(itemRequests);
-
+    private void setItems(WorkoutTemplateSection section, List<WorkoutItemRequest> itemRequests, Long trainerId, LocalDateTime now) {
         if (itemRequests == null) {
             return;
         }
 
-        for (WorkoutTemplateItemRequest itemRequest : itemRequests) {
-            validateItemStructure(itemRequest);
-
+        for (WorkoutItemRequest itemRequest : itemRequests) {
             WorkoutTemplateItem item = new WorkoutTemplateItem();
             item.setWorkoutTemplateSection(section);
             item.setPosition(itemRequest.position());
@@ -205,14 +204,12 @@ public class WorkoutTemplateService {
         }
     }
 
-    private void setItemExercises(WorkoutTemplateItem item, List<WorkoutTemplateItemExerciseRequest> itemExerciseRequests, Long trainerId, LocalDateTime now) {
-        validateItemExercisePositions(itemExerciseRequests);
-
+    private void setItemExercises(WorkoutTemplateItem item, List<WorkoutItemExerciseRequest> itemExerciseRequests, Long trainerId, LocalDateTime now) {
         if (itemExerciseRequests == null) {
             return;
         }
 
-        for (WorkoutTemplateItemExerciseRequest itemExerciseRequest : itemExerciseRequests) {
+        for (WorkoutItemExerciseRequest itemExerciseRequest : itemExerciseRequests) {
             WorkoutTemplateItemExercise itemExercise = new WorkoutTemplateItemExercise();
             itemExercise.setWorkoutTemplateItem(item);
             itemExercise.setExercise(getAvailableExerciseOrThrow(itemExerciseRequest.exerciseId(), trainerId));
@@ -226,8 +223,8 @@ public class WorkoutTemplateService {
         }
     }
 
-    private Exercise resolveDirectExercise(WorkoutTemplateItemRequest itemRequest, Long trainerId) {
-        if (itemRequest.itemType() != WorkoutTemplateItemType.EXERCISE) {
+    private Exercise resolveDirectExercise(WorkoutItemRequest itemRequest, Long trainerId) {
+        if (itemRequest.itemType() != WorkoutItemType.EXERCISE) {
             return null;
         }
         return getAvailableExerciseOrThrow(itemRequest.exerciseId(), trainerId);
@@ -264,93 +261,4 @@ public class WorkoutTemplateService {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Exercise not found.");
     }
 
-    private void validateSectionPositions(List<WorkoutTemplateSectionRequest> sections) {
-        if (sections == null) {
-            return;
-        }
-
-        Set<Integer> positions = new HashSet<>();
-        for (WorkoutTemplateSectionRequest section : sections) {
-            validatePositivePosition(section.position(), "Section position");
-            if (!positions.add(section.position())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section positions must be unique within a workout template.");
-            }
-        }
-    }
-
-    private void validateItemPositions(List<WorkoutTemplateItemRequest> items) {
-        if (items == null) {
-            return;
-        }
-
-        Set<Integer> positions = new HashSet<>();
-        for (WorkoutTemplateItemRequest item : items) {
-            validatePositivePosition(item.position(), "Item position");
-            if (!positions.add(item.position())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item positions must be unique within a section.");
-            }
-        }
-    }
-
-    private void validateItemExercisePositions(List<WorkoutTemplateItemExerciseRequest> itemExercises) {
-        if (itemExercises == null) {
-            return;
-        }
-
-        Set<Integer> positions = new HashSet<>();
-        for (WorkoutTemplateItemExerciseRequest itemExercise : itemExercises) {
-            validatePositivePosition(itemExercise.position(), "Item exercise position");
-            if (!positions.add(itemExercise.position())) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item exercise positions must be unique within an item.");
-            }
-        }
-    }
-
-    private void validatePositivePosition(Integer position, String label) {
-        if (position == null || position <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must be positive.");
-        }
-    }
-
-    private void validateItemStructure(WorkoutTemplateItemRequest item) {
-        if (item.itemType() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item type is required.");
-        }
-
-        int itemExerciseCount = item.itemExercises() == null ? 0 : item.itemExercises().size();
-
-        switch (item.itemType()) {
-            case EXERCISE -> validateExerciseItem(item, itemExerciseCount);
-            case SUPERSET -> validateGroupedItem(item, itemExerciseCount, 2, 2, "Supersets");
-            case TRISET -> validateGroupedItem(item, itemExerciseCount, 3, 3, "Trisets");
-            case CIRCUIT -> validateGroupedItem(item, itemExerciseCount, 2, null, "Circuits");
-        }
-    }
-
-    private void validateExerciseItem(WorkoutTemplateItemRequest item, int itemExerciseCount) {
-        if (item.exerciseId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exercise items require exerciseId.");
-        }
-        if (itemExerciseCount > 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exercise items must not include child item exercises.");
-        }
-        if (item.rounds() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exercise items must not set rounds.");
-        }
-    }
-
-    private void validateGroupedItem(WorkoutTemplateItemRequest item, int itemExerciseCount, int minimumExercises, Integer exactExercises, String label) {
-        if (item.exerciseId() != null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " must not set exerciseId.");
-        }
-        if (item.rounds() == null || item.rounds() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " require rounds.");
-        }
-        if (exactExercises != null && itemExerciseCount != exactExercises) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " require exactly " + exactExercises + " child exercises.");
-        }
-        if (exactExercises == null && itemExerciseCount < minimumExercises) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, label + " require at least " + minimumExercises + " child exercises.");
-        }
-    }
 }

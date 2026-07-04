@@ -6,7 +6,7 @@
 
 The live development build supports trainer registration and provides each account with an isolated workspace.
 
-CoachFlow is being designed and tested in collaboration with a working personal trainer. It is an active product build rather than a finished SaaS application: the current focus is giving trainers a clean, responsive workspace for client onboarding and workout design, while the next phases expand into assessments, programs, and recorded live-session results.
+CoachFlow is being designed and tested in collaboration with a working personal trainer. It is an active product build rather than a finished SaaS application: the current focus is giving trainers a clean, responsive workspace for client onboarding, workout design, and initial assessments. Next phases expand into programs and recorded live-session results.
 
 ---
 
@@ -52,6 +52,21 @@ CoachFlow is being designed and tested in collaboration with a working personal 
 
 <p align="center">
   <img src="images/client-intake-resume.gif" alt="Resuming and finishing a CoachFlow client intake" width="100%" />
+</p>
+
+</details>
+<br>
+<details>
+<summary><strong>Initial assessment workflows</strong> — Create and manage client-specific assessment workouts</summary>
+
+- Start an assessment from a blank workout or a reusable workout template
+- Save assessments as editable client-specific workout copies
+- Review configured assessments from the client Records workflow
+- Edit, replace, or delete assessments without changing the source template
+- Preserve recoverable builder state through direct, URL-backed navigation
+
+<p align="center">
+  <img src="images/initial-assessment-setup.gif" alt="Setting up an initial assessment workout for a CoachFlow client" width="100%" />
 </p>
 
 </details>
@@ -131,9 +146,10 @@ flowchart TD
     API -->|"JPA / Hibernate<br/>Flyway migrations"| DB
 ```
 
-The frontend is a React single-page application with route-based navigation and reusable, feature-oriented UI. The backend exposes a REST API, owns validation and authorization, and persists the core trainer, client, intake, exercise, and workout-template domains in PostgreSQL.
+The frontend is a React single-page application with route-based navigation and reusable, feature-oriented UI. 
+The backend exposes a REST API, owns validation and authorization, and persists the core trainer, client, intake, exercise, workout-template, and client-workout domains in PostgreSQL.
 
-The workout builder uses a nested template model:
+The workout builder uses a nested workout-definition model:
 
 ```text
 Workout Template
@@ -152,9 +168,14 @@ The frontend separates entity-specific workflows from the reusable workout editi
 WorkoutTemplateBuilder
   └── WorkoutBuilder
         └── WorkoutStructureEditor
+        
+InitialAssessmentBuilder
+  └── WorkoutBuilder
+        └── WorkoutStructureEditor
 ```
 
 **WorkoutTemplateBuilder** handles template-specific loading, saving, copy behavior, and recovery keys.<br>
+**InitialAssessmentBuilder** handles blank or template-based assessment setup, client-specific workout loading and saving, and assessment draft recovery.<br>
 **WorkoutBuilder** owns the shared editing session, including validation, unsaved-change tracking, local draft recovery, and responsive modal/drawer behavior.<br>
 **WorkoutStructureEditor** manages the editable workout structure: sections, exercises, stacks, targets, and tracking fields.
 
@@ -294,7 +315,6 @@ Current work is focused on expanding the workout-design workflow and building to
 - Exercise-library domain refactor into a dedicated feature module
 - Larger multi-panel workout-builder layout for desktop workflows
 - Drag-and-drop reordering for sections, workout items, and stacked exercises
-- Assessment workflows that create editable client workout copies from reusable templates
 - Live workout sessions with recorded exercise results and session history
 - Program templates and client-specific program assignment workflows
 - Measurement check-ins with supporting scans and photos
@@ -304,7 +324,8 @@ Current work is focused on expanding the workout-design workflow and building to
 
 ## Status
 
-CoachFlow is actively under development and being refined through ongoing trainer feedback and hands-on testing. The current build establishes the trainer-side foundation for client onboarding and workout design; assessments, programs, live sessions, and expanded scheduling are the next major product areas.
+CoachFlow is actively under development and being refined through ongoing trainer feedback and hands-on testing. 
+The current build establishes the trainer-side foundation for client onboarding, workout design, and initial assessment setup; measurements, programs, live sessions, and expanded scheduling are the next major product areas.
 
 ---
 

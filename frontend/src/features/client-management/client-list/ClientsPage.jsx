@@ -21,7 +21,8 @@ import {
 import {ROUTES} from '../../../constants/routes.js';
 
 import {apiGetClients} from '../shared/api/clients-api.js';
-import {apiGetClientIntakes} from '../intake/client-intake-api.js';
+
+import {getClientReviewPriority} from '../shared/review/client-review-utils.js';
 
 import ClientCard from './ClientCard.jsx';
 import ClientMobileRow from './ClientMobileRow.jsx';
@@ -40,12 +41,10 @@ function ClientsPage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const [clients, setClients] = useState([]);
-    const [intakes, setIntakes] = useState([]);
 
     const [clientsLoaded, setClientsLoaded] = useState(false);
-    const [intakesLoaded, setIntakesLoaded] = useState(false);
 
-    const loading = !clientsLoaded || !intakesLoaded;
+    const loading = !clientsLoaded;
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Stored state
@@ -64,18 +63,7 @@ function ClientsPage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const sortedClients = [...clients].sort((a, b) => {
-        const aStatus = getClientReviewStatus(a.id);
-        const bStatus = getClientReviewStatus(b.id);
-        const getPriority = (status) => {
-            if (status === 'INTAKE') {
-                return 0;
-            }
-            if (status === 'ASSESS') {
-                return 1;
-            }
-            return 2;
-        };
-        return getPriority(aStatus) - getPriority(bStatus);
+        return getClientReviewPriority(a) - getClientReviewPriority(b);
     });
 
     const visibleClients = sortedClients.filter(client => {
@@ -95,7 +83,6 @@ function ClientsPage() {
 
     useEffect(() => {
         loadClients();
-        loadIntakes();
     }, []);
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -114,21 +101,6 @@ function ClientsPage() {
             })
             .finally(() => {
                 setClientsLoaded(true);
-            });
-    }
-
-    function loadIntakes() {
-        setIntakesLoaded(false);
-        apiGetClientIntakes()
-            .then(intakes => {
-                setIntakes(intakes);
-            })
-            .catch(error => {
-                console.error('Error loading intake drafts:', error);
-                setIntakes([]);
-            })
-            .finally(() => {
-                setIntakesLoaded(true);
             });
     }
 
@@ -152,40 +124,6 @@ function ClientsPage() {
     function changeClientFilter(value) {
         setClientFilter(value);
         localStorage.setItem('clients_filter', value);
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Utility
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function getIncompleteIntakeForClient(clientId) {
-        return intakes.find(intake =>
-            String(intake.clientId) === String(clientId)
-            && intake.status !== 'COMPLETED'
-        );
-    }
-
-    function getCompletedIntakeForClient(clientId) {
-        return intakes.find(intake =>
-            String(intake.clientId) === String(clientId)
-            && intake.status === 'COMPLETED'
-        );
-    }
-
-    function hasInitialAssessment(clientId) {
-        //TODO, if the client does not have any assessments in database, then that indicates they need an initial assessment
-        //and if they have 1 assessment but it is incomplete then that indicates their initial assessment is incomplete
-        return false;
-    }
-
-    function getClientReviewStatus(clientId) {
-        if (getIncompleteIntakeForClient(clientId)) {
-            return 'INTAKE';
-        }
-        if (getCompletedIntakeForClient(clientId) && !hasInitialAssessment(clientId)) {
-            return 'ASSESS';
-        }
-        return null;
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -220,7 +158,6 @@ function ClientsPage() {
                     <ClientCard
                         key={client.id}
                         client={client}
-                        reviewStatus={getClientReviewStatus(client.id)}
                         onClick={() => selectClient(client)}
                     />
                 ))}
@@ -239,7 +176,6 @@ function ClientsPage() {
                                 <ClientMobileRow
                                     key={client.id}
                                     client={client}
-                                    reviewStatus={getClientReviewStatus(client.id)}
                                     onClick={() => selectClient(client)}
                                 />
                             ))}
@@ -266,7 +202,6 @@ function ClientsPage() {
                                     <ClientTableRow
                                         key={client.id}
                                         client={client}
-                                        reviewStatus={getClientReviewStatus(client.id)}
                                         onClick={() => selectClient(client)}
                                     />
                                 ))}

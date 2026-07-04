@@ -3,7 +3,6 @@ package com.stugger.coachflow.api.controller;
 import com.stugger.coachflow.api.dto.request.person.CreateClientRequest;
 import com.stugger.coachflow.api.dto.request.person.UpdateClientRequest;
 import com.stugger.coachflow.api.dto.response.person.ClientResponse;
-import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.service.ClientService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -28,14 +27,12 @@ public class ClientController {
 
     @PostMapping
     public ClientResponse createClient(@Valid @RequestBody CreateClientRequest request) {
-        Client client = clientService.createClient(request);
-        return new ClientResponse(client);
+        return clientService.createClient(request);
     }
 
     @PutMapping("/{clientId}")
     public ClientResponse updateClient(@PathVariable Long clientId, @Valid @RequestBody UpdateClientRequest request) {
-        Client client = clientService.updateClient(clientId, request);
-        return new ClientResponse(client);
+        return clientService.updateClient(clientId, request);
     }
 
     @GetMapping("/{clientId}")

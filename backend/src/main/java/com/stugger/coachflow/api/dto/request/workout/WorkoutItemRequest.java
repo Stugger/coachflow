@@ -1,6 +1,6 @@
 package com.stugger.coachflow.api.dto.request.workout;
 
-import com.stugger.coachflow.entity.workout.WorkoutTemplateItemType;
+import com.stugger.coachflow.entity.workout.WorkoutItemType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -12,15 +12,14 @@ import java.util.List;
  * @author Jake
  * @since June 15th, 2026
  */
-public record WorkoutTemplateItemRequest(
+public record WorkoutItemRequest(
         Long id,
 
         @NotNull(message = "Item position is required")
         @Positive(message = "Item position must be positive")
         Integer position,
 
-        @NotNull(message = "Item type is required")
-        WorkoutTemplateItemType itemType,
+        @NotNull(message = "Item type is required") WorkoutItemType itemType,
 
         Long exerciseId,
 
@@ -34,6 +33,6 @@ public record WorkoutTemplateItemRequest(
         String configJson,
 
         @Valid
-        List<WorkoutTemplateItemExerciseRequest> itemExercises
+        List<WorkoutItemExerciseRequest> itemExercises
 ) {
 }
