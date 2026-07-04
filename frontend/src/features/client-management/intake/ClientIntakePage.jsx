@@ -265,22 +265,22 @@ function ClientIntakePage() {
         setExitModalOpen(false);
         switch (currentStep) {
             case IntakeSteps.PARQ:
-                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(ROUTES.clientProfile(clientId)));
+                saveIntakeStep(IntakeSteps.PARQ, parqForm, () => navigate(`${ROUTES.clientRecords(clientId)}#intake`));
                 break;
             case IntakeSteps.GOALS:
-                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(ROUTES.clientProfile(clientId)));
+                saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => navigate(`${ROUTES.clientRecords(clientId)}#intake`));
                 break;
             case IntakeSteps.ACTIVITY_HISTORY:
-                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(ROUTES.clientProfile(clientId)));
+                saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => navigate(`${ROUTES.clientRecords(clientId)}#intake`));
                 break;
             case IntakeSteps.MEDICAL:
-                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(ROUTES.clientProfile(clientId)));
+                saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => navigate(`${ROUTES.clientRecords(clientId)}#intake`));
                 break;
             case IntakeSteps.LIFESTYLE:
-                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(ROUTES.clientProfile(clientId)));
+                saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => navigate(`${ROUTES.clientRecords(clientId)}#intake`));
                 break;
             case IntakeSteps.TRAINING_PREFERENCES:
-                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(ROUTES.clientProfile(clientId)));
+                saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => navigate(`${ROUTES.clientRecords(clientId)}#intake`));
                 break;
             case IntakeSteps.COMPLETED:
                 navigate(`${ROUTES.clientRecords(clientId)}#intake`, {
@@ -291,7 +291,7 @@ function ClientIntakePage() {
                 break;
             default:
                 if (clientId) {
-                    navigate(ROUTES.clientProfile(clientId));
+                    navigate(`${ROUTES.clientRecords(clientId)}#intake`);
                 } else {
                     navigate(ROUTES.CLIENTS);
                 }

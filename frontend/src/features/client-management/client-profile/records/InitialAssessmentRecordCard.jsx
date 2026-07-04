@@ -108,7 +108,7 @@ function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWor
         return (
             <Stack gap="sm">
                 <Text size="sm" c="dimmed">
-                    Create an assessment workout plan before the client&apos;s
+                    Create an assessment workout plan before the client's
                     first assessment.
                 </Text>
 

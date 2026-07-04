@@ -2,19 +2,19 @@ import {useEffect, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {
     Accordion,
-    Alert,
     Badge,
     Button,
     Group,
     Modal,
     Stack,
     Text,
+    ThemeIcon,
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
+    IconCheck,
     IconClipboardCheck,
-    IconClipboardText,
-    IconRulerMeasure,
+    IconCircleDashedCheck,
 } from '@tabler/icons-react';
 
 import {
@@ -274,20 +274,28 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                         style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
                         bg='var(--color-surface)'
                     >
-                        <Accordion.Control icon={<IconClipboardText size={18}/>}>
-                            <Group justify="space-between" pr="sm" wrap="nowrap">
+                        <Accordion.Control
+                            icon={intake?.status === 'COMPLETED'
+                                ?
+                                    <ThemeIcon size={20} radius="xl" color="green">
+                                        <IconCheck size={16} stroke={3}/>
+                                    </ThemeIcon>
+                                :
+                                <IconCircleDashedCheck size={20} color='gray'/>
+                            }
+                        >
+                            {intake?.status === 'COMPLETED' ? (
                                 <Text fw={600}>Intake</Text>
-
-                                <Badge
-                                    color={intake?.status === 'COMPLETED' ? 'green' : 'red'}
-                                    variant="light"
-                                >
-                                    {intake?.status === 'COMPLETED'
-                                        ? 'Completed'
-                                        : 'In Progress'
-                                    }
-                                </Badge>
-                            </Group>
+                            ) : (
+                                <Group justify="space-between" pr="sm" wrap="nowrap">
+                                    <Text fw={600} c='dimmed'>Intake</Text>
+                                    {intakeLoaded && (
+                                        <Badge color="red" variant="light">
+                                            {intake === null ? 'Missing' : 'Incomplete'}
+                                        </Badge>
+                                    )}
+                                </Group>
+                            )}
                         </Accordion.Control>
 
                         <Accordion.Panel>
@@ -306,9 +314,19 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                         style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
                         bg='var(--color-surface)'
                     >
-                        <Accordion.Control icon={<IconClipboardCheck size={18}/>}>
+                        {/*TODO completed assessment style: no badge, not dimmed, green circle check (like intake)*/}
+                        <Accordion.Control
+                            icon={initialAssessmentWorkout
+                                    ?
+                                    <ThemeIcon size={20} radius="xl" color="yellow">
+                                        <IconClipboardCheck size={14} stroke={2.5}/>
+                                    </ThemeIcon>
+                                    :
+                                    <IconCircleDashedCheck size={20} color='gray'/>
+                            }
+                        >
                             <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text fw={600}>Initial Assessment</Text>
+                                <Text fw={600} c={initialAssessmentWorkout ? undefined : 'dimmed'}>Initial Assessment</Text>
 
                                 <Badge
                                     color={initialAssessmentWorkout ? 'yellow' : 'gray'}
@@ -339,12 +357,10 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                         style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
                         bg="var(--color-surface)"
                     >
-                        <Accordion.Control icon={<IconRulerMeasure size={18}/>}>
+                        {/*TODO completed initial measurements style: no badge, not dimmed, green circle check (like intake)*/}
+                        <Accordion.Control icon={<IconCircleDashedCheck size={20} color='gray'/>}>
                             <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text fw={600}>Initial Measurements</Text>
-                                <Badge color="gray" variant="light">
-                                    Coming soon
-                                </Badge>
+                                <Text fw={600} c='dimmed'>Initial Measurements</Text>
                             </Group>
                         </Accordion.Control>
 

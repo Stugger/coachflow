@@ -446,7 +446,7 @@ function ClientProfilePage() {
                         }
                         description={
                             reviewStatus.initialAssessmentStatus === 'READY'
-                                ? `${client.firstName}'s initial assessment workout is ready to review.`
+                                ? `${client.firstName}'s initial assessment workout is ready.`
                                 : `${client.firstName} needs an initial assessment workout.`
                         }
                         actionLabel="View Assessment"
