@@ -75,7 +75,6 @@ function WorkoutSectionPreview({section}) {
             withBorder
             radius="md"
             bg="var(--color-background)"
-            style={{overflow: 'hidden'}}
         >
             <Box
                 px="md"
@@ -84,6 +83,8 @@ function WorkoutSectionPreview({section}) {
                     background: headerGradient,
                     color: 'white',
                     borderBottom: '1px solid var(--color-border)',
+                    borderTopLeftRadius: 'var(--mantine-radius-md)',
+                    borderTopRightRadius: 'var(--mantine-radius-md)',
                 }}
             >
                 <Group justify="space-between" wrap="nowrap">

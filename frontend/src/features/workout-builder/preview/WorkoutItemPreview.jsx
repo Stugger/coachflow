@@ -182,17 +182,16 @@ function WorkoutStackPreview({stack}) {
 
     return (
         <Box
-            ml='calc(var(--mantine-spacing-md) * -0.6)'
-            pl='calc(var(--mantine-spacing-md) * 0.4)'
+            ml={isMobile ? 'calc(var(--mantine-spacing-md) * -0.65)' : 'calc(var(--mantine-spacing-md) * -0.5)'}
+            pl={isMobile ? 'calc(var(--mantine-spacing-md) * 0.45)' : 'calc(var(--mantine-spacing-md) * 0.5)'}
             style={{
-                borderLeft: `3px solid var(--mantine-color-${option?.color ?? 'gray'}-6)`,
+                borderLeft: `3px solid var(--mantine-color-${option?.color ?? 'gray'}-4)`,
             }}
         >
             <Paper
                 withBorder
                 radius="md"
-                style={{overflow: 'hidden'}}
-                bg='var(--color-background)'
+                bg="var(--color-background)"
             >
                 <Box
                     px="sm"
@@ -200,6 +199,8 @@ function WorkoutStackPreview({stack}) {
                     style={{
                         background: headerGradient,
                         borderBottom: '1px solid var(--color-border)',
+                        borderTopLeftRadius: 'var(--mantine-radius-sm)',
+                        borderTopRightRadius: 'var(--mantine-radius-md)',
                     }}
                 >
                     <Group justify="space-between" wrap="nowrap">
