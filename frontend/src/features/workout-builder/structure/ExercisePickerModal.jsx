@@ -26,6 +26,55 @@ import {
 
 import {resolveMediaUrl} from '../../../utils/media-url-utils';
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Utility
+// ------------------------------------------------------------------------------------------------------------------------
+
+function findOptionLabel(options, value) {
+    return options.find(option => option.value === value)?.label || value;
+}
+
+function matchesSearch(exercise, normalizedSearch) {
+    if (!normalizedSearch) {
+        return true;
+    }
+
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(
+        exercise.metadataJson,
+    );
+
+    const searchableValues = [
+        exercise.name,
+        ...metadata.equipment.map(value => findOptionLabel(EQUIPMENT_OPTIONS, value)),
+        ...metadata.primaryMuscles.map(value => findOptionLabel(MUSCLE_OPTIONS, value)),
+        ...metadata.tags.map(value => findOptionLabel(EXERCISE_TAG_OPTIONS, value)),
+    ];
+
+    return searchableValues
+        .filter(Boolean)
+        .some(value => value.toLowerCase().includes(normalizedSearch));
+}
+
+function getExerciseSummary(exercise) {
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(
+        exercise.metadataJson,
+    );
+
+    const equipment = metadata.equipment
+        .slice(0, 1)
+        .map(value => findOptionLabel(EQUIPMENT_OPTIONS, value));
+
+    const muscles = metadata.primaryMuscles
+        .slice(0, 2)
+        .map(value => findOptionLabel(MUSCLE_OPTIONS, value));
+
+    return [...equipment, ...muscles].join(' · ');
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Component
+// ------------------------------------------------------------------------------------------------------------------------
+
 function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -58,51 +107,6 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
             return;
         }
     }, [opened]);
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Utility
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function matchesSearch(exercise, normalizedSearch) {
-        if (!normalizedSearch) {
-            return true;
-        }
-
-        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(
-            exercise.metadataJson,
-        );
-
-        const searchableValues = [
-            exercise.name,
-            ...metadata.equipment.map(value => findOptionLabel(EQUIPMENT_OPTIONS, value)),
-            ...metadata.primaryMuscles.map(value => findOptionLabel(MUSCLE_OPTIONS, value)),
-            ...metadata.tags.map(value => findOptionLabel(EXERCISE_TAG_OPTIONS, value)),
-        ];
-
-        return searchableValues
-            .filter(Boolean)
-            .some(value => value.toLowerCase().includes(normalizedSearch));
-    }
-
-    function findOptionLabel(options, value) {
-        return options.find(option => option.value === value)?.label || value;
-    }
-
-    function getExerciseSummary(exercise) {
-        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(
-            exercise.metadataJson,
-        );
-
-        const equipment = metadata.equipment
-            .slice(0, 1)
-            .map(value => findOptionLabel(EQUIPMENT_OPTIONS, value));
-
-        const muscles = metadata.primaryMuscles
-            .slice(0, 2)
-            .map(value => findOptionLabel(MUSCLE_OPTIONS, value));
-
-        return [...equipment, ...muscles].join(' · ');
-    }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers

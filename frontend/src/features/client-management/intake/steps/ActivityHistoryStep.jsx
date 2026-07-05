@@ -8,52 +8,23 @@ import {
     Text,
     Textarea,
 } from '@mantine/core';
-import { IconBarbell } from '@tabler/icons-react';
-import StepNavigation from "../StepNavigation.jsx";
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Utility
-// ------------------------------------------------------------------------------------------------------------------------
-
-export function createEmptyActivityHistoryForm() {
-    return {
-        previousTrainer: null,
-        previousTrainerExperience: '',
-        activityLevel: '',
-        currentRoutine: ''
-    };
-}
-
-export function validateActivityHistoryForm(form) {
-    const errors = {};
-
-    if (form.previousTrainer === null) {
-        errors.previousTrainer = 'Please answer this question';
-    }
-
-    if (!form.activityLevel) {
-        errors.activityLevel = 'Current activity level is required';
-    }
-
-    return errors;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Component
-// ------------------------------------------------------------------------------------------------------------------------
+import {IconBarbell} from '@tabler/icons-react';
+import StepNavigation from '../StepNavigation.jsx';
+import {
+    ACTIVITY_LEVEL_OPTIONS,
+    YES_NO_OPTIONS,
+} from '../intake-step-options.js';
 
 function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onContinue}) {
-
     const hasErrors = Object.keys(errors).length > 0;
 
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-
                 <Alert
                     color={hasErrors ? 'red' : 'blue'}
                     variant="light"
-                    icon={<IconBarbell size={18} />}
+                    icon={<IconBarbell size={18}/>}
                 >
                     Tell us about your training experience and activity level.
                 </Alert>
@@ -69,7 +40,6 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
                     }}
                 >
                     <Stack gap="sm">
-
                         <Text fw={500}>
                             Have you worked with a personal trainer before?
                         </Text>
@@ -81,13 +51,8 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
                                     ? ''
                                     : String(form.previousTrainer)
                             }
-                            onChange={(value) =>
-                                updateTrainer(value === 'true')
-                            }
-                            data={[
-                                { label: 'Yes', value: 'true' },
-                                { label: 'No', value: 'false' },
-                            ]}
+                            onChange={(value) => updateTrainer(value === 'true')}
+                            data={YES_NO_OPTIONS}
                             fullWidth
                         />
 
@@ -99,7 +64,7 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
 
                         {form.previousTrainer && (
                             <>
-                                <Divider />
+                                <Divider/>
 
                                 <Textarea
                                     label="Describe your experience"
@@ -111,7 +76,6 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
                                 />
                             </>
                         )}
-
                     </Stack>
                 </Paper>
 
@@ -129,12 +93,7 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
                         })
                     }
                     error={errors.activityLevel}
-                    data={[
-                        { value: 'SEDENTARY', label: 'Sedentary' },
-                        { value: 'LIGHTLY_ACTIVE', label: 'Lightly active' },
-                        { value: 'MODERATELY_ACTIVE', label: 'Moderately active' },
-                        { value: 'VERY_ACTIVE', label: 'Very active' },
-                    ]}
+                    data={ACTIVITY_LEVEL_OPTIONS}
                     required
                 />
 
@@ -147,10 +106,7 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
                     onChange={onChange}
                 />
 
-                <StepNavigation
-                    onBack={onBack}
-                />
-
+                <StepNavigation onBack={onBack}/>
             </Stack>
         </form>
     );

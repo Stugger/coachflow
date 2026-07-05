@@ -1,71 +1,22 @@
 import {
     Alert,
     Checkbox,
+    Divider,
     Group,
     Select,
     SimpleGrid,
     Stack,
     Text,
     Textarea,
-    Divider,
 } from '@mantine/core';
 import {IconClipboardList} from '@tabler/icons-react';
-import StepNavigation from "../StepNavigation.jsx";
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Constants
-// ------------------------------------------------------------------------------------------------------------------------
-
-const WORKOUT_DAY_OPTIONS = [
-    ['MONDAY', 'Mon'],
-    ['TUESDAY', 'Tue'],
-    ['WEDNESDAY', 'Wed'],
-    ['THURSDAY', 'Thu'],
-    ['FRIDAY', 'Fri'],
-    ['SATURDAY', 'Sat'],
-    ['SUNDAY', 'Sun'],
-];
-
-const LEARNING_STYLE_OPTIONS = [
-    ['VISUAL_DEMONSTRATION', 'Visual demonstration'],
-    ['VERBAL_EXPLANATION', 'Verbal explanation'],
-    ['HANDS_ON_CORRECTION', 'Hands-on correction'],
-    ['WRITTEN_INSTRUCTIONS', 'Written instructions'],
-    ['NOT_SURE', 'Not sure'],
-];
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Utility
-// ------------------------------------------------------------------------------------------------------------------------
-
-export function createEmptyTrainingPreferencesForm() {
-    return {
-        daysPerWeek: '',
-        workoutTimePreference: '',
-        preferredWorkoutDays: [],
-        learningStyles: [],
-        exercisesToAvoid: '',
-        additionalPreferences: '',
-    };
-}
-
-export function validateTrainingPreferencesForm(form) {
-    const errors = {};
-
-    if (!form.daysPerWeek) {
-        errors.daysPerWeek = 'Training days per week is required';
-    }
-
-    if (!form.workoutTimePreference) {
-        errors.workoutTimePreference = 'Workout time preference is required';
-    }
-
-    return errors;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Component
-// ------------------------------------------------------------------------------------------------------------------------
+import StepNavigation from '../StepNavigation.jsx';
+import {
+    DAYS_PER_WEEK_OPTIONS,
+    LEARNING_STYLE_OPTIONS,
+    WORKOUT_DAY_OPTIONS,
+    WORKOUT_TIME_PREFERENCE_OPTIONS,
+} from '../intake-step-options.js';
 
 function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updateLearningStyle, onChange, onBack, onContinue}) {
 
@@ -80,16 +31,14 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
         });
     }
 
-    function renderCheckboxCard(value, label, selected, onClick) {
+    function renderCheckboxCard({value, label}, selected, onClick) {
         return (
             <Checkbox.Card
                 key={value}
                 radius="md"
                 checked={selected}
                 onClick={onClick}
-                style={{
-                    border: 'none'
-                }}
+                style={{border: 'none'}}
             >
                 <Group wrap="nowrap" align="center">
                     <Checkbox.Indicator/>
@@ -112,7 +61,7 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
                 >
                     {hasErrors
                         ? 'Please complete the required training preference fields before finishing.'
-                        : 'Tell us how this client prefers to train and learn.'}
+                        : 'Tell us how you prefer to train and learn.'}
                 </Alert>
 
                 <Select
@@ -122,15 +71,7 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
                     error={errors.daysPerWeek}
                     required
                     onChange={(value) => updateSelect('daysPerWeek', value)}
-                    data={[
-                        {value: '1', label: '1 day'},
-                        {value: '2', label: '2 days'},
-                        {value: '3', label: '3 days'},
-                        {value: '4', label: '4 days'},
-                        {value: '5', label: '5 days'},
-                        {value: '6', label: '6 days'},
-                        {value: '7', label: '7 days'},
-                    ]}
+                    data={DAYS_PER_WEEK_OPTIONS}
                 />
 
                 <Select
@@ -140,12 +81,7 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
                     error={errors.workoutTimePreference}
                     required
                     onChange={(value) => updateSelect('workoutTimePreference', value)}
-                    data={[
-                        {value: 'MORNING', label: 'Morning'},
-                        {value: 'AFTERNOON', label: 'Afternoon'},
-                        {value: 'EVENING', label: 'Evening'},
-                        {value: 'FLEXIBLE', label: 'Flexible'},
-                    ]}
+                    data={WORKOUT_TIME_PREFERENCE_OPTIONS}
                 />
 
                 <Stack gap="xs">
@@ -158,18 +94,17 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
                         </Text>
                     </Stack>
                     <SimpleGrid cols={{base: 2, sm: 4}}>
-                        {WORKOUT_DAY_OPTIONS.map(([value, label]) =>
+                        {WORKOUT_DAY_OPTIONS.map(option =>
                             renderCheckboxCard(
-                                value,
-                                label,
-                                form.preferredWorkoutDays.includes(value),
-                                () => updatePreferredWorkoutDay(value)
+                                option,
+                                form.preferredWorkoutDays.includes(option.value),
+                                () => updatePreferredWorkoutDay(option.value),
                             )
                         )}
                     </SimpleGrid>
                 </Stack>
 
-                <Divider />
+                <Divider/>
 
                 <Stack gap="xs">
                     <Stack gap={0}>
@@ -181,18 +116,17 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
                         </Text>
                     </Stack>
                     <SimpleGrid cols={{base: 1, sm: 2}}>
-                        {LEARNING_STYLE_OPTIONS.map(([value, label]) =>
+                        {LEARNING_STYLE_OPTIONS.map(option =>
                             renderCheckboxCard(
-                                value,
-                                label,
-                                form.learningStyles.includes(value),
-                                () => updateLearningStyle(value)
+                                option,
+                                form.learningStyles.includes(option.value),
+                                () => updateLearningStyle(option.value),
                             )
                         )}
                     </SimpleGrid>
                 </Stack>
 
-                <Divider />
+                <Divider/>
 
                 <Textarea
                     label="Are there any specific exercises you would like to avoid?"
@@ -214,7 +148,7 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
 
                 <StepNavigation
                     onBack={onBack}
-                    submitLabel={"Complete Intake"}
+                    submitLabel="Complete Intake"
                 />
             </Stack>
         </form>

@@ -182,7 +182,8 @@ function AuthPage({onAuthSuccess}) {
             return;
         }
 
-        const {confirmPassword, ...payload} = registerForm;
+        const payload = {...registerForm};
+        delete payload.confirmPassword;
 
         fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/register-trainer`, {
             method: 'POST',

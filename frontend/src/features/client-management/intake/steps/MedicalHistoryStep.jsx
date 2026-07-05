@@ -4,24 +4,7 @@ import {
     Textarea,
 } from '@mantine/core';
 import {IconMedicalCross} from '@tabler/icons-react';
-import StepNavigation from "../StepNavigation.jsx";
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Utility
-// ------------------------------------------------------------------------------------------------------------------------
-
-export function createEmptyMedicalHistoryForm() {
-    return {
-        medicalConditions: '',
-        currentMedications: '',
-        pastSurgeries: '',
-        injuriesLimitations: '',
-    };
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Component
-// ------------------------------------------------------------------------------------------------------------------------
+import StepNavigation from '../StepNavigation.jsx';
 
 function MedicalHistoryStep({form, onChange, onBack, onContinue}) {
     return (
@@ -71,9 +54,7 @@ function MedicalHistoryStep({form, onChange, onBack, onContinue}) {
                     onChange={onChange}
                 />
 
-                <StepNavigation
-                    onBack={onBack}
-                />
+                <StepNavigation onBack={onBack}/>
             </Stack>
         </form>
     );

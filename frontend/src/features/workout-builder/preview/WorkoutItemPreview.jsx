@@ -12,7 +12,6 @@ import {
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
-    IconAlertTriangle,
     IconPhoto,
 } from '@tabler/icons-react';
 

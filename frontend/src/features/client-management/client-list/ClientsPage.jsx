@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {
     Button,
@@ -78,19 +78,12 @@ function ClientsPage() {
     const archivedClientCount = clients.filter(client => client.archived).length;
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Effects
+    // Effects & Callbacks
     // ------------------------------------------------------------------------------------------------------------------------
 
-    useEffect(() => {
-        loadClients();
-    }, []);
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // API loading
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function loadClients() {
+    const loadClients = useCallback(() => {
         setClientsLoaded(false);
+
         apiGetClients()
             .then(data => {
                 setClients(Array.isArray(data) ? data : []);
@@ -102,7 +95,11 @@ function ClientsPage() {
             .finally(() => {
                 setClientsLoaded(true);
             });
-    }
+    }, []);
+
+    useEffect(() => {
+        loadClients();
+    }, [loadClients]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route/query param helpers

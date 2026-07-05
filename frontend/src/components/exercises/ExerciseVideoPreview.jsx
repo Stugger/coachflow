@@ -5,9 +5,7 @@ import {
     Text,
 } from '@mantine/core';
 import {
-    IconBrandYoutube,
     IconExternalLink,
-    IconVideo,
 } from '@tabler/icons-react';
 
 function ExerciseVideoPreview({url, title = 'Exercise demo video'}) {
@@ -113,7 +111,7 @@ function getYoutubeEmbedUrl(url) {
         }
 
         return null;
-    } catch (error) {
+    } catch {
         return null;
     }
 }

@@ -4,7 +4,6 @@ import {trimToNull} from '../../../utils/text-utils';
 import {
     createDraftId,
     createEmptyWorkoutDraft,
-    createEmptyWorkoutConfig,
     parseWorkoutConfig,
     stringifyWorkoutConfig,
 } from './workout-draft-factory';
@@ -211,7 +210,7 @@ function addExerciseEquipment(equipment, exercise) {
         return;
     }
 
-    let metadata = {};
+    let metadata;
 
     try {
         metadata = JSON.parse(exercise.metadataJson);

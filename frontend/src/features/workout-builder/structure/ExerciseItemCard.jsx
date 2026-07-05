@@ -10,7 +10,6 @@ import {
     Paper,
     Stack,
     Switch,
-    Text,
     Textarea,
     TextInput,
     Tooltip,
@@ -44,8 +43,6 @@ import {resolveMediaUrl} from '../../../utils/media-url-utils';
 
 function ExerciseItemCard({
                               item,
-                              sectionIndex,
-                              parentStackItemIndex = null,
                               itemIndex,
                               itemCount,
                               independent,

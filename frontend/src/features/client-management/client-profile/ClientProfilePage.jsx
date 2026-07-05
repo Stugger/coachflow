@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
 import {
     Box,
@@ -7,7 +7,6 @@ import {
     Modal,
     Stack,
     Text,
-    Group,
 } from '@mantine/core';
 import {
     IconAlertTriangle,
@@ -67,6 +66,8 @@ function ClientProfilePage() {
     const activeTab = getClientProfileActiveTab(location.pathname);
     const [visitedTabs, setVisitedTabs] = useState(() => [activeTab]);
 
+    const visitedClientIdRef = useRef(clientId);
+
     const [editForm, setEditForm] = useState(null);
     const [editErrors, setEditErrors] = useState({});
     const [editingDetails, setEditingDetails] = useState(false);
@@ -77,42 +78,45 @@ function ClientProfilePage() {
     const [recordsRefreshKey, setRecordsRefreshKey] = useState(0);
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Effects
+    // Effects & Callbacks
     // ------------------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
-        loadClient();
-    }, [clientId]);
+        setVisitedTabs(currentTabs => {
+            if (visitedClientIdRef.current !== clientId) {
+                visitedClientIdRef.current = clientId;
+                return [activeTab];
+            }
 
-    useEffect(() => {
-        setVisitedTabs(currentTabs =>
-            currentTabs.includes(activeTab)
+            return currentTabs.includes(activeTab)
                 ? currentTabs
-                : [...currentTabs, activeTab]
-        );
-    }, [activeTab]);
+                : [...currentTabs, activeTab];
+        });
+    }, [activeTab, clientId]);
 
-    useEffect(() => {
-        setVisitedTabs([activeTab]);
-    }, [clientId]);
+    const applyClient = useCallback((nextClient) => {
+        setClient(nextClient);
+        setEditErrors({});
+        setEditingDetails(false);
+        setEditForm(ClientDetailsFormUtils.createClientDetailsFormFromClient(nextClient));
+    }, []);
 
-    // ------------------------------------------------------------------------------------------------------------------------
-    // API loading
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function loadClient() {
+    const loadClient = useCallback(() => {
         setClientLoaded(false);
-        apiGetClient(clientId)
-            .then(client => {
-                applyClient(client);
-            })
+
+        return apiGetClient(clientId)
+            .then(applyClient)
             .catch(error => {
                 console.error('Error loading client:', error);
             })
             .finally(() => {
                 setClientLoaded(true);
             });
-    }
+    }, [clientId, applyClient]);
+
+    useEffect(() => {
+        loadClient();
+    }, [loadClient]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Client CRUD
@@ -151,17 +155,6 @@ function ClientProfilePage() {
 
                 console.error('Error updating client:', error);
             });
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Client applied
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function applyClient(client) {
-        setClient(client);
-        setEditErrors({});
-        setEditingDetails(false);
-        setEditForm(ClientDetailsFormUtils.createClientDetailsFormFromClient(client));
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

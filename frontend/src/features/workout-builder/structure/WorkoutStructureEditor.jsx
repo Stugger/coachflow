@@ -18,6 +18,8 @@ import {reindexPositions} from '../draft/workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from '../workout-builder-utils';
 import {WORKOUT_VALIDATION_SCOPE} from '../draft/workout-draft-validation';
 
+const EMPTY_SECTIONS = Object.freeze([]);
+
 function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChange, onViewExercise}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -44,7 +46,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
     // Derived state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const sections = draft.sections ?? [];
+    const sections = draft.sections ?? EMPTY_SECTIONS;
 
     const builderIssues = validationIssues.filter(issue =>
         issue.scope === WORKOUT_VALIDATION_SCOPE.WORKOUT &&

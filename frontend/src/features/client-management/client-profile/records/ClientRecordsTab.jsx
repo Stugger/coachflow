@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {
     Accordion,
@@ -41,6 +41,8 @@ function isRecordId(recordId) {
 
 function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
 
+    const clientId = client?.id ?? null;
+
     const isMobile = useMediaQuery('(max-width: 48em)');
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -67,24 +69,88 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
     const [deletingInitialAssessment, setDeletingInitialAssessment] = useState(false);
 
+    const initialAssessmentLoadedRef = useRef(false);
+    const scrollContextRef = useRef(null);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // API loading
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const loadIntake = useCallback(() => {
+        if (!clientId) {
+            return;
+        }
+
+        setIntakeLoaded(false);
+        setIntakeError('');
+
+        return apiGetClientIntakesForClient(clientId)
+            .then(intakes => {
+                setIntake(intakes?.[0] ?? null);
+            })
+            .catch(error => {
+                console.error('Failed to load intake record:', error);
+                setIntake(null);
+                setIntakeError(error.message || 'Failed to load the intake record.');
+            })
+            .finally(() => {
+                setIntakeLoaded(true);
+            });
+    }, [clientId]);
+
+    const loadInitialAssessmentWorkout = useCallback(() => {
+        if (!clientId) {
+            return;
+        }
+
+        const shouldShowInitialLoader = !initialAssessmentLoadedRef.current;
+
+        if (shouldShowInitialLoader) {
+            setInitialAssessmentLoaded(false);
+        }
+
+        setInitialAssessmentError('');
+
+        return apiGetInitialAssessmentWorkout(clientId)
+            .then(workout => {
+                setInitialAssessmentWorkout(workout);
+            })
+            .catch(error => {
+                if (error.status === 404) {
+                    setInitialAssessmentWorkout(null);
+                    return;
+                }
+
+                console.error('Failed to load initial assessment workout:', error);
+                setInitialAssessmentError(
+                    error.message || 'Failed to refresh the initial assessment workout.'
+                );
+            })
+            .finally(() => {
+                initialAssessmentLoadedRef.current = true;
+                setInitialAssessmentLoaded(true);
+            });
+    }, [clientId]);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
     // ------------------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
-        if (!client?.id) {
-            return;
-        }
-
-        loadIntake();
-    }, [client?.id]);
+        initialAssessmentLoadedRef.current = false;
+    }, [clientId]);
 
     useEffect(() => {
-        if (!client?.id) {
+        loadIntake();
+    }, [loadIntake]);
+
+    useEffect(() => {
+        if (!clientId) {
             return;
         }
 
         if (client.reviewStatus?.initialAssessmentStatus === 'MISSING') {
+            initialAssessmentLoadedRef.current = true;
             setInitialAssessmentWorkout(null);
             setInitialAssessmentError('');
             setInitialAssessmentLoaded(true);
@@ -92,11 +158,19 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
         }
 
         loadInitialAssessmentWorkout();
-    }, [
-        client?.id,
-        client.reviewStatus?.initialAssessmentStatus,
-        refreshKey,
-    ]);
+    }, [clientId, client.reviewStatus?.initialAssessmentStatus, refreshKey, loadInitialAssessmentWorkout]);
+
+    useEffect(() => {
+        scrollContextRef.current = {
+            isMobile,
+            intakeLoaded,
+            initialAssessmentLoaded,
+            pathname: location.pathname,
+            search: location.search,
+            hash: location.hash,
+            navigate,
+        };
+    }, [isMobile, intakeLoaded, initialAssessmentLoaded, location.pathname, location.search, location.hash, navigate]);
 
     useEffect(() => {
         const recordId = location.hash.replace('#', '');
@@ -119,6 +193,12 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
             return;
         }
 
+        const scrollContext = scrollContextRef.current;
+
+        if (!scrollContext) {
+            return;
+        }
+
         setExpandedRecords(currentRecords => (
             currentRecords.includes(recordId)
                 ? currentRecords
@@ -126,8 +206,8 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
         ));
 
         const scrollDelay =
-            (isMobile ? 125 : 225)
-            + (intakeLoaded && initialAssessmentLoaded ? 0 : 250);
+            (scrollContext.isMobile ? 135 : 235)
+            + (scrollContext.intakeLoaded && scrollContext.initialAssessmentLoaded ? 0 : 250);
 
         const timeoutId = window.setTimeout(() => {
             document.getElementById(recordId)?.scrollIntoView({
@@ -135,10 +215,10 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                 block: 'start',
             });
 
-            navigate({
-                pathname: location.pathname,
-                search: location.search,
-                hash: location.hash,
+            scrollContext.navigate({
+                pathname: scrollContext.pathname,
+                search: scrollContext.search,
+                hash: scrollContext.hash,
             }, {
                 replace: true,
                 state: null,
@@ -146,58 +226,7 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
         }, scrollDelay);
 
         return () => window.clearTimeout(timeoutId);
-    }, [
-        location.key,
-        location.state?.scrollToRecord,
-    ]);
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // API loading
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function loadIntake() {
-        setIntakeLoaded(false);
-        setIntakeError('');
-
-        apiGetClientIntakesForClient(client.id)
-            .then(intakes => {
-                setIntake(intakes?.[0] ?? null);
-            })
-            .catch(error => {
-                console.error('Failed to load intake record:', error);
-                setIntake(null);
-                setIntakeError(error.message || 'Failed to load the intake record.');
-            })
-            .finally(() => {
-                setIntakeLoaded(true);
-            });
-    }
-
-    function loadInitialAssessmentWorkout() {
-        const shouldShowInitialLoader = !initialAssessmentLoaded;
-
-        if (shouldShowInitialLoader) {
-            setInitialAssessmentLoaded(false);
-        }
-
-        setInitialAssessmentError('');
-
-        apiGetInitialAssessmentWorkout(client.id)
-            .then(workout => {
-                setInitialAssessmentWorkout(workout);
-            })
-            .catch(error => {
-                if (error.status === 404) {
-                    setInitialAssessmentWorkout(null);
-                    return;
-                }
-                console.error('Failed to load initial assessment workout:', error);
-                setInitialAssessmentError(error.message || 'Failed to refresh the initial assessment workout.');
-            })
-            .finally(() => {
-                setInitialAssessmentLoaded(true);
-            });
-    }
+    }, [location.key, location.state?.scrollToRecord]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
