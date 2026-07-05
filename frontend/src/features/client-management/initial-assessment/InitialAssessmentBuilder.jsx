@@ -179,7 +179,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             exercises={exercises}
             recoveryKey={recoveryKey}
             isDraft={!isPersisted}
-            isNew={!isPersisted && !Boolean(sourceWorkoutTemplateId)}
+            isNew={!isPersisted && !sourceWorkoutTemplateId}
             allowSaveWithoutChanges={Boolean(sourceWorkoutTemplateId) && !isEditing}
             autoFocusName={!isPersisted}
             source={WORKOUT_BUILDER_SOURCE.INITIAL_ASSESSMENT}

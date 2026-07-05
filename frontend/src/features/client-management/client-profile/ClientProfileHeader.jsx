@@ -1,7 +1,6 @@
 import {
     ActionIcon,
     Avatar,
-    Button,
     Group,
     Menu,
     Paper,

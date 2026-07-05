@@ -7,7 +7,6 @@ import {
     Modal,
     Stack,
     Text,
-    Group,
 } from '@mantine/core';
 import {
     IconAlertTriangle,

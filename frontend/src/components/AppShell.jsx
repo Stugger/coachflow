@@ -2,7 +2,6 @@ import {useDisclosure} from '@mantine/hooks';
 import {
     AppShell as MantineAppShell,
     useMantineColorScheme,
-    ActionIcon,
     Burger,
     Group,
     NavLink,

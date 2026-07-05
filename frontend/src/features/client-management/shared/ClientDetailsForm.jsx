@@ -3,7 +3,6 @@ import {
     Select,
     Stack,
     TextInput,
-    Textarea,
 } from '@mantine/core';
 import { DateInput, DatePickerInput } from '@mantine/dates';
 import {IconCalendar} from '@tabler/icons-react';

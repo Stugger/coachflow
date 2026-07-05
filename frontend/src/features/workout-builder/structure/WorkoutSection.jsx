@@ -8,7 +8,6 @@ import {
     Box,
     Button,
     Collapse,
-    Divider,
     Group,
     Menu,
     Paper,
@@ -30,11 +29,8 @@ import {
     IconDots,
     IconEdit,
     IconGripVertical,
-    IconLink,
     IconPlus,
-    IconStackPush,
     IconTrash,
-    IconSeparatorHorizontal,
 } from '@tabler/icons-react';
 
 import ExerciseItemCard from './ExerciseItemCard';

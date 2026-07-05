@@ -128,8 +128,11 @@ function createSetGroups(sets, trackingFields, stackControlled) {
         });
     }
 
-    return groups.map(({signature, ...group}) => ({
-        ...group,
+    return groups.map(group => ({
+        count: group.count,
+        setType: group.setType,
+        targetParts: group.targetParts,
+        noteParts: group.noteParts,
         label: [
             formatSetGroupLead(group.setType, group.count, stackControlled),
             ...group.targetParts,
