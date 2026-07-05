@@ -37,6 +37,9 @@ import {
     MUSCLE_OPTIONS,
 } from '../constants/exercises';
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Constants & Utility
+// ------------------------------------------------------------------------------------------------------------------------
 
 const emptyForm = {
     name: '',
@@ -58,6 +61,83 @@ const FORM_MODE = {
     EDIT: 'EDIT',
     VIEW: 'VIEW',
 };
+
+function findOptionLabel(options, value) {
+    return options.find(option => option.value === value)?.label || value;
+}
+
+function matchesScope(exercise, scope) {
+    if (scope === 'MINE') {
+        return exercise.visibility === 'TRAINER';
+    }
+
+    if (scope === 'GLOBAL') {
+        return exercise.visibility === 'GLOBAL';
+    }
+
+    return true;
+}
+
+function matchesSearch(exercise, normalizedSearch) {
+    if (!normalizedSearch) {
+        return true;
+    }
+
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(
+        exercise.metadataJson
+    );
+
+    const searchableValues = [
+        exercise.name,
+        exercise.visibility,
+        findOptionLabel(EXERCISE_DIFFICULTY_OPTIONS, metadata.difficulty),
+        ...metadata.equipment.map(value => findOptionLabel(EQUIPMENT_OPTIONS, value)),
+        ...metadata.primaryMuscles.map(value => findOptionLabel(MUSCLE_OPTIONS, value)),
+        ...metadata.secondaryMuscles.map(value => findOptionLabel(MUSCLE_OPTIONS, value)),
+        ...metadata.tags.map(value => findOptionLabel(EXERCISE_TAG_OPTIONS, value)),
+    ];
+
+    return searchableValues
+        .filter(Boolean)
+        .some(value => value.toLowerCase().includes(normalizedSearch));
+}
+
+function matchesFilters(exercise, filters) {
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
+
+    if (filters.equipment.length > 0 && !filters.equipment.some(value => metadata.equipment.includes(value))) {
+        return false;
+    }
+
+    if (filters.primaryMuscles.length > 0 && !filters.primaryMuscles.some(value => metadata.primaryMuscles.includes(value))) {
+        return false;
+    }
+
+    if (filters.tags.length > 0 && !filters.tags.some(value => metadata.tags.includes(value))) {
+        return false;
+    }
+
+    if (filters.difficulty.length > 0 && !filters.difficulty.some(value => metadata.difficulty === value)) {
+        return false;
+    }
+
+    return true;
+}
+
+function sortExercises(first, second) {
+    const firstIsMine = first.visibility === 'TRAINER';
+    const secondIsMine = second.visibility === 'TRAINER';
+
+    if (firstIsMine !== secondIsMine) {
+        return firstIsMine ? -1 : 1;
+    }
+
+    return first.name.localeCompare(second.name);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Component
+// ------------------------------------------------------------------------------------------------------------------------
 
 function ExerciseLibraryPage() {
 
@@ -90,10 +170,12 @@ function ExerciseLibraryPage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const filteredExercises = useMemo(() => {
+        const normalizedSearch = searchText.trim().toLowerCase();
+
         return exercises
-            .filter(exercise => matchesScope(exercise))
-            .filter(exercise => matchesSearch(exercise))
-            .filter(exercise => matchesFilters(exercise))
+            .filter(exercise => matchesScope(exercise, scope))
+            .filter(exercise => matchesSearch(exercise, normalizedSearch))
+            .filter(exercise => matchesFilters(exercise, filters))
             .sort(sortExercises);
     }, [exercises, searchText, scope, filters]);
 
@@ -214,75 +296,6 @@ function ExerciseLibraryPage() {
         setSearchText('');
         setScope('ALL');
         setFilters(emptyFilters);
-    }
-
-    function matchesScope(exercise) {
-        if (scope === 'MINE') {
-            return exercise.visibility === 'TRAINER';
-        }
-
-        if (scope === 'GLOBAL') {
-            return exercise.visibility === 'GLOBAL';
-        }
-
-        return true;
-    }
-
-    function matchesSearch(exercise) {
-        const normalizedSearch = searchText.trim().toLowerCase();
-
-        if (!normalizedSearch) {
-            return true;
-        }
-
-        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
-
-        const searchableValues = [
-            exercise.name,
-            exercise.visibility,
-            findOptionLabel(EXERCISE_DIFFICULTY_OPTIONS, metadata.difficulty),
-            ...metadata.equipment.map(value => findOptionLabel(EQUIPMENT_OPTIONS, value)),
-            ...metadata.primaryMuscles.map(value => findOptionLabel(MUSCLE_OPTIONS, value)),
-            ...metadata.secondaryMuscles.map(value => findOptionLabel(MUSCLE_OPTIONS, value)),
-            ...metadata.tags.map(value => findOptionLabel(EXERCISE_TAG_OPTIONS, value)),
-        ];
-
-        return searchableValues
-            .filter(Boolean)
-            .some(value => value.toLowerCase().includes(normalizedSearch));
-    }
-
-    function matchesFilters(exercise) {
-        const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
-
-        if (filters.equipment.length > 0 && !filters.equipment.some(value => metadata.equipment.includes(value))) {
-            return false;
-        }
-
-        if (filters.primaryMuscles.length > 0 && !filters.primaryMuscles.some(value => metadata.primaryMuscles.includes(value))) {
-            return false;
-        }
-
-        if (filters.tags.length > 0 && !filters.tags.some(value => metadata.tags.includes(value))) {
-            return false;
-        }
-
-        if (filters.difficulty.length > 0 && !filters.difficulty.some(value => metadata.difficulty === value)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    function sortExercises(first, second) {
-        const firstIsMine = first.visibility === 'TRAINER';
-        const secondIsMine = second.visibility === 'TRAINER';
-
-        if (firstIsMine !== secondIsMine) {
-            return firstIsMine ? -1 : 1;
-        }
-
-        return first.name.localeCompare(second.name);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -406,14 +419,6 @@ function ExerciseLibraryPage() {
         if (errorBody.message) {
             setMessage(errorBody.message);
         }
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Metadata display helpers
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function findOptionLabel(options, value) {
-        return options.find(option => option.value === value)?.label || value;
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

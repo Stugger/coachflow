@@ -171,7 +171,7 @@ function AppointmentsPage() {
         }
 
         beginEditAppointment(appointment);
-    }, [routedAppointmentId, appointments]);
+    }, [routedAppointmentId, appointments, editingAppointmentId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // API loading
