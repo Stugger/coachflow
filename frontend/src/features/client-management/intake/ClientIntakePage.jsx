@@ -39,12 +39,25 @@ import IntakeHeader from './IntakeHeader';
 import ClientDetailsForm from '../shared/ClientDetailsForm.jsx';
 import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
 
-import ParqStep, {createEmptyParqForm, validateParqForm} from './steps/ParqStep';
-import GoalsStep, {createEmptyGoalsForm, validateGoalsForm} from './steps/GoalsStep';
-import ActivityHistoryStep, {createEmptyActivityHistoryForm, validateActivityHistoryForm} from './steps/ActivityHistoryStep';
-import MedicalHistoryStep, {createEmptyMedicalHistoryForm} from './steps/MedicalHistoryStep';
-import LifestyleStep, {createEmptyLifestyleForm, validateLifestyleForm} from './steps/LifestyleStep';
-import TrainingPreferencesStep, {createEmptyTrainingPreferencesForm, validateTrainingPreferencesForm} from './steps/TrainingPreferencesStep';
+import ParqStep from './steps/ParqStep';
+import GoalsStep from './steps/GoalsStep';
+import ActivityHistoryStep from './steps/ActivityHistoryStep';
+import MedicalHistoryStep from './steps/MedicalHistoryStep';
+import LifestyleStep from './steps/LifestyleStep';
+import TrainingPreferencesStep from './steps/TrainingPreferencesStep';
+import {
+    createEmptyActivityHistoryForm,
+    createEmptyGoalsForm,
+    createEmptyLifestyleForm,
+    createEmptyMedicalHistoryForm,
+    createEmptyParqForm,
+    createEmptyTrainingPreferencesForm,
+    validateActivityHistoryForm,
+    validateGoalsForm,
+    validateLifestyleForm,
+    validateParqForm,
+    validateTrainingPreferencesForm,
+} from './intake-step-form-utils.js';
 
 function ClientIntakePage() {
 

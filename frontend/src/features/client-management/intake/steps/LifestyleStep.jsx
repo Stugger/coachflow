@@ -6,44 +6,12 @@ import {
     TextInput,
 } from '@mantine/core';
 import {IconHeartRateMonitor} from '@tabler/icons-react';
-import StepNavigation from "../StepNavigation.jsx";
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Utility
-// ------------------------------------------------------------------------------------------------------------------------
-
-export function createEmptyLifestyleForm() {
-    return {
-        occupation: '',
-        dailyActivityLevel: '',
-        averageSleep: '',
-        stressLevel: '',
-        stressSources: '',
-        additionalNotes: '',
-    };
-}
-
-export function validateLifestyleForm(form) {
-    const errors = {};
-
-    if (!form.dailyActivityLevel) {
-        errors.dailyActivityLevel = 'Daily activity level is required';
-    }
-
-    if (!form.averageSleep) {
-        errors.averageSleep = 'Average sleep is required';
-    }
-
-    if (!form.stressLevel) {
-        errors.stressLevel = 'Stress level is required';
-    }
-
-    return errors;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Component
-// ------------------------------------------------------------------------------------------------------------------------
+import StepNavigation from '../StepNavigation.jsx';
+import {
+    AVERAGE_SLEEP_OPTIONS,
+    DAILY_ACTIVITY_LEVEL_OPTIONS,
+    STRESS_LEVEL_OPTIONS,
+} from '../intake-step-options.js';
 
 function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
 
@@ -92,12 +60,7 @@ function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
                     error={errors.dailyActivityLevel}
                     required
                     onChange={(value) => updateSelect('dailyActivityLevel', value)}
-                    data={[
-                        {value: 'MOSTLY_SITTING', label: 'Mostly sitting'},
-                        {value: 'MOSTLY_STANDING', label: 'Mostly standing'},
-                        {value: 'MODERATELY_ACTIVE', label: 'Moderately active'},
-                        {value: 'HIGHLY_ACTIVE', label: 'Highly active'},
-                    ]}
+                    data={DAILY_ACTIVITY_LEVEL_OPTIONS}
                 />
 
                 <Select
@@ -107,13 +70,7 @@ function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
                     error={errors.averageSleep}
                     required
                     onChange={(value) => updateSelect('averageSleep', value)}
-                    data={[
-                        {value: 'LESS_THAN_5', label: 'Less than 5 hours'},
-                        {value: 'FIVE_TO_SIX', label: '5-6 hours'},
-                        {value: 'SIX_TO_SEVEN', label: '6-7 hours'},
-                        {value: 'SEVEN_TO_EIGHT', label: '7-8 hours'},
-                        {value: 'MORE_THAN_8', label: '8+ hours'},
-                    ]}
+                    data={AVERAGE_SLEEP_OPTIONS}
                 />
 
                 <Select
@@ -123,12 +80,7 @@ function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
                     error={errors.stressLevel}
                     required
                     onChange={(value) => updateSelect('stressLevel', value)}
-                    data={[
-                        {value: 'LOW', label: 'Low'},
-                        {value: 'MODERATE', label: 'Moderate'},
-                        {value: 'HIGH', label: 'High'},
-                        {value: 'VERY_HIGH', label: 'Very High'},
-                    ]}
+                    data={STRESS_LEVEL_OPTIONS}
                 />
 
                 {showStressSources() && (
@@ -151,9 +103,7 @@ function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
                     onChange={onChange}
                 />
 
-                <StepNavigation
-                    onBack={onBack}
-                />
+                <StepNavigation onBack={onBack}/>
             </Stack>
         </form>
     );

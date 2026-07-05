@@ -1,61 +1,16 @@
 import {
     Alert,
     Checkbox,
+    Divider,
     Group,
     SimpleGrid,
     Stack,
     Text,
     Textarea,
-    Divider,
 } from '@mantine/core';
 import {IconTargetArrow} from '@tabler/icons-react';
-import StepNavigation from "../StepNavigation.jsx";
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Constants
-// ------------------------------------------------------------------------------------------------------------------------
-
-const GOAL_OPTIONS = [
-    ['LOSE_WEIGHT', 'Lose weight'],
-    ['BUILD_MUSCLE', 'Build muscle'],
-    ['GET_STRONGER', 'Get stronger'],
-    ['IMPROVE_ENDURANCE', 'Improve endurance'],
-    ['IMPROVE_MOBILITY', 'Improve mobility / flexibility'],
-    ['IMPROVE_HEALTH', 'Improve overall health'],
-    ['SPORT_PERFORMANCE', 'Improve sports performance'],
-    ['INCREASE_CONFIDENCE', 'Increase confidence in the gym'],
-    ['OTHER', 'Other'],
-];
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Utility
-// ------------------------------------------------------------------------------------------------------------------------
-
-export function createEmptyGoalsForm() {
-    return {
-        objectives: [],
-        otherGoal: '',
-        successDescription: '',
-    };
-}
-
-export function validateGoalsForm(form) {
-    const errors = {};
-
-    if (form.objectives.length === 0) {
-        errors.objectives = 'Select at least one goal';
-    }
-
-    if (form.objectives.includes('OTHER') && !form.otherGoal.trim()) {
-        errors.otherGoal = 'Please describe your other goal';
-    }
-
-    return errors;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Component
-// ------------------------------------------------------------------------------------------------------------------------
+import StepNavigation from '../StepNavigation.jsx';
+import {GOAL_OPTIONS} from '../intake-step-options.js';
 
 function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}) {
     return (
@@ -80,7 +35,7 @@ function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}
                     </Stack>
 
                     <SimpleGrid cols={{base: 1, sm: 2}}>
-                        {GOAL_OPTIONS.map(([value, label]) => {
+                        {GOAL_OPTIONS.map(({value, label}) => {
                             const checked = form.objectives.includes(value);
 
                             return (
@@ -89,9 +44,7 @@ function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}
                                     radius="md"
                                     checked={checked}
                                     onClick={() => updateObjective(value)}
-                                    style={{
-                                        border: 'none'
-                                    }}
+                                    style={{border: 'none'}}
                                 >
                                     <Group wrap="nowrap" align="center">
                                         <Checkbox.Indicator/>
@@ -124,7 +77,7 @@ function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}
                     />
                 )}
 
-                <Divider />
+                <Divider/>
 
                 <Textarea
                     label="What would success look like to you?"
@@ -135,9 +88,7 @@ function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}
                     onChange={onChange}
                 />
 
-                <StepNavigation
-                    onBack={onBack}
-                />
+                <StepNavigation onBack={onBack}/>
             </Stack>
         </form>
     );
