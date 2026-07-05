@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import WorkoutBuilder from '../../workout-builder/WorkoutBuilder';
 
@@ -60,8 +60,57 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
     }, [client?.id, clientWorkoutId, sourceWorkoutTemplateId, trainerId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Effects
+    // Effects & Callbacks
     // ------------------------------------------------------------------------------------------------------------------------
+
+    const resetBuilderState = useCallback(() => {
+        setInitialDraft(null);
+        setExercises([]);
+        setLoaded(false);
+        setLoadError('');
+        setPersistedWorkoutId(null);
+        setCreatedDuringOpen(false);
+    }, []);
+
+    const loadInitialDraft = useCallback(async () => {
+        if (isEditing) {
+            const clientWorkout = await apiGetClientWorkout(clientWorkoutId);
+            return normalizeWorkoutDefinitionForDraft(clientWorkout);
+        }
+
+        if (sourceWorkoutTemplateId) {
+            const template = await apiGetWorkoutTemplate(sourceWorkoutTemplateId);
+            return createWorkoutDefinitionDraftFromTemplate(template);
+        }
+
+        return createEmptyWorkoutDraft();
+    }, [clientWorkoutId, isEditing, sourceWorkoutTemplateId]);
+
+    const loadBuilderData = useCallback(() => {
+        setLoaded(false);
+        setLoadError('');
+        setInitialDraft(null);
+        setExercises([]);
+
+        return Promise.all([
+            apiGetExercises(),
+            loadInitialDraft(),
+        ])
+            .then(([loadedExercises, loadedDraft]) => {
+                setExercises(loadedExercises);
+                setInitialDraft(loadedDraft);
+            })
+            .catch(error => {
+                console.error('Failed to load initial assessment builder:', error);
+                setLoadError(
+                    error.message
+                    || 'Failed to load the initial assessment workout.'
+                );
+            })
+            .finally(() => {
+                setLoaded(true);
+            });
+    }, [loadInitialDraft]);
 
     useEffect(() => {
         if (!opened) {
@@ -75,48 +124,11 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
 
         setPersistedWorkoutId(clientWorkoutId ?? null);
         loadBuilderData();
-    }, [opened, client?.id, clientWorkoutId, sourceWorkoutTemplateId]);
+    }, [opened, client?.id, clientWorkoutId, resetBuilderState, loadBuilderData]);
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Loading & event handlers
+    // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
-
-    function loadBuilderData() {
-        setLoaded(false);
-        setLoadError('');
-        setInitialDraft(null);
-        setExercises([]);
-
-        Promise.all([
-            apiGetExercises(),
-            loadInitialDraft(),
-        ])
-            .then(([loadedExercises, loadedDraft]) => {
-                setExercises(loadedExercises);
-                setInitialDraft(loadedDraft);
-            })
-            .catch(error => {
-                console.error('Failed to load initial assessment builder:', error);
-                setLoadError(error.message || 'Failed to load the initial assessment workout.');
-            })
-            .finally(() => {
-                setLoaded(true);
-            });
-    }
-
-    async function loadInitialDraft() {
-        if (isEditing) {
-            const clientWorkout = await apiGetClientWorkout(clientWorkoutId);
-            return normalizeWorkoutDefinitionForDraft(clientWorkout);
-        }
-
-        if (sourceWorkoutTemplateId) {
-            const template = await apiGetWorkoutTemplate(sourceWorkoutTemplateId);
-            return createWorkoutDefinitionDraftFromTemplate(template);
-        }
-
-        return createEmptyWorkoutDraft();
-    }
 
     async function saveInitialAssessmentDraft(draft) {
         const workoutId = persistedWorkoutId ?? clientWorkoutId;
@@ -155,15 +167,6 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             hasSavedWorkout: isPersisted,
             createdDuringOpen,
         });
-    }
-
-    function resetBuilderState() {
-        setInitialDraft(null);
-        setExercises([]);
-        setLoaded(false);
-        setLoadError('');
-        setPersistedWorkoutId(null);
-        setCreatedDuringOpen(false);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

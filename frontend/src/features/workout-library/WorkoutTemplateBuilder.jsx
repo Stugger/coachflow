@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useState} from 'react';
 import {
     ActionIcon,
     Menu,
@@ -88,9 +88,53 @@ function WorkoutTemplateBuilder({opened, mode, templateId, trainerId, onClose, o
         </Menu>
     );
 
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Effects
-    // ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
+// Effects & Callbacks
+// ------------------------------------------------------------------------------------------------------------------------
+
+    const resetTemplateEditorState = useCallback(() => {
+        setInitialDraft(null);
+        setExercises([]);
+        setLoaded(false);
+        setLoadError('');
+    }, []);
+
+    const loadInitialTemplateDraft = useCallback(async () => {
+        if (isEditing) {
+            const template = await apiGetWorkoutTemplate(templateId);
+            return normalizeWorkoutDefinitionForDraft(template);
+        }
+
+        if (isCopying) {
+            const template = await apiGetWorkoutTemplate(templateId);
+            return createWorkoutDefinitionCopy(template);
+        }
+
+        return createEmptyWorkoutDraft();
+    }, [isCopying, isEditing, templateId]);
+
+    const loadTemplateEditorData = useCallback(() => {
+        setLoaded(false);
+        setLoadError('');
+        setInitialDraft(null);
+        setExercises([]);
+
+        return Promise.all([
+            apiGetExercises(),
+            loadInitialTemplateDraft(),
+        ])
+            .then(([loadedExercises, loadedDraft]) => {
+                setExercises(loadedExercises);
+                setInitialDraft(loadedDraft);
+            })
+            .catch(error => {
+                console.error('Failed to load workout template editor:', error);
+                setLoadError(error.message || 'Failed to load workout editor.');
+            })
+            .finally(() => {
+                setLoaded(true);
+            });
+    }, [loadInitialTemplateDraft]);
 
     useEffect(() => {
         if (!opened) {
@@ -103,46 +147,7 @@ function WorkoutTemplateBuilder({opened, mode, templateId, trainerId, onClose, o
         }
 
         loadTemplateEditorData();
-    }, [opened, mode, templateId, trainerId]);
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // API loading
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function loadTemplateEditorData() {
-        setLoaded(false);
-        setLoadError('');
-        setInitialDraft(null);
-        setExercises([]);
-
-        Promise.all([
-            apiGetExercises(),
-            loadInitialTemplateDraft(),
-        ])
-            .then(([loadedExercises, loadedDraft]) => {
-                setExercises(loadedExercises);
-                setInitialDraft(loadedDraft);
-            })
-            .catch(error => {
-                console.error('Failed to load workout template editor:', error);
-                setLoadError(error.message || 'Failed to load workout editor.');
-            })
-            .finally(() => setLoaded(true));
-    }
-
-    async function loadInitialTemplateDraft() {
-        if (isEditing) {
-            const template = await apiGetWorkoutTemplate(templateId);
-            return normalizeWorkoutDefinitionForDraft(template);
-        }
-
-        if (isCopying) {
-            const template = await apiGetWorkoutTemplate(templateId);
-            return createWorkoutDefinitionCopy(template);
-        }
-
-        return createEmptyWorkoutDraft();
-    }
+    }, [opened, canLoad, resetTemplateEditorState, loadTemplateEditorData]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Save handling
@@ -159,17 +164,6 @@ function WorkoutTemplateBuilder({opened, mode, templateId, trainerId, onClose, o
             savedEntity: savedTemplate,
             savedDraft: normalizeWorkoutDefinitionForDraft(savedTemplate),
         };
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Reset helpers
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function resetTemplateEditorState() {
-        setInitialDraft(null);
-        setExercises([]);
-        setLoaded(false);
-        setLoadError('');
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

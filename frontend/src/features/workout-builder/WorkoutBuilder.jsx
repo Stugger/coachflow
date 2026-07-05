@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     Alert,
@@ -98,7 +98,7 @@ function WorkoutBuilder({
         }
 
         return isLoading && !isNew ? '...' : 'Unnamed';
-    }, [draft, isLoading]);
+    }, [draft, isLoading, isNew]);
 
     const workoutEquipment = useMemo(() => {
         return getWorkoutEquipment(draft);
@@ -159,8 +159,19 @@ function WorkoutBuilder({
     }, [draft, saving, isDraft, hasUnsavedChanges]);
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Effects
+    // Effects & Callbacks
     // ------------------------------------------------------------------------------------------------------------------------
+
+    const resetEditorState = useCallback(() => {
+        setDraft(null);
+        setSaving(false);
+        setMessage('');
+        setSavedSnapshot('');
+        setDraftRecovered(false);
+        setActiveValidationIssueIds([]);
+        setExitModalOpen(false);
+        setExerciseOverlay(null);
+    }, []);
 
     useEffect(() => {
         if (!opened) {
@@ -180,7 +191,7 @@ function WorkoutBuilder({
         setSaving(false);
         setMessage(loadError || '');
         setActiveValidationIssueIds([]);
-    }, [opened, loaded, initialDraft, recoveryKey]);
+    }, [opened, loaded, initialDraft, recoveryKey, loadError, resetEditorState]);
 
     useEffect(() => {
         if (!opened || !loadError) {
@@ -309,21 +320,6 @@ function WorkoutBuilder({
             mode: 'VIEW',
             exercise,
         });
-    }
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Reset helpers
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function resetEditorState() {
-        setDraft(null);
-        setSaving(false);
-        setMessage('');
-        setSavedSnapshot('');
-        setDraftRecovered(false);
-        setActiveValidationIssueIds([]);
-        setExitModalOpen(false);
-        setExerciseOverlay(null);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------

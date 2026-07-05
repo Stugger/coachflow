@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {
     LoadingOverlay,
@@ -99,37 +99,19 @@ function ClientIntakePage() {
     const [trainingPreferencesErrors, setTrainingPreferencesErrors] = useState({});
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Effects
+    // Effects & Callbacks
     // ------------------------------------------------------------------------------------------------------------------------
 
-    useEffect(() => {
-        if (routeIntakeId) {
-            loadIntake(routeIntakeId);
-        }
-    }, [routeIntakeId]);
-
-    // ------------------------------------------------------------------------------------------------------------------------
-    // Loading
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    function loadIntake(id) {
-        setIntakeLoaded(false);
-        apiGetClientIntake(id)
-            .then(intake => {
-                hydrateIntake(intake);
-                loadClient(intake.clientId);
-                setCurrentStep(intake.currentStep);
-                scrollToTop();
-            })
-            .catch(error => {
-                console.error('Error loading intake:', error)
-            })
-            .finally(() => {
-                setIntakeLoaded(true);
+    const scrollToTop = useCallback(() => {
+        window.setTimeout(() => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth',
             });
-    }
+        }, 200);
+    }, []);
 
-    function hydrateIntake(intake) {
+    const hydrateIntake = useCallback((intake) => {
         setIntakeId(intake.id);
         setClientId(intake.clientId);
 
@@ -169,21 +151,48 @@ function ClientIntakePage() {
                 ...JSON.parse(intake.trainingPreferencesJson)
             });
         }
-    }
+    }, []);
 
-    function loadClient(id) {
+    const loadClient = useCallback((id) => {
         setClientLoaded(false);
-        apiGetClient(id)
+
+        return apiGetClient(id)
             .then(client => {
-                setBasicInfoForm(ClientDetailsFormUtils.createClientDetailsFormFromClient(client));
+                setBasicInfoForm(
+                    ClientDetailsFormUtils.createClientDetailsFormFromClient(client)
+                );
             })
             .catch(error => {
-                console.error('Error loading client:', error)
+                console.error('Error loading client:', error);
             })
             .finally(() => {
                 setClientLoaded(true);
             });
-    }
+    }, []);
+
+    const loadIntake = useCallback((id) => {
+        setIntakeLoaded(false);
+
+        return apiGetClientIntake(id)
+            .then(intake => {
+                hydrateIntake(intake);
+                loadClient(intake.clientId);
+                setCurrentStep(intake.currentStep);
+                scrollToTop();
+            })
+            .catch(error => {
+                console.error('Error loading intake:', error);
+            })
+            .finally(() => {
+                setIntakeLoaded(true);
+            });
+    }, [hydrateIntake, loadClient, scrollToTop]);
+
+    useEffect(() => {
+        if (routeIntakeId) {
+            loadIntake(routeIntakeId);
+        }
+    }, [routeIntakeId, loadIntake]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // API actions
@@ -890,15 +899,6 @@ function ClientIntakePage() {
             delete updatedErrors[name];
             setErrors(updatedErrors);
         }
-    }
-
-    function scrollToTop() {
-        setTimeout(() => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }, 200);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
