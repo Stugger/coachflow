@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {
     Alert,
     Button,
@@ -15,9 +15,27 @@ import {
 
 import IntakeReview from './IntakeReview';
 
-function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDetails}) {
+function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDetails, onEditIntakeSection, showIntakeReview = false}) {
 
-    const [intakeShown, setIntakeShown] = useState(false);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const [intakeShown, setIntakeShown] = useState(showIntakeReview);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        if (showIntakeReview) {
+            setIntakeShown(true);
+        }
+    }, [showIntakeReview]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Conditional return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     if (!loaded) {
         return (
@@ -45,6 +63,10 @@ function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDe
             </Text>
         );
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const completed = intake.status === 'COMPLETED';
 
@@ -84,6 +106,7 @@ function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDe
                     intake={intake}
                     client={client}
                     onEditBasicInfo={onEditClientDetails}
+                    onEditSection={step => onEditIntakeSection?.(intake.id, step)}
                 />
             )}
         </Stack>

@@ -13,7 +13,7 @@ import {
     STRESS_LEVEL_OPTIONS,
 } from '../intake-step-options.js';
 
-function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
+function LifestyleStep({form, errors, isReviewEditing, onChange, onBack, onContinue}) {
 
     const hasErrors = Object.keys(errors).length > 0;
 
@@ -35,16 +35,17 @@ function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-                <Alert
-                    color={hasErrors ? 'red' : 'blue'}
-                    variant="light"
-                    icon={<IconHeartRateMonitor size={18}/>}
-                >
-                    {hasErrors
-                        ? 'Please complete the required lifestyle fields before continuing.'
-                        : 'Tell us about your daily lifestyle, sleep, stress, and activity level.'}
-                </Alert>
-
+                {(!isReviewEditing || hasErrors) && (
+                    <Alert
+                        color={hasErrors ? 'red' : 'blue'}
+                        variant="light"
+                        icon={<IconHeartRateMonitor size={18}/>}
+                    >
+                        {hasErrors
+                            ? 'Please complete the required lifestyle fields before continuing.'
+                            : 'Tell us about your daily lifestyle, sleep, stress, and activity level.'}
+                    </Alert>
+                )}
                 <TextInput
                     label="Occupation"
                     name="occupation"
@@ -103,7 +104,7 @@ function LifestyleStep({form, errors, onChange, onBack, onContinue}) {
                     onChange={onChange}
                 />
 
-                <StepNavigation onBack={onBack}/>
+                <StepNavigation isReviewEditing={isReviewEditing} onBack={onBack}/>
             </Stack>
         </form>
     );

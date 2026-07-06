@@ -41,7 +41,7 @@ function isRecordId(recordId) {
 }
 
 function ClientRecordsTab({client, refreshKey,
-                              onOpenIntake, onEditClientDetails,
+                              onOpenIntake, onEditClientDetails, onEditIntakeSection,
                               onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
 
     const clientId = client?.id ?? null;
@@ -342,6 +342,8 @@ function ClientRecordsTab({client, refreshKey,
                                 error={intakeError}
                                 onOpen={onOpenIntake}
                                 onEditClientDetails={onEditClientDetails}
+                                onEditIntakeSection={onEditIntakeSection}
+                                showIntakeReview={Boolean(location.state?.showIntakeReview)}
                             />
                         </Accordion.Panel>
                     </Accordion.Item>

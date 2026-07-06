@@ -8,6 +8,7 @@ export const ROUTES = {
     INTAKE_NEW: "/intake",
     INTAKE_BY_ID: "/intake/:intakeId",
     intake: (intakeId) => `/intake/${intakeId}`,
+    intakeEditStep: (intakeId, step) => `/intake/${intakeId}?editStep=${step}`,
 
     /* Client */
 

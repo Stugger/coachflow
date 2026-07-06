@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import {useNavigate, useParams, useSearchParams} from 'react-router-dom';
 import {
     LoadingOverlay,
     Container,
@@ -66,7 +66,12 @@ function ClientIntakePage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const navigate = useNavigate();
+
     const {intakeId: routeIntakeId} = useParams();
+
+    const [searchParams] = useSearchParams();
+
+    const requestedReviewEditStep = searchParams.get('editStep');
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -80,6 +85,9 @@ function ClientIntakePage() {
     const [intakeLoaded, setIntakeLoaded] = useState(true);
 
     const loading = !clientLoaded || !intakeLoaded;
+
+    const [reviewEditStep, setReviewEditStep] = useState(null);
+    const isReviewEditing = reviewEditStep !== null;
 
     const [exitModalOpen, setExitModalOpen] = useState(false);
 
@@ -172,12 +180,26 @@ function ClientIntakePage() {
 
     const loadIntake = useCallback((id) => {
         setIntakeLoaded(false);
+        setReviewEditStep(null);
 
         return apiGetClientIntake(id)
             .then(intake => {
                 hydrateIntake(intake);
                 loadClient(intake.clientId);
-                setCurrentStep(intake.currentStep);
+
+                const canEditCompletedIntake =
+                    intake.status === 'COMPLETED'
+                    && requestedReviewEditStep
+                    && requestedReviewEditStep !== IntakeSteps.BASIC_INFO
+                    && requestedReviewEditStep !== IntakeSteps.COMPLETED
+
+                const nextReviewEditStep = canEditCompletedIntake
+                    ? requestedReviewEditStep
+                    : null;
+
+                setReviewEditStep(nextReviewEditStep);
+                setCurrentStep(nextReviewEditStep ?? intake.currentStep);
+
                 scrollToTop();
             })
             .catch(error => {
@@ -186,7 +208,7 @@ function ClientIntakePage() {
             .finally(() => {
                 setIntakeLoaded(true);
             });
-    }, [hydrateIntake, loadClient, scrollToTop]);
+    }, [hydrateIntake, loadClient, requestedReviewEditStep, scrollToTop]);
 
     useEffect(() => {
         if (routeIntakeId) {
@@ -252,21 +274,31 @@ function ClientIntakePage() {
     }
 
     function saveIntakeStep(step, formData, onSaved) {
-        const hasData = Object.values(formData).some(value =>
-            typeof value === 'string' ? value.trim() !== '' : value !== null
-        );
-
-        if (!hasData && step === IntakeSteps.MEDICAL) { //medical history can be empty
-            onSaved();
-            return;
-        }
-
-        apiSaveClientIntakeStep(intakeId, step, formData)
-            .then(intake => {
-                hydrateIntake(intake);
+        return apiSaveClientIntakeStep(intakeId, step, formData)
+            .then(updatedIntake => {
+                hydrateIntake(updatedIntake);
                 onSaved();
             })
-            .catch(error => console.error(error));
+            .catch(error => {
+                console.error('Error saving intake step:', error);
+            });
+    }
+
+    function saveStepAndContinue(step, formData, nextStep) {
+        saveIntakeStep(step, formData, () => {
+            if (isReviewEditing) {
+                returnToIntakeReview();
+                return;
+            }
+
+            if (nextStep === IntakeSteps.COMPLETED) {
+                completeIntake();
+                return;
+            }
+
+            setCurrentStep(nextStep);
+            scrollToTop();
+        });
     }
 
     function completeIntake() {
@@ -282,6 +314,21 @@ function ClientIntakePage() {
     // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
+
+    function returnToIntakeReview() {
+        if (!clientId) {
+            navigate(ROUTES.CLIENTS);
+            return;
+        }
+
+        navigate(`${ROUTES.clientRecords(clientId)}#intake`, {
+            replace: true,
+            state: {
+                scrollToRecord: 'intake',
+                showIntakeReview: true,
+            },
+        });
+    }
 
     function exitIntake() {
         setExitModalOpen(false);
@@ -308,6 +355,7 @@ function ClientIntakePage() {
                 navigate(`${ROUTES.clientRecords(clientId)}#intake`, {
                     state: {
                         scrollToRecord: 'intake',
+                        showIntakeReview: true,
                     },
                 });
                 break;
@@ -376,10 +424,7 @@ function ClientIntakePage() {
             return;
         }
 
-        saveIntakeStep(IntakeSteps.PARQ, parqForm, () => {
-            setCurrentStep(IntakeSteps.GOALS);
-            scrollToTop();
-        });
+        saveStepAndContinue(IntakeSteps.PARQ, parqForm, IntakeSteps.GOALS);
     }
 
     function updateParqForm(event) {
@@ -433,10 +478,7 @@ function ClientIntakePage() {
             return;
         }
 
-        saveIntakeStep(IntakeSteps.GOALS, goalsForm, () => {
-            setCurrentStep(IntakeSteps.ACTIVITY_HISTORY);
-            scrollToTop();
-        });
+        saveStepAndContinue(IntakeSteps.GOALS, goalsForm, IntakeSteps.ACTIVITY_HISTORY);
     }
 
     function updateGoalObjective(objective) {
@@ -499,10 +541,7 @@ function ClientIntakePage() {
             return;
         }
 
-        saveIntakeStep(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, () => {
-            setCurrentStep(IntakeSteps.MEDICAL);
-            scrollToTop();
-        });
+        saveStepAndContinue(IntakeSteps.ACTIVITY_HISTORY, activityHistoryForm, IntakeSteps.MEDICAL);
     }
 
     function updateActivityHistoryForm(event) {
@@ -548,10 +587,7 @@ function ClientIntakePage() {
     function handleMedicalContinue(event) {
         event.preventDefault();
 
-        saveIntakeStep(IntakeSteps.MEDICAL, medicalForm, () => {
-            setCurrentStep(IntakeSteps.LIFESTYLE);
-            scrollToTop();
-        });
+        saveStepAndContinue(IntakeSteps.MEDICAL, medicalForm, IntakeSteps.LIFESTYLE);
     }
 
     function updateMedicalForm(event) {
@@ -584,10 +620,7 @@ function ClientIntakePage() {
             return;
         }
 
-        saveIntakeStep(IntakeSteps.LIFESTYLE, lifestyleForm, () => {
-            setCurrentStep(IntakeSteps.TRAINING_PREFERENCES);
-            scrollToTop();
-        });
+        saveStepAndContinue(IntakeSteps.LIFESTYLE, lifestyleForm, IntakeSteps.TRAINING_PREFERENCES);
     }
 
     function updateLifestyleForm(event) {
@@ -637,9 +670,7 @@ function ClientIntakePage() {
             return;
         }
 
-        saveIntakeStep(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, () => {
-            completeIntake();
-        });
+        saveStepAndContinue(IntakeSteps.TRAINING_PREFERENCES, trainingPreferencesForm, IntakeSteps.COMPLETED);
     }
 
     function updateTrainingPreferencesForm(event) {
@@ -710,11 +741,13 @@ function ClientIntakePage() {
                 <IntakeHeader
                     step="PAR-Q"
                     stepNumber={2}
-                    exitIntake={() => setExitModalOpen(true)}
+                    isReviewEditing={isReviewEditing}
+                    exitIntake={isReviewEditing ? returnToIntakeReview : () => setExitModalOpen(true)}
                 />
                 <ParqStep
                     form={parqForm}
                     errors={parqErrors}
+                    isReviewEditing={isReviewEditing}
                     updateField={updateParqValue}
                     onChange={updateParqForm}
                     onBack={handleParqBack}
@@ -731,11 +764,13 @@ function ClientIntakePage() {
                 <IntakeHeader
                     step="Goals"
                     stepNumber={3}
-                    exitIntake={() => setExitModalOpen(true)}
+                    isReviewEditing={isReviewEditing}
+                    exitIntake={isReviewEditing ? returnToIntakeReview : () => setExitModalOpen(true)}
                 />
                 <GoalsStep
                     form={goalsForm}
                     errors={goalsErrors}
+                    isReviewEditing={isReviewEditing}
                     updateObjective={updateGoalObjective}
                     onChange={updateGoalsForm}
                     onBack={handleGoalsBack}
@@ -751,11 +786,13 @@ function ClientIntakePage() {
                 <IntakeHeader
                     step="Activity History"
                     stepNumber={4}
-                    exitIntake={() => setExitModalOpen(true)}
+                    isReviewEditing={isReviewEditing}
+                    exitIntake={isReviewEditing ? returnToIntakeReview : () => setExitModalOpen(true)}
                 />
                 <ActivityHistoryStep
                     form={activityHistoryForm}
                     errors={activityHistoryErrors}
+                    isReviewEditing={isReviewEditing}
                     updateTrainer={updatePreviousTrainer}
                     onChange={updateActivityHistoryForm}
                     onBack={handleActivityHistoryBack}
@@ -771,10 +808,12 @@ function ClientIntakePage() {
                 <IntakeHeader
                     step="Medical History"
                     stepNumber={5}
-                    exitIntake={() => setExitModalOpen(true)}
+                    isReviewEditing={isReviewEditing}
+                    exitIntake={isReviewEditing ? returnToIntakeReview : () => setExitModalOpen(true)}
                 />
                 <MedicalHistoryStep
                     form={medicalForm}
+                    isReviewEditing={isReviewEditing}
                     onChange={updateMedicalForm}
                     onBack={handleMedicalBack}
                     onContinue={handleMedicalContinue}
@@ -789,11 +828,13 @@ function ClientIntakePage() {
                 <IntakeHeader
                     step="Lifestyle"
                     stepNumber={6}
-                    exitIntake={() => setExitModalOpen(true)}
+                    isReviewEditing={isReviewEditing}
+                    exitIntake={isReviewEditing ? returnToIntakeReview : () => setExitModalOpen(true)}
                 />
                 <LifestyleStep
                     form={lifestyleForm}
                     errors={lifestyleErrors}
+                    isReviewEditing={isReviewEditing}
                     onChange={updateLifestyleForm}
                     onBack={handleLifestyleBack}
                     onContinue={handleLifestyleContinue}
@@ -808,11 +849,13 @@ function ClientIntakePage() {
                 <IntakeHeader
                     step="Training Preferences"
                     stepNumber={7}
-                    exitIntake={() => setExitModalOpen(true)}
+                    isReviewEditing={isReviewEditing}
+                    exitIntake={isReviewEditing ? returnToIntakeReview : () => setExitModalOpen(true)}
                 />
                 <TrainingPreferencesStep
                     form={trainingPreferencesForm}
                     errors={trainingPreferencesErrors}
+                    isReviewEditing={isReviewEditing}
                     updatePreferredWorkoutDay={updatePreferredWorkoutDay}
                     updateLearningStyle={updateLearningStyle}
                     onChange={updateTrainingPreferencesForm}

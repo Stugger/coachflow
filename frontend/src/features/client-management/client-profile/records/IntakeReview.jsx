@@ -12,6 +12,8 @@ import {
     IconPoint,
 } from '@tabler/icons-react';
 
+import {IntakeSteps} from '../../intake/intake-constants.js';
+
 import {
     ACTIVITY_LEVEL_OPTIONS,
     AVERAGE_SLEEP_OPTIONS,
@@ -40,7 +42,7 @@ const formatBirthDate = (dateString) => {
     return new Date(`${dateString}T00:00:00`).toLocaleDateString([], options);
 };
 
-function IntakeReview({intake, client, onEditBasicInfo}) {
+function IntakeReview({intake, client, onEditBasicInfo, onEditSection}) {
 
     const computedColorScheme = useComputedColorScheme('light');
 
@@ -165,7 +167,10 @@ function IntakeReview({intake, client, onEditBasicInfo}) {
 
         return (
             <Stack gap="sm" pb="md" radius="md" style={sectionStyle}>
-                <SectionHeader name="PAR-Q"/>
+                <SectionHeader
+                    name="PAR-Q"
+                    onEdit={() => onEditSection?.(IntakeSteps.PARQ)}
+                />
 
                 {positiveQuestions.length === 0 ? (
                     <SectionRow label="No health concerns reported."/>
@@ -219,7 +224,10 @@ function IntakeReview({intake, client, onEditBasicInfo}) {
 
         return (
             <Stack gap="sm" pb="md" radius="md" style={sectionStyle}>
-                <SectionHeader name="Goals"/>
+                <SectionHeader
+                    name="Goals"
+                    onEdit={() => onEditSection?.(IntakeSteps.GOALS)}
+                />
 
                 {!hasInformation ? (
                     <SectionRow label="No goals provided."/>
@@ -273,7 +281,10 @@ function IntakeReview({intake, client, onEditBasicInfo}) {
 
         return (
             <Stack gap="sm" pb="md" radius="md" style={sectionStyle}>
-                <SectionHeader name="Activity History"/>
+                <SectionHeader
+                    name="Activity History"
+                    onEdit={() => onEditSection?.(IntakeSteps.ACTIVITY_HISTORY)}
+                />
 
                 {!hasInformation ? (
                     <SectionRow label="No activity history provided."/>
@@ -331,7 +342,10 @@ function IntakeReview({intake, client, onEditBasicInfo}) {
 
         return (
             <Stack gap="sm" pb="md" radius="md" style={sectionStyle}>
-                <SectionHeader name="Medical History"/>
+                <SectionHeader
+                    name="Medical History"
+                    onEdit={() => onEditSection?.(IntakeSteps.MEDICAL)}
+                />
 
                 {!hasInformation ? (
                     <SectionRow label="No medical information provided."/>
@@ -406,7 +420,10 @@ function IntakeReview({intake, client, onEditBasicInfo}) {
 
         return (
             <Stack gap="sm" pb="md" radius="md" style={sectionStyle}>
-                <SectionHeader name="Lifestyle"/>
+                <SectionHeader
+                    name="Lifestyle"
+                    onEdit={() => onEditSection?.(IntakeSteps.LIFESTYLE)}
+                />
 
                 {!hasInformation ? (
                     <SectionRow label="No lifestyle information provided."/>
@@ -503,7 +520,10 @@ function IntakeReview({intake, client, onEditBasicInfo}) {
                     borderBottomLeftRadius: 'var(--mantine-radius-md)',
                     borderBottomRightRadius: 'var(--mantine-radius-md)',
                 }}>
-                <SectionHeader name="Training Preferences"/>
+                <SectionHeader
+                    name="Training Preferences"
+                    onEdit={() => onEditSection?.(IntakeSteps.TRAINING_PREFERENCES)}
+                />
 
                 {!hasInformation ? (
                     <SectionRow label="No training preferences provided."/>

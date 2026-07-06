@@ -180,6 +180,10 @@ function ClientProfilePage() {
         navigate(ROUTES.intake(intakeId));
     }
 
+    function editIntakeSection(intakeId, step) {
+        navigate(ROUTES.intakeEditStep(intakeId, step));
+    }
+
     function viewInitialAssessment() {
         navigateToClientRecord('initial-assessment', {
             scroll: true,
@@ -352,6 +356,7 @@ function ClientProfilePage() {
                         refreshKey={recordsRefreshKey}
                         onOpenIntake={intakeId => navigate(ROUTES.intake(intakeId))}
                         onEditClientDetails={() => setEditingDetails(true)}
+                        onEditIntakeSection={editIntakeSection}
                         onNewInitialAssessment={createBlankInitialAssessment}
                         onInitialAssessmentFromTemplate={() => setInitialAssessmentTemplatePickerOpen(true)}
                         onEditInitialAssessment={editInitialAssessment}

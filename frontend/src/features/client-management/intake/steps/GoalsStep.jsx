@@ -12,17 +12,19 @@ import {IconTargetArrow} from '@tabler/icons-react';
 import StepNavigation from '../StepNavigation.jsx';
 import {GOAL_OPTIONS} from '../intake-step-options.js';
 
-function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}) {
+function GoalsStep({form, errors, isReviewEditing, updateObjective, onChange, onBack, onContinue}) {
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-                <Alert
-                    color={errors.objectives ? 'red' : 'blue'}
-                    variant="light"
-                    icon={<IconTargetArrow size={18}/>}
-                >
-                    Select one or more goals.
-                </Alert>
+                {!isReviewEditing && (
+                    <Alert
+                        color={errors.objectives ? 'red' : 'blue'}
+                        variant="light"
+                        icon={<IconTargetArrow size={18}/>}
+                    >
+                        Select one or more goals.
+                    </Alert>
+                )}
 
                 <Stack gap="xs">
                     <Stack gap={0}>
@@ -88,7 +90,7 @@ function GoalsStep({form, errors, updateObjective, onChange, onBack, onContinue}
                     onChange={onChange}
                 />
 
-                <StepNavigation onBack={onBack}/>
+                <StepNavigation isReviewEditing={isReviewEditing} onBack={onBack}/>
             </Stack>
         </form>
     );
