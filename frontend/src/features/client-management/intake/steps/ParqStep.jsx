@@ -14,7 +14,7 @@ import {
     YES_NO_OPTIONS,
 } from '../intake-step-options.js';
 
-function ParqStep({form, errors, updateField, onChange, onBack, onContinue}) {
+function ParqStep({form, errors, isReviewEditing, updateField, onChange, onBack, onContinue}) {
 
     const hasErrors = PARQ_QUESTIONS.some(question => errors[question.field]) || Boolean(errors.additionalNotes);
 
@@ -75,19 +75,21 @@ function ParqStep({form, errors, updateField, onChange, onBack, onContinue}) {
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-                <Alert
-                    color={hasErrors ? 'red' : 'blue'}
-                    variant="light"
-                    icon={<IconAlertCircle size={18}/>}
-                >
-                    {hasErrors
-                        ? 'Please fix the highlighted PAR-Q answers before continuing.'
-                        : 'Please answer each PAR-Q question before continuing.'}
-                </Alert>
+                {(!isReviewEditing || hasErrors) && (
+                    <Alert
+                        color={hasErrors ? 'red' : 'blue'}
+                        variant="light"
+                        icon={<IconAlertCircle size={18}/>}
+                    >
+                        {hasErrors
+                            ? 'Please fix the highlighted PAR-Q answers before continuing.'
+                            : 'Please answer each PAR-Q question before continuing.'}
+                    </Alert>
+                )}
 
                 {PARQ_QUESTIONS.map(renderParqQuestion)}
 
-                <StepNavigation onBack={onBack}/>
+                <StepNavigation isReviewEditing={isReviewEditing} onBack={onBack}/>
             </Stack>
         </form>
     );

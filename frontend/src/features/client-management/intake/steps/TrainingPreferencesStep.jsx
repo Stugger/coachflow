@@ -18,7 +18,7 @@ import {
     WORKOUT_TIME_PREFERENCE_OPTIONS,
 } from '../intake-step-options.js';
 
-function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updateLearningStyle, onChange, onBack, onContinue}) {
+function TrainingPreferencesStep({form, errors, isReviewEditing, updatePreferredWorkoutDay, updateLearningStyle, onChange, onBack, onContinue}) {
 
     const hasErrors = Object.keys(errors).length > 0;
 
@@ -54,15 +54,17 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-                <Alert
-                    color={hasErrors ? 'red' : 'blue'}
-                    variant="light"
-                    icon={<IconClipboardList size={18}/>}
-                >
-                    {hasErrors
-                        ? 'Please complete the required training preference fields before finishing.'
-                        : 'Tell us how you prefer to train and learn.'}
-                </Alert>
+                {(!isReviewEditing || hasErrors) && (
+                    <Alert
+                        color={hasErrors ? 'red' : 'blue'}
+                        variant="light"
+                        icon={<IconClipboardList size={18}/>}
+                    >
+                        {hasErrors
+                            ? 'Please complete the required training preference fields before finishing.'
+                            : 'Tell us how you prefer to train and learn.'}
+                    </Alert>
+                )}
 
                 <Select
                     label="How many days per week would you like to train?"
@@ -147,6 +149,7 @@ function TrainingPreferencesStep({form, errors, updatePreferredWorkoutDay, updat
                 />
 
                 <StepNavigation
+                    isReviewEditing={isReviewEditing}
                     onBack={onBack}
                     submitLabel="Complete Intake"
                 />

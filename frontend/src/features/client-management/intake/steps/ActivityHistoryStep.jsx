@@ -15,19 +15,21 @@ import {
     YES_NO_OPTIONS,
 } from '../intake-step-options.js';
 
-function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onContinue}) {
+function ActivityHistoryStep({form, errors, isReviewEditing, updateTrainer, onChange, onBack, onContinue}) {
     const hasErrors = Object.keys(errors).length > 0;
 
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-                <Alert
-                    color={hasErrors ? 'red' : 'blue'}
-                    variant="light"
-                    icon={<IconBarbell size={18}/>}
-                >
-                    Tell us about your training experience and activity level.
-                </Alert>
+                {!isReviewEditing && (
+                    <Alert
+                        color={hasErrors ? 'red' : 'blue'}
+                        variant="light"
+                        icon={<IconBarbell size={18}/>}
+                    >
+                        Tell us about your training experience and activity level.
+                    </Alert>
+                )}
 
                 <Paper
                     p="md"
@@ -106,7 +108,7 @@ function ActivityHistoryStep({form, errors, updateTrainer, onChange, onBack, onC
                     onChange={onChange}
                 />
 
-                <StepNavigation onBack={onBack}/>
+                <StepNavigation isReviewEditing={isReviewEditing} onBack={onBack}/>
             </Stack>
         </form>
     );

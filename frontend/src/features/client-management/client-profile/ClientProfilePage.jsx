@@ -141,12 +141,6 @@ function ClientProfilePage() {
                 document.activeElement?.blur(); //close mobile keyboard
 
                 applyClient(updatedClient);
-                setTimeout(() => {
-                    window.scrollTo({
-                        top: 0,
-                        behavior: 'smooth'
-                    });
-                }, 200);
             })
             .catch(error => {
                 if (error.fieldErrors) {
@@ -184,6 +178,10 @@ function ClientProfilePage() {
         }
 
         navigate(ROUTES.intake(intakeId));
+    }
+
+    function editIntakeSection(intakeId, step) {
+        navigate(ROUTES.intakeEditStep(intakeId, step));
     }
 
     function viewInitialAssessment() {
@@ -357,6 +355,8 @@ function ClientProfilePage() {
                         client={client}
                         refreshKey={recordsRefreshKey}
                         onOpenIntake={intakeId => navigate(ROUTES.intake(intakeId))}
+                        onEditClientDetails={() => setEditingDetails(true)}
+                        onEditIntakeSection={editIntakeSection}
                         onNewInitialAssessment={createBlankInitialAssessment}
                         onInitialAssessmentFromTemplate={() => setInitialAssessmentTemplatePickerOpen(true)}
                         onEditInitialAssessment={editInitialAssessment}

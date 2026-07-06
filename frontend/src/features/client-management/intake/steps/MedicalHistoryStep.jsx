@@ -6,18 +6,19 @@ import {
 import {IconMedicalCross} from '@tabler/icons-react';
 import StepNavigation from '../StepNavigation.jsx';
 
-function MedicalHistoryStep({form, onChange, onBack, onContinue}) {
+function MedicalHistoryStep({form, isReviewEditing, onChange, onBack, onContinue}) {
     return (
         <form onSubmit={onContinue}>
             <Stack gap="md">
-                <Alert
-                    color="blue"
-                    variant="light"
-                    icon={<IconMedicalCross size={18}/>}
-                >
-                    Add any relevant medical details, injuries, medications, or limitations. This step can be left blank.
-                </Alert>
-
+                {!isReviewEditing && (
+                    <Alert
+                        color="blue"
+                        variant="light"
+                        icon={<IconMedicalCross size={18}/>}
+                    >
+                        Add any relevant medical details, injuries, medications, or limitations. This step can be left blank.
+                    </Alert>
+                )}
                 <Textarea
                     label="Medical conditions"
                     name="medicalConditions"
@@ -54,7 +55,7 @@ function MedicalHistoryStep({form, onChange, onBack, onContinue}) {
                     onChange={onChange}
                 />
 
-                <StepNavigation onBack={onBack}/>
+                <StepNavigation isReviewEditing={isReviewEditing} onBack={onBack}/>
             </Stack>
         </form>
     );
