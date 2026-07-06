@@ -5,6 +5,7 @@ import {
     Badge,
     Button,
     Group,
+    Loader,
     Modal,
     Stack,
     Text,
@@ -304,13 +305,17 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                         bg='var(--color-surface)'
                     >
                         <Accordion.Control
-                            icon={intake?.status === 'COMPLETED'
+                            icon={!intakeLoaded
                                 ?
+                                <Loader size={20} color="gray"/>
+                                :
+                                intake?.status === 'COMPLETED'
+                                    ?
                                     <ThemeIcon size={20} radius="xl" color="green">
                                         <IconCheck size={16} stroke={3}/>
                                     </ThemeIcon>
-                                :
-                                <IconCircleDashedCheck size={20} color='gray'/>
+                                    :
+                                    <IconCircleDashedCheck size={20} color='gray'/>
                             }
                         >
                             {intake?.status === 'COMPLETED' ? (
@@ -330,6 +335,7 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                         <Accordion.Panel>
                             <IntakeRecordCard
                                 intake={intake}
+                                client={client}
                                 loaded={intakeLoaded}
                                 error={intakeError}
                                 onOpen={onOpenIntake}
@@ -345,7 +351,11 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                     >
                         {/*TODO completed assessment style: no badge, not dimmed, green circle check (like intake)*/}
                         <Accordion.Control
-                            icon={initialAssessmentWorkout
+                            icon={!initialAssessmentLoaded
+                                ?
+                                <Loader size={20} color="gray"/>
+                                :
+                                initialAssessmentWorkout
                                     ?
                                     <ThemeIcon size={20} radius="xl" color="yellow">
                                         <IconClipboardCheck size={14} stroke={2.5}/>
@@ -355,14 +365,15 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                             }
                         >
                             <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text fw={600} c={initialAssessmentWorkout ? undefined : 'dimmed'}>Initial Assessment</Text>
-
-                                <Badge
-                                    color={initialAssessmentWorkout ? 'yellow' : 'gray'}
-                                    variant="light"
-                                >
-                                    {initialAssessmentWorkout ? 'Ready' : 'Not set up'}
-                                </Badge>
+                                <Text fw={600} c={initialAssessmentLoaded && initialAssessmentWorkout ? undefined : 'dimmed'}>Initial Assessment</Text>
+                                {initialAssessmentLoaded && (
+                                    <Badge
+                                        color={initialAssessmentWorkout ? 'yellow' : 'gray'}
+                                        variant="light"
+                                    >
+                                        {initialAssessmentWorkout ? 'Ready' : 'Not set up'}
+                                    </Badge>
+                                )}
                             </Group>
                         </Accordion.Control>
 

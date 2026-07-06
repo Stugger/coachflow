@@ -1,3 +1,4 @@
+import {useState} from 'react'
 import {
     Alert,
     Button,
@@ -8,10 +9,15 @@ import {
 } from '@mantine/core';
 import {
     IconEye,
+    IconEyeOff,
     IconPlayerPlay,
 } from '@tabler/icons-react';
 
-function IntakeRecordCard({intake, loaded, error, onOpen}) {
+import IntakeReview from './IntakeReview';
+
+function IntakeRecordCard({intake, client, loaded, error, onOpen}) {
+
+    const [intakeShown, setIntakeShown] = useState(false);
 
     if (!loaded) {
         return (
@@ -54,17 +60,31 @@ function IntakeRecordCard({intake, loaded, error, onOpen}) {
             </Group>
 
             <Group>
-                <Button
-                    variant={completed ? 'default' : 'filled'}
-                    leftSection={completed
-                        ? <IconEye size={16}/>
-                        : <IconPlayerPlay size={16}/>
-                    }
-                    onClick={() => onOpen(intake.id)}
-                >
-                    {completed ? 'Review Intake' : 'Resume Intake'}
-                </Button>
+                {completed ? (
+                    <Button
+                        variant={'default'}
+                        leftSection={intakeShown ? <IconEyeOff size={16}/> : <IconEye size={16}/>}
+                        onClick={() => setIntakeShown(!intakeShown)}
+                    >
+                        {intakeShown ? 'Hide Intake' : 'Show Intake'}
+                    </Button>
+                ) : (
+                    <Button
+                        variant={'filled'}
+                        leftSection={ <IconPlayerPlay size={16}/>}
+                        onClick={() => onOpen(intake.id)}
+                    >
+                        Resume Intake
+                    </Button>
+                )}
             </Group>
+
+            {intakeShown && (
+                <IntakeReview
+                    intake={intake}
+                    client={client}
+                />
+            )}
         </Stack>
     );
 }
