@@ -37,10 +37,10 @@ const sectionStyle = {
 
 const formatBirthDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-US', options);
+    return new Date(`${dateString}T00:00:00`).toLocaleDateString([], options);
 };
 
-function IntakeReview({intake, client}) {
+function IntakeReview({intake, client, onEditBasicInfo}) {
 
     const computedColorScheme = useComputedColorScheme('light');
 
@@ -48,7 +48,7 @@ function IntakeReview({intake, client}) {
     // Shared review UI
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function SectionHeader({name, first = false}) {
+    function SectionHeader({name, first = false, onEdit}) {
         return (
             <Box
                 style={{
@@ -67,9 +67,15 @@ function IntakeReview({intake, client}) {
                             {name}
                         </Text>
                     </Group>
-                    <Button disabled radius="sm" variant="transparent">
-                        Edit
-                    </Button>
+                    {onEdit ? (
+                        <Button variant="transparent" onClick={onEdit}>
+                            Edit
+                        </Button>
+                    ) : (
+                        <Button disabled radius="sm" variant="transparent">
+                            Edit
+                        </Button>
+                    )}
                 </Group>
             </Box>
         );
@@ -115,7 +121,11 @@ function IntakeReview({intake, client}) {
                     borderTopLeftRadius: 'var(--mantine-radius-md)',
                     borderTopRightRadius: 'var(--mantine-radius-md)',
                 }}>
-                <SectionHeader first name="Basic Information"/>
+                <SectionHeader
+                    first
+                    name="Basic Information"
+                    onEdit={onEditBasicInfo}
+                />
                 <Stack gap="xs">
                     <SectionRow
                         label="Name"

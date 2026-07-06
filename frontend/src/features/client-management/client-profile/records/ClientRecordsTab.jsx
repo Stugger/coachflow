@@ -40,7 +40,9 @@ function isRecordId(recordId) {
     return RECORD_IDS.includes(recordId);
 }
 
-function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
+function ClientRecordsTab({client, refreshKey,
+                              onOpenIntake, onEditClientDetails,
+                              onNewInitialAssessment, onInitialAssessmentFromTemplate, onEditInitialAssessment, onInitialAssessmentDeleted}) {
 
     const clientId = client?.id ?? null;
 
@@ -339,6 +341,7 @@ function ClientRecordsTab({client, refreshKey, onOpenIntake, onNewInitialAssessm
                                 loaded={intakeLoaded}
                                 error={intakeError}
                                 onOpen={onOpenIntake}
+                                onEditClientDetails={onEditClientDetails}
                             />
                         </Accordion.Panel>
                     </Accordion.Item>

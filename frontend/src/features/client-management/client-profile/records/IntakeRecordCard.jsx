@@ -15,7 +15,7 @@ import {
 
 import IntakeReview from './IntakeReview';
 
-function IntakeRecordCard({intake, client, loaded, error, onOpen}) {
+function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDetails}) {
 
     const [intakeShown, setIntakeShown] = useState(false);
 
@@ -83,6 +83,7 @@ function IntakeRecordCard({intake, client, loaded, error, onOpen}) {
                 <IntakeReview
                     intake={intake}
                     client={client}
+                    onEditBasicInfo={onEditClientDetails}
                 />
             )}
         </Stack>
