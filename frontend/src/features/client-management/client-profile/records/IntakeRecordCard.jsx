@@ -15,6 +15,8 @@ import {
 
 import IntakeReview from './IntakeReview';
 
+import {formatDisplayLongDate} from "../../../../utils/time-utils.js";
+
 function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDetails, onEditIntakeSection, showIntakeReview = false}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -75,8 +77,10 @@ function IntakeRecordCard({intake, client, loaded, error, onOpen, onEditClientDe
             <Group justify="space-between">
                 <Text size="sm" c="dimmed">
                     {completed
-                        ? 'The client intake has been completed.'
-                        : 'The client intake is still in progress.'
+                        ? intake.completedAt
+                            ? `${client.firstName}'s intake was completed on ${formatDisplayLongDate(intake.completedAt)}.`
+                            : `${client.firstName}'s intake has been completed.`
+                        : `${client.firstName}'s intake is still in progress.`
                     }
                 </Text>
             </Group>

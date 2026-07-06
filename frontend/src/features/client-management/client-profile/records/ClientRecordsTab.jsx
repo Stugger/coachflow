@@ -285,7 +285,7 @@ function ClientRecordsTab({client, refreshKey,
     return (
         <>
             <Stack gap="md">
-                <Stack gap={2}>
+                <Stack gap={2} pl='0.25rem'>
                     <Text fw={700}>Records</Text>
                     <Text size="sm" c="dimmed">
                         Review client onboarding records and manage the initial assessment setup.

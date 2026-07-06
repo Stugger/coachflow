@@ -1,3 +1,9 @@
+const longDateOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+};
+
 export function toLocalDateTimeString(date) {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -30,6 +36,14 @@ export function formatDisplayDate(dateTime) {
         month: 'short',
         day: 'numeric'
     });
+}
+
+export function formatDisplayLongDate(dateTime) {
+    return new Date(dateTime).toLocaleDateString([], longDateOptions);
+}
+
+export function formatDisplayLongDateOnly(dateString) {
+    return new Date(`${dateString}T00:00:00`).toLocaleDateString([], longDateOptions);
 }
 
 export function toDateKey(dateTime) {

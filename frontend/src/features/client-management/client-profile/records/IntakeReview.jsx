@@ -30,16 +30,11 @@ import {
 } from '../../intake/intake-step-options.js';
 
 import {normalizeName} from '../../../../utils/text-utils.js';
+import {formatDisplayLongDateOnly} from "../../../../utils/time-utils.js";
 
 const sectionStyle = {
     border: '1px solid var(--color-border)',
     borderBottom: 'none',
-    borderRadius: 0,
-};
-
-const formatBirthDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(`${dateString}T00:00:00`).toLocaleDateString([], options);
 };
 
 function IntakeReview({intake, client, onEditBasicInfo, onEditSection}) {
@@ -83,10 +78,10 @@ function IntakeReview({intake, client, onEditBasicInfo, onEditSection}) {
         );
     }
 
-    function SectionRow({ label, value = null, urgent = false, prewrap = false }) {
+    function SectionRow({label, value = null, urgent = false, prewrap = false}) {
         const hasValue = value !== null && value !== undefined && value !== '';
         return (
-            <Group pl={6} gap={4} wrap="nowrap" align="flex-start">
+            <Group pl='0.5rem' pr='0.5rem' gap={4} wrap="nowrap" align="flex-start">
                 {hasValue ? (
                     <>
                         {urgent ? (
@@ -106,7 +101,7 @@ function IntakeReview({intake, client, onEditBasicInfo, onEditSection}) {
                         </Text>
                     </>
                 ) : (
-                    <Text size="sm" pl={4}>{label}</Text>
+                    <Text size="sm" pl='0.4rem'>{label}</Text>
                 )}
             </Group>
         );
@@ -131,11 +126,7 @@ function IntakeReview({intake, client, onEditBasicInfo, onEditSection}) {
                 <Stack gap="xs">
                     <SectionRow
                         label="Name"
-                        value={`${client.firstName} ${client.lastName}${
-                            client.preferredName
-                                ? ` (${client.preferredName})`
-                                : ''
-                        }`}
+                        value={`${client.firstName} ${client.lastName}${client.preferredName ? ` (${client.preferredName})` : ''}`}
                     />
                     <SectionRow
                         label="Phone"
@@ -147,7 +138,7 @@ function IntakeReview({intake, client, onEditBasicInfo, onEditSection}) {
                     />
                     <SectionRow
                         label="DOB"
-                        value={client.birthDate ? formatBirthDate(client.birthDate) : "—"}
+                        value={client.birthDate ? formatDisplayLongDateOnly(client.birthDate) : "—"}
                     />
                     <SectionRow
                         label="Gender"

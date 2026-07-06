@@ -328,7 +328,7 @@ function ClientProfilePage() {
             <>
                 {tab === 'history' && (
                     //TODO temp content, will be replaced with own component
-                    <Stack gap="sm">
+                    <Stack gap={2} pl='0.25rem'>
                         <Text fw={700}>
                             History
                         </Text>
@@ -340,7 +340,7 @@ function ClientProfilePage() {
                 )}
                 {tab === 'programs' && (
                     //TODO temp content, will be replaced with own component
-                    <Stack gap="sm">
+                    <Stack gap={2} pl='0.25rem'>
                         <Text fw={700}>
                             Programs
                         </Text>
@@ -365,7 +365,7 @@ function ClientProfilePage() {
                 )}
                 {tab === 'habits' && (
                     //TODO temp content, will be replaced with own component
-                    <Stack gap="sm">
+                    <Stack gap={2} pl='0.25rem'>
                         <Text fw={700}>
                             Habits
                         </Text>
@@ -377,7 +377,7 @@ function ClientProfilePage() {
                 )}
                 {tab === 'measurements' && (
                     //TODO temp content, will be replaced with own component
-                    <Stack gap="sm">
+                    <Stack gap={2} pl='0.25rem'>
                         <Text fw={700}>
                             Measurements
                         </Text>
