@@ -1,10 +1,12 @@
 import {
     Badge,
     Button,
+    Checkbox,
     Divider,
     Group,
     Menu,
     Paper,
+    SimpleGrid,
     Stack,
     Text,
 } from '@mantine/core';
@@ -342,6 +344,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                     <Menu shadow="md" withinPortal position="bottom-end" closeOnItemClick={false} style={{flexShrink: 0}}>
                         <Menu.Target>
                             <Button
+                                aria-label="Add tracking field"
                                 size="sm"
                                 variant={computedColorScheme}
                             >
@@ -350,15 +353,27 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                         </Menu.Target>
 
                         <Menu.Dropdown>
-                            {Object.values(TRACKING_FIELD_DEFINITIONS).map((field) => (
-                                <Menu.Item
-                                    key={field.key}
-                                    onClick={() => addTrackingField(field.key)}
-                                    disabled={isFieldTracked(field.key)}
-                                >
-                                    {field.label}
-                                </Menu.Item>
-                            ))}
+                            <SimpleGrid cols={{base: 2}} spacing={0} verticalSpacing={0}>
+                                {Object.values(TRACKING_FIELD_DEFINITIONS).map((field) => {
+                                    const tracked = isFieldTracked(field.key);
+                                    return (
+                                        <Menu.Item
+                                            key={field.key}
+                                            onClick={() => addTrackingField(field.key)}
+                                            disabled={tracked}
+                                            leftSection={
+                                                <Checkbox.Indicator
+                                                    disabled={tracked}
+                                                    checked={tracked}
+                                                    style={{cursor: tracked ? undefined : 'pointer'}}
+                                                />
+                                            }
+                                        >
+                                            {field.label}
+                                        </Menu.Item>
+                                    );
+                                })}
+                            </SimpleGrid>
                         </Menu.Dropdown>
                     </Menu>
                 </Group>
