@@ -8,8 +8,7 @@ import {
 
 import DurationInput from '../../../components/input/DurationInput';
 
-import {TRACKING_FIELD_TYPE} from '../workout-builder-constants';
-import {TRACKING_FIELD_DEFINITIONS} from '../workout-tracking-fields';
+import {TRACKING_FIELD_DEFINITIONS, TRACKING_FIELD_TYPE} from '../../exercises/exercise-tracking-fields';
 
 function ExerciseSetTargetInput({field, value, locked, onChange}) {
 

@@ -13,10 +13,11 @@ import WorkoutBuilder from '../workout-builder/WorkoutBuilder';
 
 import {
     apiCreateWorkoutTemplate,
-    apiGetExercises,
     apiGetWorkoutTemplate,
     apiUpdateWorkoutTemplate,
 } from './workout-template-api';
+
+import {apiGetExercises} from '../exercises/exercises-api'
 
 import {createEmptyWorkoutDraft} from '../workout-builder/draft/workout-draft-factory';
 

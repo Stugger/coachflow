@@ -1,5 +1,4 @@
 import {
-    TRACKING_FIELD_TYPE,
     WORKOUT_ITEM_TYPE,
     WORKOUT_SET_TYPE,
     WORKOUT_SET_TYPE_OPTIONS,
@@ -8,7 +7,8 @@ import {
 import {
     TRACKING_FIELD_DEFINITIONS,
     TRACKING_FIELD_KEY,
-} from '../workout-tracking-fields';
+    TRACKING_FIELD_TYPE,
+} from '../../exercises/exercise-tracking-fields';
 
 import {parseWorkoutConfig} from '../draft/workout-draft-factory';
 

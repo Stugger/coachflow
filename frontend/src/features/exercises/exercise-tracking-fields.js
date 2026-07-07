@@ -1,5 +1,3 @@
-import {TRACKING_FIELD_TYPE} from './workout-builder-constants';
-
 export const TRACKING_FIELD_KEY = {
     REPS: 'reps',
     WEIGHT: 'weight',
@@ -12,6 +10,15 @@ export const TRACKING_FIELD_KEY = {
     RPE: 'rpe',
     REST: 'rest',
     NOTES: 'notes',
+};
+
+export const TRACKING_FIELD_TYPE = {
+    INTEGER: 'INTEGER',
+    DECIMAL: 'DECIMAL',
+    RANGE: 'RANGE',
+    TIME: 'TIME',
+    TEXT: 'TEXT',
+    TEXT_LONG: 'TEXT_LONG',
 };
 
 export const TRACKING_FIELD_DEFINITIONS = {

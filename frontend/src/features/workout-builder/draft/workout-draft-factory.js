@@ -1,6 +1,6 @@
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE, WORKOUT_SET_TYPE} from '../workout-builder-constants';
-import * as ExerciseMetadataUtils from '../../../utils/exercise-metadata-utils';
-import {createTrackingField, TRACKING_FIELD_DEFINITIONS,} from '../workout-tracking-fields';
+import * as ExerciseMetadataUtils from '../../exercises/exercise-metadata-utils';
+import {createTrackingField, TRACKING_FIELD_DEFINITIONS,} from '../../exercises/exercise-tracking-fields';
 
 export function createDraftId(prefix) {
     if (crypto.randomUUID) {

@@ -26,9 +26,9 @@ import {
     EXERCISE_DIFFICULTY_OPTIONS,
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS,
-} from '../../constants/exercises.js';
+} from '../exercise-metadata-options.js';
 
-import {resolveMediaUrl} from '../../utils/media-url-utils';
+import {resolveMediaUrl} from '../../../utils/media-url-utils.js';
 
 function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, onCopy, onEdit, onArchive}) {
 

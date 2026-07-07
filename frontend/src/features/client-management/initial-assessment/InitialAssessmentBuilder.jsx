@@ -2,6 +2,8 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 
 import WorkoutBuilder from '../../workout-builder/WorkoutBuilder';
 
+import {apiGetExercises} from '../../exercises/exercises-api'
+
 import {
     apiCreateInitialAssessmentWorkout,
     apiGetClientWorkout,
@@ -9,7 +11,6 @@ import {
 } from '../client-workouts/client-workout-api';
 
 import {
-    apiGetExercises,
     apiGetWorkoutTemplate,
 } from '../../workout-library/workout-template-api';
 

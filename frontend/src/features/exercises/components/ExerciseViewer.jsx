@@ -24,18 +24,18 @@ import {
 
 import ExerciseVideoPreview from './ExerciseVideoPreview.jsx';
 
-import * as ExerciseMetadataUtils from '../../utils/exercise-metadata-utils';
+import * as ExerciseMetadataUtils from '../exercise-metadata-utils.js';
 
 import {
     EQUIPMENT_OPTIONS,
     EXERCISE_DIFFICULTY_OPTIONS,
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS,
-} from '../../constants/exercises.js';
+} from '../exercise-metadata-options.js';
 
-import {TRACKING_FIELD_OPTIONS} from "../../features/workout-builder/workout-tracking-fields.js";
+import {TRACKING_FIELD_OPTIONS} from "../exercise-tracking-fields.js";
 
-import {resolveMediaUrl} from '../../utils/media-url-utils';
+import {resolveMediaUrl} from '../../../utils/media-url-utils.js';
 
 function ExerciseViewer({exercise, onClose, onCopy, onEdit, onArchive}) {
 

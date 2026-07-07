@@ -103,12 +103,3 @@ export const WORKOUT_SET_TYPE_OPTIONS = [
         shortLabel: 'F',
     },
 ];
-
-export const TRACKING_FIELD_TYPE = {
-    INTEGER: 'INTEGER',
-    DECIMAL: 'DECIMAL',
-    RANGE: 'RANGE',
-    TIME: 'TIME',
-    TEXT: 'TEXT',
-    TEXT_LONG: 'TEXT_LONG',
-};
