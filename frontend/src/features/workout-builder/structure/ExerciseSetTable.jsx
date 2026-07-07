@@ -20,7 +20,7 @@ import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
 import {reindexSets} from '../draft/workout-draft-mappers';
 import {createDraftId} from '../draft/workout-draft-factory';
-import {TRACKING_FIELD_DEFINITIONS} from '../workout-tracking-fields';
+import {TRACKING_FIELD_DEFINITIONS} from '../../exercises/exercise-tracking-fields';
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants

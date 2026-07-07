@@ -24,7 +24,7 @@ import {reindexTrackingFields} from '../draft/workout-draft-mappers';
 import {
     TRACKING_FIELD_DEFINITIONS,
     createTrackingField,
-} from '../workout-tracking-fields';
+} from '../../exercises/exercise-tracking-fields';
 
 function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
 

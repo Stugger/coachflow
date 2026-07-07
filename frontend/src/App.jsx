@@ -16,7 +16,7 @@ import ClientIntakePage from './features/client-management/intake/ClientIntakePa
 import ClientsPage from './features/client-management/client-list/ClientsPage';
 import ClientProfilePage from './features/client-management/client-profile/ClientProfilePage';
 import AppointmentsPage from './pages/AppointmentsPage';
-import ExerciseLibraryPage from './pages/ExerciseLibraryPage';
+import ExerciseLibraryPage from './features/exercises/library/ExerciseLibraryPage';
 import WorkoutLibraryPage from './features/workout-library/WorkoutLibraryPage';
 
 import AppShell from './components/AppShell';

@@ -35,7 +35,7 @@ import {
 
 import ExerciseItemCard from './ExerciseItemCard';
 import WorkoutStackCard from './WorkoutStackCard';
-import ExercisePickerModal from './ExercisePickerModal';
+import ExercisePickerModal from '../../exercises/picker/ExercisePickerModal';
 
 import {getSectionDisplayName, getSectionTypeLabel, getWorkoutItemKey} from '../workout-builder-utils';
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';

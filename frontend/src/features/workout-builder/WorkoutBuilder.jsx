@@ -26,7 +26,7 @@ import {
     IconX,
 } from '@tabler/icons-react';
 
-import ExerciseViewer from '../../components/exercises/ExerciseViewer';
+import ExerciseViewer from '../exercises/components/ExerciseViewer';
 import WorkoutStructureEditor from './structure/WorkoutStructureEditor';
 
 import {getWorkoutEquipment} from './draft/workout-draft-mappers';

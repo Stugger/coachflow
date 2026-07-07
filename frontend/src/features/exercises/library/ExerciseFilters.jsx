@@ -18,7 +18,7 @@ import {
     EXERCISE_DIFFICULTY_OPTIONS,
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS,
-} from '../../constants/exercises.js';
+} from '../exercise-metadata-options.js';
 
 function ExerciseFilters({filters, filtersOpen, hasActiveFilters, onToggleFilters, onFilterChange, onClearFilters}) {
 

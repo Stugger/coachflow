@@ -1,5 +1,4 @@
 import {useEffect, useMemo, useState} from 'react';
-import {apiFetch} from "../utils/api-client.js";
 import {
     Alert,
     Button,
@@ -23,19 +22,26 @@ import {
     IconSearch,
 } from '@tabler/icons-react';
 
-import ExerciseForm from '../components/exercises/ExerciseForm';
-import ExerciseViewer from '../components/exercises/ExerciseViewer';
-import ExerciseFilters from '../components/exercises/ExerciseFilters';
-import ExerciseListRow from '../components/exercises/ExerciseListRow';
+import {
+    apiArchiveExercise,
+    apiCreateExercise,
+    apiGetExercises,
+    apiUpdateExercise
+} from "../exercises-api.js"
 
-import * as ExerciseMetadataUtils from '../utils/exercise-metadata-utils';
+import ExerciseForm from '../components/ExerciseForm.jsx';
+import ExerciseViewer from '../components/ExerciseViewer.jsx';
+import ExerciseFilters from './ExerciseFilters.jsx';
+import ExerciseListRow from './ExerciseListRow.jsx';
+
+import * as ExerciseMetadataUtils from '../exercise-metadata-utils.js';
 
 import {
     EQUIPMENT_OPTIONS,
     EXERCISE_DIFFICULTY_OPTIONS,
     EXERCISE_TAG_OPTIONS,
     MUSCLE_OPTIONS,
-} from '../constants/exercises';
+} from '../exercise-metadata-options';
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants & Utility
@@ -202,14 +208,7 @@ function ExerciseLibraryPage() {
     function loadExercises() {
         setLoaded(false);
 
-        apiFetch('/api/exercises')
-            .then(async response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load exercises');
-                }
-
-                return response.json();
-            })
+        apiGetExercises()
             .then(exercises => setExercises(exercises))
             .catch(error => {
                 console.error('Error loading exercises:', error);
@@ -225,29 +224,18 @@ function ExerciseLibraryPage() {
         setErrors({});
 
         const payload = normalizeForm();
-        const url = editingExercise
-            ? `/api/exercises/${editingExercise.id}`
-            : `/api/exercises`;
 
-        apiFetch(url, {
-            method: editingExercise ? 'PUT' : 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload),
-        })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    handleBadResponse(errorBody);
-                    throw new Error(errorBody.message || 'Failed to save exercise');
-                }
-
-                return response.json();
-            })
+        (editingExercise ?
+            apiUpdateExercise(editingExercise.id, payload)
+            : apiCreateExercise(payload))
             .then(() => {
                 closeModal();
                 loadExercises();
             })
-            .catch(error => console.error('Error saving exercise:', error));
+            .catch(error => {
+                handleBadResponse(error);
+                console.error('Error saving exercise:', error)
+            });
     }
 
     function archiveExercise(exercise) {
@@ -263,22 +251,18 @@ function ExerciseLibraryPage() {
 
         setMessage('');
 
-        apiFetch(`/api/exercises/${exercise.id}`, {
-            method: 'DELETE',
-        })
-            .then(async response => {
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    setMessage(errorBody.message || 'Failed to archive exercise');
-                    throw new Error(errorBody.message || 'Failed to archive exercise');
-                }
-
+        apiArchiveExercise(exercise.id)
+            .then(() => {
                 if (modalOpen) {
                     closeModal();
                 }
+
                 loadExercises();
             })
-            .catch(error => console.error('Error archiving exercise:', error));
+            .catch(error => {
+                setMessage(error.message || 'Failed to archive exercise');
+                console.error('Error archiving exercise:', error);
+            });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
