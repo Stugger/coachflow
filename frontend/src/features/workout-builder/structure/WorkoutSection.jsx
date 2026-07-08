@@ -17,6 +17,7 @@ import {
     Textarea,
     TextInput,
     Tooltip,
+    UnstyledButton,
 } from '@mantine/core';
 import {useMediaQuery} from '@mantine/hooks';
 import {
@@ -127,18 +128,38 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function renderAddItemButtons() {
+    function renderAddItemButtons(rail) {
         return (
-            <Group justify="flex-end">
-                <Menu shadow="md" withinPortal position="bottom-end">
+            <Box mt='0.5rem'>
+                <Menu shadow="md" withinPortal offset={rail && sectionIndex == sectionCount - 1 ? 0 : undefined}>
                     <Menu.Target>
-                        <Button
-                            size={isMobile ? 'xs' : 'sm'}
-                            variant="light"
-                            leftSection={<IconPlus size={16}/>}
-                        >
-                            Add Item
-                        </Button>
+                        {rail ? (
+                            <Button
+                                variant='subtle'
+                                radius='md'
+                                fullWidth
+                                style={{
+                                    minHeight: '2.5rem',
+                                    borderTopLeftRadius: 0,
+                                    borderTopRightRadius: 0,
+                                }}
+                            >
+                                <Group gap='0.5rem' justify='center'>
+                                    <IconPlus size={16} />
+                                    <Text size="sm" fw={600}>Add item</Text>
+                                    <IconChevronDown size={14} stroke={3.0} />
+                                </Group>
+                            </Button>
+                        ) : (
+                            <Button
+                                variant='light'
+                                size={isMobile ? 'xs' : 'sm'}
+                                leftSection={<IconPlus size={16}/>}
+                                rightSection={<IconChevronDown size={14} stroke={3.0} />}
+                            >
+                                Add first item
+                            </Button>
+                        )}
                     </Menu.Target>
 
                     <Menu.Dropdown>
@@ -161,7 +182,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                         ))}
                     </Menu.Dropdown>
                 </Menu>
-            </Group>
+            </Box>
         );
     }
 
@@ -199,36 +220,83 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                         borderTopRightRadius: 'var(--mantine-radius-md)',
                     }}
                 >
-                    <Group justify="space-between" wrap="nowrap" px="md" py="sm">
-                        <Group gap={6} wrap="nowrap" style={{minWidth: 0}}>
-                            <IconGripVertical size={18} opacity={0.65}/>
+                    <Group justify="space-between" wrap="nowrap" pl='sm' pr="md" py="0.8rem">
+                        <Group
+                            gap={5}
+                            wrap="nowrap"
+                            style={{
+                                minWidth: 0,
+                                flex: 1,
+                            }}
+                        >
+                            <IconGripVertical
+                                size={18}
+                                opacity={0.65}
+                                style={{ flexShrink: 0 }}
+                            />
 
-                            <Tooltip label={expanded ? 'Collapse section settings' : 'Expand section settings'}>
-                                <ActionIcon variant="subtle" color="black" onClick={onToggle}>
+                            <Tooltip offset={12} position='top-start'
+                                label={expanded ? 'Collapse section settings' : 'Expand section settings'}
+                            >
+                                <UnstyledButton
+                                    onClick={onToggle}
+                                    aria-expanded={expanded}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.3rem',
+                                        minWidth: 0,
+                                        color: 'white',
+                                        padding: '0 0.4rem 0 0',
+                                    }}
+                                >
                                     {expanded
-                                        ? <IconChevronUp size={18} color="white"/>
-                                        : <IconChevronDown size={18} color="white"/>
+                                        ? <IconChevronUp size={20} />
+                                        : <IconChevronDown size={20} />
                                     }
-                                </ActionIcon>
+                                    <Text
+                                        size={isMobile ? 'md' : 'lg'}
+                                        fw={700}
+                                        truncate
+                                        style={{
+                                            flex: 1,
+                                            minWidth: 0,
+                                            maxWidth: isMobile ? '14rem' : undefined,
+                                        }}
+                                    >
+                                        {sectionName}
+                                    </Text>
+                                </UnstyledButton>
                             </Tooltip>
 
-                            <Group gap="xs" wrap="nowrap" style={{minWidth: 0}}>
-                                <Text fw={700} truncate>
-                                    {sectionName}
-                                </Text>
-
-                                <Badge size="xs" variant="outline" color="white">
+                            <Group
+                                gap="xs"
+                                wrap="nowrap"
+                                style={{
+                                    flexShrink: 1,
+                                    minWidth: '1rem'
+                                }}
+                            >
+                                <Badge
+                                    size={isMobile ? 'xs' : 'sm'}
+                                    variant="outline"
+                                    color="white"
+                                    style={{ flexShrink: 1, minWidth: '3rem' }}
+                                >
                                     {sectionTypeLabel}
                                 </Badge>
 
-                                <Badge size="xs" variant="dot" color="white" bg="transparent" styles={{
-                                    root: {
-                                        borderColor: "white",
-                                    },
-                                    label: {
-                                        color: "white"
-                                    }
-                                }}>
+                                <Badge
+                                    size={isMobile ? 'xs' : 'sm'}
+                                    variant="dot"
+                                    color="white"
+                                    bg="transparent"
+                                    style={{ flexShrink: 1, minWidth: '2.4rem' }}
+                                    styles={{
+                                        root: { borderColor: 'white' },
+                                        label: { color: 'white' },
+                                    }}
+                                >
                                     {itemCount} item{itemCount === 1 ? '' : 's'}
                                 </Badge>
                             </Group>
@@ -335,11 +403,11 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                     {itemCount === 0 && (
                         <Paper withBorder radius="md" p="lg">
                             <Stack gap="sm" align="center">
-                                <Text fw={700}>No exercises in this section</Text>
+                                <Text fw={700}>No items in this section</Text>
                                 <Text size="sm" c="dimmed" ta="center">
                                     Add exercises or vertical stacks here next.
                                 </Text>
-                                {renderAddItemButtons()}
+                                {renderAddItemButtons(false)}
                             </Stack>
                         </Paper>
                     )}
@@ -416,11 +484,12 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                     })}
                                 </Stack>
                             </Box>
-
-                            {renderAddItemButtons()}
                         </Stack>
                     )}
                 </Box>
+                {itemCount > 0 && (
+                    renderAddItemButtons(true)
+                )}
             </Paper>
         </Box>
     );

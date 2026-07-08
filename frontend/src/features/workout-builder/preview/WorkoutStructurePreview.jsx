@@ -87,30 +87,23 @@ function WorkoutSectionPreview({section}) {
                     borderTopRightRadius: 'var(--mantine-radius-md)',
                 }}
             >
-                <Group justify="space-between" wrap="nowrap">
-                    <Group gap="xs" wrap="nowrap" style={{minWidth: 0}}>
-                        <Text fw={700} truncate>
-                            {getSectionDisplayName(section)}
-                        </Text>
+                <Group gap="xs" wrap="nowrap" style={{minWidth: 0}}>
+                    <Text fw={700} truncate>
+                        {getSectionDisplayName(section)}
+                    </Text>
 
-                        <Badge size="xs" variant="outline" color="white">
-                            {getSectionTypeLabel(section.sectionType)}
-                        </Badge>
-                    </Group>
+                    <Badge size="xs" variant="outline" color="white">
+                        {getSectionTypeLabel(section.sectionType)}
+                    </Badge>
 
                     <Badge
                         size="xs"
                         variant="dot"
                         color="white"
                         bg="transparent"
-                        style={{flexShrink: 0}}
                         styles={{
-                            root: {
-                                borderColor: 'white',
-                            },
-                            label: {
-                                color: 'white',
-                            },
+                            root: { borderColor: 'white' },
+                            label: { color: 'white' },
                         }}
                     >
                         {items.length} item{items.length === 1 ? '' : 's'}

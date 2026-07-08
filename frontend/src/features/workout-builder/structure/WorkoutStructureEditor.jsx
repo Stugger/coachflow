@@ -2,6 +2,7 @@ import {useCallback, useEffect, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     Alert,
+    Box,
     Button,
     Group,
     Modal,
@@ -444,7 +445,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
                             Add a section to start building this workout.
                         </Text>
                         <Button leftSection={<IconPlus size={16}/>} onClick={addSection}>
-                            Add Section
+                            Add First Section
                         </Button>
                     </Stack>
                 </Paper>
@@ -565,9 +566,33 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
             </Stack>
 
             {sections.length > 0 && (
-                <Button leftSection={<IconPlus size={16}/>} onClick={addSection}>
-                    Add Section
-                </Button>
+                <Group gap="sm" align="center" mt="sm" wrap="nowrap">
+                    <Box
+                        style={{
+                            flex: 1,
+                            height: 1,
+                            backgroundColor: 'var(--color-border)',
+                        }}
+                    />
+                    <Button
+                        variant='default'
+                        size='sm'
+                        leftSection={<IconPlus size={16} />}
+                        onClick={addSection}
+                        style={{
+                            flexShrink: 0,
+                        }}
+                    >
+                        Add section
+                    </Button>
+                    <Box
+                        style={{
+                            flex: 1,
+                            height: 1,
+                            backgroundColor: 'var(--color-border)',
+                        }}
+                    />
+                </Group>
             )}
 
             <div

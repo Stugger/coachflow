@@ -449,7 +449,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                         onClick={onAddExercise}
                                         disabled={!canAddExerciseToStack(stack)}
                                     >
-                                        Add Exercise
+                                        Add first exercise
                                     </Button>
                                 </Stack>
                             </Paper>
@@ -477,38 +477,46 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                         ))}
                                     </Stack>
                                 </Box>
-                                <Group gap={2} justify={complete || hasValidationIssues ? "flex-end" : "space-between"} wrap="nowrap">
-                                    {!complete && !hasValidationIssues && (
-                                        <Text size={isMobile ? "xs" : "sm"} c="red" fw={600}>
-                                            * {getStackRequirement(stack)}
-                                        </Text>
-                                    )}
-                                    <Tooltip
-                                        label="Max exercises for this stack"
-                                        disabled={canAddExerciseToStack(stack)}
-                                        offset={0}
-                                        withArrow
-                                        arrowSize={10}
-                                        arrowOffset={15}
-                                        events={{ hover: true, focus: false, touch: true }}
-                                    >
-                                        <span>
-                                            <Button
-                                                size="xs"
-                                                mt={4}
-                                                variant="light"
-                                                leftSection={<IconPlus size={14}/>}
-                                                onClick={onAddExercise}
-                                                disabled={!canAddExerciseToStack(stack)}
-                                            >
-                                                Add Exercise
-                                            </Button>
-                                        </span>
-                                    </Tooltip>
-                                </Group>
+                                {!complete && !hasValidationIssues && (
+                                    <Text size={isMobile ? "xs" : "sm"} c="red" pt={4} fw={600}>
+                                        * {getStackRequirement(stack)}
+                                    </Text>
+                                )}
                             </>
                         )}
                     </Stack>
+                    {exerciseCount > 0 && (
+                        <Tooltip
+                            label="Max exercises for this stack"
+                            disabled={canAddExerciseToStack(stack)}
+                            offset={isMobile ? -10 : 0}
+                            withArrow
+                            arrowSize={10}
+                            arrowOffset={15}
+                            events={{ hover: true, focus: false, touch: true }}
+                        >
+                            <span>
+                                <Button
+                                    variant='light'
+                                    fullWidth
+                                    size='xs'
+                                    radius='md'
+                                    mt={!complete && !hasValidationIssues ? 0 : '0.75rem'}
+                                    leftSection={<IconPlus size={14}/>}
+                                    onClick={onAddExercise}
+                                    disabled={!canAddExerciseToStack(stack)}
+                                    color={option.color}
+                                    style={{
+                                        minHeight: '2.25rem',
+                                        borderTopLeftRadius: 0,
+                                        borderTopRightRadius: 0
+                                    }}
+                                >
+                                    Add exercise to {option?.label?.toLowerCase() ?? 'stack'}
+                                </Button>
+                            </span>
+                        </Tooltip>
+                    )}
                 </Paper>
             </Box>
             {itemIndex !== itemCount - 1 && (
