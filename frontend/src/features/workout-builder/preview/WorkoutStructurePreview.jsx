@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     Badge,
     Box,
@@ -11,7 +12,6 @@ import {
     getGradient,
     useMantineTheme,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 
 import WorkoutItemPreview from './WorkoutItemPreview';
 
@@ -33,7 +33,7 @@ import ExerciseViewer from "../../exercises/components/ExerciseViewer.jsx";
 
 function WorkoutStructurePreview({workout}) {
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     const sections = sortWorkoutPreviewItems(workout?.sections ?? []);
 
@@ -68,7 +68,7 @@ function WorkoutStructurePreview({workout}) {
             />
         );
 
-        if (isMobile) {
+        if (isSmallScreen) {
             return (
                 <Drawer
                     opened
@@ -119,6 +119,7 @@ function WorkoutStructurePreview({workout}) {
                             `section-${sectionIndex}`,
                         )}
                         section={section}
+                        isSmallScreen={isSmallScreen}
                         onViewExercise={(exercise) => {
                             setExerciseOverlay({
                                 mode: 'VIEW',
@@ -136,9 +137,8 @@ function WorkoutStructurePreview({workout}) {
 // Workout section
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutSectionPreview({section, onViewExercise}) {
+function WorkoutSectionPreview({section, isSmallScreen, onViewExercise}) {
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
     const theme = useMantineTheme();
 
     const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f',}, theme);
@@ -186,7 +186,7 @@ function WorkoutSectionPreview({section, onViewExercise}) {
                 </Group>
             </Box>
 
-            <Stack gap={(isMobile ? 'xs' : 'sm')} p={isMobile ? "xs" : "md"}>
+            <Stack gap={(isSmallScreen ? 'xs' : 'sm')} p={isSmallScreen ? "xs" : "md"}>
                 {section.notes?.trim() && (
                     <Text
                         size="sm"
@@ -202,6 +202,7 @@ function WorkoutSectionPreview({section, onViewExercise}) {
                     <WorkoutItemPreview
                         key={getWorkoutPreviewKey(item, `item-${itemIndex}`)}
                         item={item}
+                        isSmallScreen={isSmallScreen}
                         onViewExercise={onViewExercise}
                     />
                 ))}

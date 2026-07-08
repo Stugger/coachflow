@@ -1,4 +1,5 @@
 import {memo, useEffect, useRef, useState} from 'react';
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     useComputedColorScheme,
     useMantineTheme,
@@ -16,7 +17,6 @@ import {
     Tooltip,
     UnstyledButton,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconAlertCircle,
     IconArrowDown,
@@ -55,7 +55,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     const computedColorScheme = useComputedColorScheme('light');
 
@@ -161,8 +161,8 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
             <Box
                 style={{
                     borderLeft: `3px solid var(--mantine-color-${option?.color ?? 'gray'}-4)`,
-                    marginLeft: isMobile ? 0 : 'var(--mantine-spacing-sm)',
-                    paddingLeft: isMobile ? 'var(--mantine-spacing-xs)' : 'var(--mantine-spacing-sm)',
+                    marginLeft: isSmallScreen ? 0 : 'var(--mantine-spacing-sm)',
+                    paddingLeft: isSmallScreen ? 'var(--mantine-spacing-xs)' : 'var(--mantine-spacing-sm)',
                 }}
             >
                 <Paper
@@ -437,7 +437,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                 <Stack gap="xs" align="center">
                                     <Text fw={700}>No exercises in this stack</Text>
                                     {!complete && !hasValidationIssues && (
-                                        <Text size={isMobile ? "xs" : "sm"} c="red" fw={600} pb={4}>
+                                        <Text size={isSmallScreen ? "xs" : "sm"} c="red" fw={600} pb={4}>
                                             * {getStackRequirement(stack)}
                                         </Text>
                                     )}
@@ -478,7 +478,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                     </Stack>
                                 </Box>
                                 {!complete && !hasValidationIssues && (
-                                    <Text size={isMobile ? "xs" : "sm"} c="red" pt={4} fw={600}>
+                                    <Text size={isSmallScreen ? "xs" : "sm"} c="red" pt={4} fw={600}>
                                         * {getStackRequirement(stack)}
                                     </Text>
                                 )}
@@ -489,7 +489,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                         <Tooltip
                             label="Max exercises for this stack"
                             disabled={canAddExerciseToStack(stack)}
-                            offset={isMobile ? -10 : 0}
+                            offset={isSmallScreen ? -10 : 0}
                             withArrow
                             arrowSize={10}
                             arrowOffset={15}

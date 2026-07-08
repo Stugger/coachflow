@@ -4,6 +4,7 @@ import {
     useRef,
     useState,
 } from 'react';
+import {useIsSmallScreen} from "../../../../hooks/useIsSmallScreen.js";
 import {
     Alert,
     Box,
@@ -13,7 +14,6 @@ import {
     Stack,
     Text,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconChevronDown,
     IconChevronUp,
@@ -34,21 +34,17 @@ import {
 function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Mantine state
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    const isMobile = useMediaQuery('(max-width: 48em)');
-
-    // ------------------------------------------------------------------------------------------------------------------------
     // State
     // ------------------------------------------------------------------------------------------------------------------------
+
+    const isSmallScreen = useIsSmallScreen();
 
     const previewContentRef = useRef(null);
 
     const [previewExpanded, setPreviewExpanded] = useState(false);
     const [previewOverflows, setPreviewOverflows] = useState(false);
 
-    const collapsedPreviewHeight = isMobile ? 420 : 512;
+    const collapsedPreviewHeight = isSmallScreen ? 420 : 512;
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects

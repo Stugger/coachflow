@@ -1,4 +1,5 @@
 import {memo, useMemo, useEffect, useRef, useState} from 'react';
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     useComputedColorScheme,
     ActionIcon,
@@ -14,7 +15,6 @@ import {
     TextInput,
     Tooltip,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconArrowDown,
     IconArrowUp,
@@ -58,7 +58,7 @@ function ExerciseItemCard({
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     const computedColorScheme = useComputedColorScheme('light');
 
@@ -218,13 +218,13 @@ function ExerciseItemCard({
             <Paper
                 className={isNew ? 'workout-structure-created' : undefined}
                 radius="sm"
-                p={isMobile ? 'md' : 'lg'}
+                p={isSmallScreen ? 'md' : 'lg'}
                 shadow={computedColorScheme === 'light' ? "var(--mantine-shadow-md)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"}
                 style={{
                     border: '1px solid var(--color-border)'
                 }}
             >
-                <Stack gap={isMobile ? 'sm' : 'md'}>
+                <Stack gap={isSmallScreen ? 'sm' : 'md'}>
                     <Group justify="space-between" align="center" wrap="nowrap" gap="sm">
                         {renderExerciseThumbnail()}
 
@@ -264,7 +264,7 @@ function ExerciseItemCard({
                             style={{
                                 flex: 1,
                                 minWidth: 0,
-                                paddingLeft: isMobile ? 2 : 4,
+                                paddingLeft: isSmallScreen ? 2 : 4,
                             }}
                             styles={{
                                 input: {
@@ -358,7 +358,7 @@ function ExerciseItemCard({
                     <Group justify="space-between" align="center" wrap="nowrap" mt={-5}>
                         <Switch
                             label="Each side"
-                            size={isMobile ? "xs" : "sm"}
+                            size={isSmallScreen ? "xs" : "sm"}
                             checked={committedConfig.eachSide}
                             onChange={event => updateEachSide(event.currentTarget.checked)}
                             disabled={customizingFields}
@@ -377,7 +377,7 @@ function ExerciseItemCard({
                             <span>
                                 <Button
                                     variant="subtle"
-                                    size={isMobile ? "xs" : "sm"}
+                                    size={isSmallScreen ? "xs" : "sm"}
                                     leftSection={independent ? <IconPlus size={16}/> : null}
                                     rightSection={independent ? null : <IconProgressHelp size={16}/>}
                                     disabled={!independent || customizingFields}
@@ -421,7 +421,7 @@ function ExerciseItemCard({
             </Paper>
 
             {itemIndex !== itemCount - 1 && (
-                <Group gap={0} mb="sm" mt="sm" mr={!independent ? (isMobile ? 13 : 25) : 0} wrap="nowrap" justify="center">
+                <Group gap={0} mb="sm" mt="sm" mr={!independent ? (isSmallScreen ? 13 : 25) : 0} wrap="nowrap" justify="center">
                     {!independent ? (
                         <IconConnection opacity={0.35} size={24}/>
                     ) : (

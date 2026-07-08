@@ -20,9 +20,9 @@
     color: var(--color-text);
 }
 
-/* Mobile */
+/* Mobile (Small Screen) */
 
-@media (max-width: 48rem) {
+@media (max-width: 48em) {
     .mantine-AppShell-main {
         padding-top: calc(60px + var(--mantine-spacing-md));
     }

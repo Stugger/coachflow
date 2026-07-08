@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useIsSmallScreen} from '../../hooks/useIsSmallScreen.js'
 import {
     useComputedColorScheme,
     Alert,
@@ -16,7 +17,6 @@ import {
     TextInput,
     Box,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconAlertCircle,
     IconDeviceFloppy,
@@ -67,7 +67,7 @@ function WorkoutBuilder({
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
     const computedColorScheme = useComputedColorScheme('light');
 
     const inputRef = useRef(null);
@@ -458,7 +458,7 @@ function WorkoutBuilder({
         return (
             <Box
                 style={{
-                    padding: isMobile ? 'var(--mantine-spacing-sm)' : 'var(--mantine-spacing-md)',
+                    padding: isSmallScreen ? 'var(--mantine-spacing-sm)' : 'var(--mantine-spacing-md)',
                     borderTop: '1px solid var(--color-border)',
                     backgroundColor: computedColorScheme === 'dark'
                         ? 'var(--color-surface)'
@@ -474,7 +474,7 @@ function WorkoutBuilder({
                             icon={<IconAlertCircle size={16} />}
                             p="xs"
                         >
-                            {isMobile
+                            {isSmallScreen
                                 ? `${activeValidationIssues.length} issue${activeValidationIssues.length === 1 ? ' needs' : 's need'} attention.`
                                 : `${activeValidationIssues.length} issue${activeValidationIssues.length === 1 ? ' needs' : 's need'} attention before saving.`}
                         </Alert>
@@ -482,7 +482,7 @@ function WorkoutBuilder({
 
                     <Group justify={editorStatus ? 'space-between' : 'flex-end'} wrap="nowrap">
                         {editorStatus && (
-                            <Group gap={editorStatus.icon ? 4 : 8} wrap="nowrap" pl={isMobile && !editorStatus.icon ? 2 : 0}>
+                            <Group gap={editorStatus.icon ? 4 : 8} wrap="nowrap" pl={isSmallScreen && !editorStatus.icon ? 2 : 0}>
                                 {editorStatus.loading ? (
                                     <Loader size={14} color="gray"/>
                                 ) : editorStatus.icon ? (
@@ -506,10 +506,10 @@ function WorkoutBuilder({
                             </Group>
                         )}
 
-                        <Group wrap="nowrap" pr={isMobile ? 2 : 0}>
+                        <Group wrap="nowrap" pr={isSmallScreen ? 2 : 0}>
                             <Button
                                 variant="default"
-                                size={isMobile ? 'xs' : 'sm'}
+                                size={isSmallScreen ? 'xs' : 'sm'}
                                 leftSection={<IconX size={16}/>}
                                 onClick={handleClose}
                             >
@@ -517,7 +517,7 @@ function WorkoutBuilder({
                             </Button>
 
                             <Button
-                                size={isMobile ? 'xs' : 'sm'}
+                                size={isSmallScreen ? 'xs' : 'sm'}
                                 leftSection={<IconDeviceFloppy size={16}/>}
                                 onClick={saveWorkout}
                                 loading={saving}
@@ -583,7 +583,7 @@ function WorkoutBuilder({
             />
         );
 
-        if (isMobile) {
+        if (isSmallScreen) {
             return (
                 <Drawer
                     opened
@@ -641,7 +641,7 @@ function WorkoutBuilder({
                     </Group>
                 )}
                 <Text
-                    size={isMobile ? '1.3rem' : '1.4rem'}
+                    size={isSmallScreen ? '1.3rem' : '1.4rem'}
                     fw={600}
                     truncate="end"
                     style={{
@@ -664,7 +664,7 @@ function WorkoutBuilder({
             {renderExitModal()}
             {renderExerciseOverlay()}
 
-            {isMobile ? (
+            {isSmallScreen ? (
                 <Drawer.Root
                     opened={opened}
                     onClose={handleClose}

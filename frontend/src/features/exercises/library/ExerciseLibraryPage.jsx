@@ -1,4 +1,5 @@
 import {useEffect, useMemo, useState} from 'react';
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     Alert,
     Button,
@@ -15,7 +16,6 @@ import {
     Title,
     Tooltip,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconAlertCircle,
     IconPlus,
@@ -151,7 +151,7 @@ function ExerciseLibraryPage() {
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     const [exercises, setExercises] = useState([]);
     const [loaded, setLoaded] = useState(false);
@@ -428,7 +428,7 @@ function ExerciseLibraryPage() {
                 exercise={exercise}
                 detailedView={detailedView}
                 metadata={ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson)}
-                isMobile={isMobile}
+                isSmallScreen={isSmallScreen}
                 onView={openViewExercise}
                 onCopy={openCopyModal}
                 onEdit={openEditModal}
@@ -510,7 +510,7 @@ function ExerciseLibraryPage() {
             />
         );
 
-        if (isMobile) {
+        if (isSmallScreen) {
             return (
                 <Drawer
                     opened={modalOpen}

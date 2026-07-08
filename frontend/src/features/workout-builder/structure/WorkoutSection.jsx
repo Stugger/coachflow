@@ -1,4 +1,5 @@
 import {memo} from 'react';
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     useMantineTheme,
     getGradient,
@@ -19,7 +20,6 @@ import {
     Tooltip,
     UnstyledButton,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconAlertCircle,
     IconArrowDown,
@@ -54,7 +54,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Event actions
@@ -153,7 +153,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                         ) : (
                             <Button
                                 variant='light'
-                                size={isMobile ? 'xs' : 'sm'}
+                                size={isSmallScreen ? 'xs' : 'sm'}
                                 leftSection={<IconPlus size={16}/>}
                                 rightSection={<IconChevronDown size={14} stroke={3.0} />}
                             >
@@ -255,13 +255,13 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                         : <IconChevronDown size={20} />
                                     }
                                     <Text
-                                        size={isMobile ? 'md' : 'lg'}
+                                        size={isSmallScreen ? 'md' : 'lg'}
                                         fw={700}
                                         truncate
                                         style={{
                                             flex: 1,
                                             minWidth: 0,
-                                            maxWidth: isMobile ? '14rem' : undefined,
+                                            maxWidth: isSmallScreen ? '14rem' : undefined,
                                         }}
                                     >
                                         {sectionName}
@@ -278,7 +278,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                 }}
                             >
                                 <Badge
-                                    size={isMobile ? 'xs' : 'sm'}
+                                    size={isSmallScreen ? 'xs' : 'sm'}
                                     variant="outline"
                                     color="white"
                                     style={{ flexShrink: 1, minWidth: '3rem' }}
@@ -287,7 +287,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                 </Badge>
 
                                 <Badge
-                                    size={isMobile ? 'xs' : 'sm'}
+                                    size={isSmallScreen ? 'xs' : 'sm'}
                                     variant="dot"
                                     color="white"
                                     bg="transparent"

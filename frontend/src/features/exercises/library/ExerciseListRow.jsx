@@ -30,7 +30,7 @@ import {
 
 import {resolveMediaUrl} from '../../../utils/media-url-utils.js';
 
-function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, onCopy, onEdit, onArchive}) {
+function ExerciseListRow({exercise, detailedView, metadata, isSmallScreen, onView, onCopy, onEdit, onArchive}) {
 
     const isGlobal = exercise.visibility === 'GLOBAL';
     const isTrainerOwned = exercise.visibility === 'TRAINER';
@@ -141,7 +141,7 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                     {renderExerciseThumbnail()}
 
                     <Stack gap={detailedView ? 6 : 2} style={{flex: 1, minWidth: 0}}>
-                        {isMobile ? (
+                        {isSmallScreen ? (
                             <Stack gap={0}>
                                 {renderExerciseName()}
 
@@ -217,7 +217,7 @@ function ExerciseListRow({exercise, detailedView, metadata, isMobile, onView, on
                                         variant="subtle"
                                         color="gray"
                                         size="md"
-                                        mr={isMobile ? -2 : 0}
+                                        mr={isSmallScreen ? -2 : 0}
                                         style={{alignSelf: 'center'}}
                                     >
                                         <IconDotsVertical size={18}/>

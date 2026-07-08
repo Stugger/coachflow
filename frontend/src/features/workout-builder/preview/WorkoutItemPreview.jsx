@@ -10,7 +10,6 @@ import {
     getGradient,
     useMantineTheme,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconPhoto,
 } from '@tabler/icons-react';
@@ -37,21 +36,19 @@ import {
 // Workout item
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutItemPreview({item, onViewExercise}) {
+function WorkoutItemPreview({item, isSmallScreen, onViewExercise}) {
     const isExercise = item.itemType === WORKOUT_ITEM_TYPE.EXERCISE || item.exercise;
 
     return isExercise
-        ? <ExercisePreview item={item} onViewExercise={onViewExercise} />
-        : <WorkoutStackPreview stack={item} onViewExercise={onViewExercise}/>;
+        ? <ExercisePreview item={item} isSmallScreen={isSmallScreen} onViewExercise={onViewExercise} />
+        : <WorkoutStackPreview stack={item} isSmallScreen={isSmallScreen} onViewExercise={onViewExercise}/>;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Exercise
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExercisePreview({item, stacked = false, onViewExercise}) {
-
-    const isMobile = useMediaQuery('(max-width: 48em)');
+function ExercisePreview({item, stacked = false, isSmallScreen, onViewExercise}) {
 
     const exercise = item.exercise;
 
@@ -61,13 +58,13 @@ function ExercisePreview({item, stacked = false, onViewExercise}) {
         noTargetTrackingFields,
     } = getExercisePreviewSummary(item.configJson, {stackControlled: stacked});
 
-    const thumbnailSize = (stacked ? 38 : 48) / (isMobile ? 1.2 : 1.0);
+    const thumbnailSize = (stacked ? 38 : 48) / (isSmallScreen ? 1.2 : 1.0);
 
     return (
         <Paper
             withBorder
             radius="sm"
-            p={stacked ? 'sm' : (isMobile ? 'sm' : 'md')}
+            p={stacked ? 'sm' : (isSmallScreen ? 'sm' : 'md')}
             bg="var(--color-surface)"
         >
             <Group align="flex-start" wrap="nowrap" gap="sm">
@@ -113,7 +110,7 @@ function ExercisePreview({item, stacked = false, onViewExercise}) {
                                 key={`${group.signature}-${index}`}
                             >
                                 <Text
-                                    size={isMobile || stacked ? 'xs' : 'sm'}
+                                    size={isSmallScreen || stacked ? 'xs' : 'sm'}
                                     c="dimmed"
                                 >
                                     {group.label}
@@ -135,7 +132,7 @@ function ExercisePreview({item, stacked = false, onViewExercise}) {
                     </Stack>
 
                     {noTargetTrackingFields.length > 0 && (
-                        <Text size={isMobile ? '0.6rem' : 'xs'} c="dimmed">
+                        <Text size={isSmallScreen ? '0.6rem' : 'xs'} c="dimmed">
                             <strong>No default target:</strong>
                             {' '}
                             {noTargetTrackingFields
@@ -169,9 +166,8 @@ function ExercisePreview({item, stacked = false, onViewExercise}) {
 // Stack
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutStackPreview({stack, onViewExercise}) {
+function WorkoutStackPreview({stack, isSmallScreen, onViewExercise}) {
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
     const computedColorScheme = useComputedColorScheme('light');
     const theme = useMantineTheme();
 
@@ -185,8 +181,8 @@ function WorkoutStackPreview({stack, onViewExercise}) {
 
     return (
         <Box
-            ml={isMobile ? 'calc(var(--mantine-spacing-md) * -0.65)' : 'calc(var(--mantine-spacing-md) * -0.5)'}
-            pl={isMobile ? 'calc(var(--mantine-spacing-md) * 0.45)' : 'calc(var(--mantine-spacing-md) * 0.5)'}
+            ml={isSmallScreen ? 'calc(var(--mantine-spacing-md) * -0.65)' : 'calc(var(--mantine-spacing-md) * -0.5)'}
+            pl={isSmallScreen ? 'calc(var(--mantine-spacing-md) * 0.45)' : 'calc(var(--mantine-spacing-md) * 0.5)'}
             style={{
                 borderLeft: `3px solid var(--mantine-color-${option?.color ?? 'gray'}-4)`,
             }}
@@ -232,7 +228,7 @@ function WorkoutStackPreview({stack, onViewExercise}) {
                     </Group>
                 </Box>
 
-                <Stack gap="xs" p={isMobile ? "xs" : "sm"}>
+                <Stack gap="xs" p={isSmallScreen ? "xs" : "sm"}>
                     {stack.notes?.trim() && (
                         <Text
                             size="sm"
@@ -249,6 +245,7 @@ function WorkoutStackPreview({stack, onViewExercise}) {
                             key={getWorkoutPreviewKey(exercise, `stack-exercise-${index}`,)}
                             item={exercise}
                             stacked
+                            isSmallScreen={isSmallScreen}
                             onViewExercise={onViewExercise}
                         />
                     ))}

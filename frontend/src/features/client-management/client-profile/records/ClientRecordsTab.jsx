@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
+import {useIsSmallScreen} from "../../../../hooks/useIsSmallScreen.js";
 import {
     Accordion,
     Badge,
@@ -11,7 +12,6 @@ import {
     Text,
     ThemeIcon,
 } from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconCheck,
     IconClipboardCheck,
@@ -46,7 +46,7 @@ function ClientRecordsTab({client, refreshKey,
 
     const clientId = client?.id ?? null;
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -165,7 +165,7 @@ function ClientRecordsTab({client, refreshKey,
 
     useEffect(() => {
         scrollContextRef.current = {
-            isMobile,
+            isSmallScreen,
             intakeLoaded,
             initialAssessmentLoaded,
             pathname: location.pathname,
@@ -173,7 +173,7 @@ function ClientRecordsTab({client, refreshKey,
             hash: location.hash,
             navigate,
         };
-    }, [isMobile, intakeLoaded, initialAssessmentLoaded, location.pathname, location.search, location.hash, navigate]);
+    }, [isSmallScreen, intakeLoaded, initialAssessmentLoaded, location.pathname, location.search, location.hash, navigate]);
 
     useEffect(() => {
         const recordId = location.hash.replace('#', '');
@@ -209,7 +209,7 @@ function ClientRecordsTab({client, refreshKey,
         ));
 
         const scrollDelay =
-            (scrollContext.isMobile ? 135 : 235)
+            (scrollContext.isSmallScreen ? 135 : 235)
             + (scrollContext.intakeLoaded && scrollContext.initialAssessmentLoaded ? 0 : 250);
 
         const timeoutId = window.setTimeout(() => {
@@ -298,12 +298,12 @@ function ClientRecordsTab({client, refreshKey,
                     onChange={handleExpandedRecordsChange}
                     variant="separated"
                     radius="md"
-                    transitionDuration={isMobile ? 100 : 200}
+                    transitionDuration={isSmallScreen ? 100 : 200} //mobile flickers so we speed it up
                 >
                     <Accordion.Item
                         value="intake"
                         id="intake"
-                        style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
+                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
                         bg='var(--color-surface)'
                     >
                         <Accordion.Control
@@ -351,7 +351,7 @@ function ClientRecordsTab({client, refreshKey,
                     <Accordion.Item
                         value="initial-assessment"
                         id="initial-assessment"
-                        style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
+                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
                         bg='var(--color-surface)'
                     >
                         {/*TODO completed assessment style: no badge, not dimmed, green circle check (like intake)*/}
@@ -399,7 +399,7 @@ function ClientRecordsTab({client, refreshKey,
                     <Accordion.Item
                         value="initial-measurements"
                         id="initial-measurements"
-                        style={{scrollMarginTop: isMobile ? '4.5rem' : '1rem'}}
+                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
                         bg="var(--color-surface)"
                     >
                         {/*TODO completed initial measurements style: no badge, not dimmed, green circle check (like intake)*/}

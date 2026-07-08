@@ -1,3 +1,4 @@
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     Badge,
     Button,
@@ -9,9 +10,8 @@ import {
     SimpleGrid,
     Stack,
     Text,
+    useComputedColorScheme,
 } from '@mantine/core';
-import {useComputedColorScheme} from '@mantine/core';
-import {useMediaQuery} from '@mantine/hooks';
 import {
     IconArrowLeft,
     IconArrowRight,
@@ -32,7 +32,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     const computedColorScheme = useComputedColorScheme('light');
 
@@ -183,7 +183,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                         bg={computedColorScheme === 'light'
                             ? 'var(--color-surface)'
                             : 'var(--mantine-color-dark-5)'}
-                        size={isMobile ? "lg" : "xl"}
+                        size={isSmallScreen ? "lg" : "xl"}
                         radius="sm"
                         component="button"
                         style={{
@@ -332,7 +332,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                 <Divider opacity={0.4}/>
 
                 {trackingFields.length === 0 ? (
-                    <Text size="xs" c="dimmed" opacity={0.6} pt={isMobile ? "xs" : "0.9rem"}>No trackers added</Text>
+                    <Text size="xs" c="dimmed" opacity={0.6} pt={isSmallScreen ? "xs" : "0.9rem"}>No trackers added</Text>
                 ) : (
                     <Group gap="xs">
                         {trackingFields.map(field => (

@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useNavigate, useSearchParams} from 'react-router-dom';
+import {useIsSmallScreen} from "../../hooks/useIsSmallScreen.js";
 import {ROUTES} from '../../constants/routes';
 import {
     Alert,
@@ -14,8 +15,6 @@ import {
     Title,
 } from '@mantine/core';
 
-import {useMediaQuery} from '@mantine/hooks';
-
 import {IconAlertCircle, IconBarbell, IconClock, IconPlus, IconSearch, IconClipboardList} from '@tabler/icons-react';
 
 import WorkoutTemplateListRow from './WorkoutTemplateListRow';
@@ -26,14 +25,13 @@ import {
     apiGetWorkoutTemplates,
 } from './workout-template-api';
 
-
 function WorkoutLibraryPage({trainerId}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const isMobile = useMediaQuery('(max-width: 48em)');
+    const isSmallScreen = useIsSmallScreen();
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -79,7 +77,7 @@ function WorkoutLibraryPage({trainerId}) {
         });
     }, [templates, searchText]);
 
-    const mobileHeaderCellStyle = isMobile
+    const smallScreenHeaderCellStyle = isSmallScreen
         ? {
             height: 0,
             paddingTop: 0,
@@ -262,21 +260,21 @@ function WorkoutLibraryPage({trainerId}) {
                         highlightOnHover={filteredTemplates.length > 0}
                         verticalSpacing="md"
                         horizontalSpacing="md"
-                        mt={isMobile ? -1 : '0.25rem'}
+                        mt={isSmallScreen ? -1 : '0.25rem'}
                         style={{
                             width: '100%',
                             tableLayout: 'fixed',
                         }}
                     >
                         <Table.Thead>
-                            <Table.Tr style={isMobile ? {height: 0} : undefined}>
+                            <Table.Tr style={isSmallScreen ? {height: 0} : undefined}>
                                 <Table.Th
                                     style={{
                                         width: '50%',
-                                        ...mobileHeaderCellStyle,
+                                        ...smallScreenHeaderCellStyle,
                                     }}
                                 >
-                                    {!isMobile && (
+                                    {!isSmallScreen && (
                                         <Group gap={4}>
                                             <IconClipboardList size={16} stroke={2.4}/>
                                             <Text size="sm" fw={600}>
@@ -288,8 +286,8 @@ function WorkoutLibraryPage({trainerId}) {
 
                                 <Table.Th
                                     style={{
-                                        display: isMobile ? 'none' : undefined,
-                                        ...mobileHeaderCellStyle,
+                                        display: isSmallScreen ? 'none' : undefined,
+                                        ...smallScreenHeaderCellStyle,
                                     }}
                                 >
                                     <Group gap={5} justify="center">
@@ -302,8 +300,8 @@ function WorkoutLibraryPage({trainerId}) {
 
                                 <Table.Th
                                     style={{
-                                        display: isMobile ? 'none' : undefined,
-                                        ...mobileHeaderCellStyle,
+                                        display: isSmallScreen ? 'none' : undefined,
+                                        ...smallScreenHeaderCellStyle,
                                     }}
                                 >
                                     <Group gap={4} justify="center">
@@ -316,8 +314,8 @@ function WorkoutLibraryPage({trainerId}) {
 
                                 <Table.Th
                                     style={{
-                                        width: isMobile ? '2rem' : '4rem',
-                                        ...mobileHeaderCellStyle,
+                                        width: isSmallScreen ? '2rem' : '4rem',
+                                        ...smallScreenHeaderCellStyle,
                                     }}
                                 />
                             </Table.Tr>
@@ -328,6 +326,7 @@ function WorkoutLibraryPage({trainerId}) {
                                 <WorkoutTemplateListRow
                                     key={template.id}
                                     template={template}
+                                    isSmallScreen={isSmallScreen}
                                     onSelect={() => openEditEditor(template)}
                                     onEdit={() => openEditEditor(template)}
                                     onCopy={() => openCopyEditor(template)}
