@@ -37,19 +37,19 @@ import {
 // Workout item
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutItemPreview({item}) {
+function WorkoutItemPreview({item, onViewExercise}) {
     const isExercise = item.itemType === WORKOUT_ITEM_TYPE.EXERCISE || item.exercise;
 
     return isExercise
-        ? <ExercisePreview item={item}/>
-        : <WorkoutStackPreview stack={item}/>;
+        ? <ExercisePreview item={item} onViewExercise={onViewExercise} />
+        : <WorkoutStackPreview stack={item} onViewExercise={onViewExercise}/>;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Exercise
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExercisePreview({item, stacked = false}) {
+function ExercisePreview({item, stacked = false, onViewExercise}) {
 
     const isMobile = useMediaQuery('(max-width: 48em)');
 
@@ -81,7 +81,11 @@ function ExercisePreview({item, stacked = false}) {
                     size={thumbnailSize}
                     radius="sm"
                     variant="light"
-                    style={{flexShrink: 0}}
+                    style={{
+                        flexShrink: 0,
+                        cursor: exercise && onViewExercise ? 'pointer' : 'default'
+                    }}
+                    onClick={() => exercise && onViewExercise?.(exercise)}
                 >
                     <IconPhoto size={stacked ? 18 : 22}/>
                 </Avatar>
@@ -109,7 +113,7 @@ function ExercisePreview({item, stacked = false}) {
                                 key={`${group.signature}-${index}`}
                             >
                                 <Text
-                                    size={stacked ? 'xs' : 'sm'}
+                                    size={isMobile || stacked ? 'xs' : 'sm'}
                                     c="dimmed"
                                 >
                                     {group.label}
@@ -165,7 +169,7 @@ function ExercisePreview({item, stacked = false}) {
 // Stack
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutStackPreview({stack}) {
+function WorkoutStackPreview({stack, onViewExercise}) {
 
     const isMobile = useMediaQuery('(max-width: 48em)');
     const computedColorScheme = useComputedColorScheme('light');
@@ -245,6 +249,7 @@ function WorkoutStackPreview({stack}) {
                             key={getWorkoutPreviewKey(exercise, `stack-exercise-${index}`,)}
                             item={exercise}
                             stacked
+                            onViewExercise={onViewExercise}
                         />
                     ))}
 

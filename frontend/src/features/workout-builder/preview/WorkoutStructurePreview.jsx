@@ -1,7 +1,10 @@
+import {useState} from 'react'
 import {
     Badge,
     Box,
+    Drawer,
     Group,
+    Modal,
     Paper,
     Stack,
     Text,
@@ -22,12 +25,19 @@ import {
     sortWorkoutPreviewItems,
 } from './workout-preview-utils';
 
+import ExerciseViewer from "../../exercises/components/ExerciseViewer.jsx";
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Workout structure
 // ------------------------------------------------------------------------------------------------------------------------
 
 function WorkoutStructurePreview({workout}) {
+
+    const isMobile = useMediaQuery('(max-width: 48em)');
+
     const sections = sortWorkoutPreviewItems(workout?.sections ?? []);
+
+    const [exerciseOverlay, setExerciseOverlay] = useState(null);
 
     if (sections.length === 0) {
         return (
@@ -42,18 +52,83 @@ function WorkoutStructurePreview({workout}) {
         );
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderExerciseOverlay() {
+        if (!exerciseOverlay) {
+            return null;
+        }
+
+        const content = (
+            <ExerciseViewer
+                exercise={exerciseOverlay.exercise}
+                onClose={() => setExerciseOverlay(null)}
+            />
+        );
+
+        if (isMobile) {
+            return (
+                <Drawer
+                    opened
+                    onClose={() => setExerciseOverlay(null)}
+                    title="Exercise"
+                    position="bottom"
+                    size="100%"
+                    zIndex={300}
+                    styles={{
+                        title: {fontSize: '1.2rem'},
+                        body: {paddingBottom: '2rem'},
+                    }}
+                >
+                    {content}
+                </Drawer>
+            );
+        }
+
+        return (
+            <Modal
+                opened
+                onClose={() => setExerciseOverlay(null)}
+                title="Exercise"
+                centered
+                size="48rem"
+                zIndex={300}
+                styles={{
+                    title: {fontSize: '1.2rem'},
+                }}
+            >
+                {content}
+            </Modal>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
-        <Stack gap="md">
-            {sections.map((section, sectionIndex) => (
-                <WorkoutSectionPreview
-                    key={getWorkoutPreviewKey(
-                        section,
-                        `section-${sectionIndex}`,
-                    )}
-                    section={section}
-                />
-            ))}
-        </Stack>
+        <>
+            {renderExerciseOverlay()}
+            <Stack gap="md">
+                {sections.map((section, sectionIndex) => (
+                    <WorkoutSectionPreview
+                        key={getWorkoutPreviewKey(
+                            section,
+                            `section-${sectionIndex}`,
+                        )}
+                        section={section}
+                        onViewExercise={(exercise) => {
+                            setExerciseOverlay({
+                                mode: 'VIEW',
+                                exercise,
+                            })
+                        }}
+                    />
+                ))}
+            </Stack>
+        </>
     );
 }
 
@@ -61,7 +136,7 @@ function WorkoutStructurePreview({workout}) {
 // Workout section
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutSectionPreview({section}) {
+function WorkoutSectionPreview({section, onViewExercise}) {
 
     const isMobile = useMediaQuery('(max-width: 48em)');
     const theme = useMantineTheme();
@@ -127,6 +202,7 @@ function WorkoutSectionPreview({section}) {
                     <WorkoutItemPreview
                         key={getWorkoutPreviewKey(item, `item-${itemIndex}`)}
                         item={item}
+                        onViewExercise={onViewExercise}
                     />
                 ))}
 
