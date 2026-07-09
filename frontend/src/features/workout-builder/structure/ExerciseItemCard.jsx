@@ -23,7 +23,7 @@ import {
     IconEdit,
     IconEye,
     IconLink,
-    IconPencilExclamation,
+    IconAlertTriangle,
     IconPhoto,
     IconPlus,
     IconProgressHelp,
@@ -217,9 +217,12 @@ function ExerciseItemCard({
         <>
             <Paper
                 className={isNew ? 'workout-structure-created' : undefined}
-                radius="sm"
+                radius={isSmallScreen ? "sm" : "md"}
                 p={isSmallScreen ? 'md' : 'lg'}
-                shadow={computedColorScheme === 'light' ? "var(--mantine-shadow-md)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"}
+                ml={!independent ? 0 : isSmallScreen ? 3 : 5}
+                mr={!independent ? 0 : isSmallScreen ? 3 : 5}
+                bg="var(--color-workout-exercise-bg)"
+                shadow="0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)"
                 style={{
                     border: '1px solid var(--color-border)'
                 }}
@@ -229,16 +232,21 @@ function ExerciseItemCard({
                         {renderExerciseThumbnail()}
 
                         <TextInput
+                            classNames={{input: 'subtle-input'}}
                             fw={600}
-                            variant={computedColorScheme === 'light' ? 'filled' : 'default'}
+                            variant='filled'
                             placeholder="Name this exercise"
                             leftSection={
                                 hasNameOverride && (
                                     <Tooltip label="Custom exercise name" events={{ hover: true, focus: false, touch: true }}>
-                                        <IconPencilExclamation
+                                        <IconAlertTriangle
                                             size={18}
-                                            color="var(--mantine-color-blue-6)"
-                                            style={{flexShrink: 0}}
+                                            color="var(--mantine-color-yellow-5)"
+                                            style={{
+                                                flexShrink: 0,
+                                                paddingTop: '2px',
+                                                filter: 'drop-shadow(0 0 4px rgba(250, 176, 5, 0.6))',
+                                            }}
                                         />
                                     </Tooltip>
                                 )
@@ -269,6 +277,7 @@ function ExerciseItemCard({
                             styles={{
                                 input: {
                                     paddingLeft: hasNameOverride ? '2rem' : undefined,
+                                    backgroundColor: computedColorScheme === 'light' ? '#f5f7f9' : '#2f2f2f',
                                 }
                             }}
                         />
@@ -335,6 +344,7 @@ function ExerciseItemCard({
                     <Collapse expanded={customizingFields}>
                         <ExerciseTrackingConfig
                             configDraft={configDraft}
+                            colorScheme={computedColorScheme}
                             onChange={setConfigDraft}
                             onClose={closeTrackingConfig}
                             onSave={saveTrackingConfig}
@@ -345,6 +355,7 @@ function ExerciseItemCard({
                         config={activeConfig}
                         locked={customizingFields}
                         stackControlled={!independent}
+                        colorScheme={computedColorScheme}
                         onChange={nextConfig => {
                             if (customizingFields) {
                                 setConfigDraft(nextConfig);
@@ -413,7 +424,7 @@ function ExerciseItemCard({
                         maxRows={4}
                         styles={{
                             input: {
-                                backgroundColor: computedColorScheme === 'light' ? 'var(--color-background)' : 'var(--color-surface)',
+                                backgroundColor: computedColorScheme === 'light' ? '#f5f7f9' : '#2f2f2f',
                             },
                         }}
                     />
@@ -421,7 +432,7 @@ function ExerciseItemCard({
             </Paper>
 
             {itemIndex !== itemCount - 1 && (
-                <Group gap={0} mb="sm" mt="sm" mr={!independent ? (isSmallScreen ? 13 : 25) : 0} wrap="nowrap" justify="center">
+                <Group gap={0} mb="sm" mt="sm" mr={!independent ? (isSmallScreen ? 13 : 24) : 0} wrap="nowrap" justify="center">
                     {!independent ? (
                         <IconConnection opacity={0.35} size={24}/>
                     ) : (

@@ -1,5 +1,6 @@
 import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
+    ActionIcon,
     Badge,
     Button,
     Checkbox,
@@ -10,12 +11,13 @@ import {
     SimpleGrid,
     Stack,
     Text,
-    useComputedColorScheme,
+    Tooltip,
 } from '@mantine/core';
 import {
     IconArrowLeft,
     IconArrowRight,
     IconCheck,
+    IconHelpCircle,
     IconPlus,
     IconTrash,
 } from '@tabler/icons-react';
@@ -26,15 +28,13 @@ import {
     createTrackingField,
 } from '../../exercises/exercise-tracking-fields';
 
-function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
+function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, onSave}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
     // ------------------------------------------------------------------------------------------------------------------------
 
     const isSmallScreen = useIsSmallScreen();
-
-    const computedColorScheme = useComputedColorScheme('light');
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -180,7 +180,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
             <Menu shadow="md" key={field.key} withinPortal position="bottom-start">
                 <Menu.Target>
                     <Badge
-                        bg={computedColorScheme === 'light'
+                        bg={colorScheme === 'light'
                             ? 'var(--color-surface)'
                             : 'var(--mantine-color-dark-5)'}
                         size={isSmallScreen ? "lg" : "xl"}
@@ -191,18 +191,18 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                             transition: 'transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease',
                         }}
                         onMouseEnter={(e) => {
-                            e.currentTarget.style.background = computedColorScheme === 'light' ? 'transparent' : 'var(--mantine-color-dark-4)';
+                            e.currentTarget.style.background = colorScheme === 'light' ? 'transparent' : 'var(--mantine-color-dark-4)';
                         }}
                         onMouseLeave={(e) => {
-                            e.currentTarget.style.background = computedColorScheme === 'light' ? 'var(--color-surface)' : 'var(--mantine-color-dark-5)';
+                            e.currentTarget.style.background = colorScheme === 'light' ? 'var(--color-surface)' : 'var(--mantine-color-dark-5)';
                         }}
                         styles={{
                             root: {
                                 borderColor: "var(--color-border)",
-                                boxShadow: computedColorScheme === 'light' ? "0 0.15rem 0.3rem rgba(0, 0, 0, 0.2)" : "0 0.1rem 0.5rem rgba(0, 0, 0, 0.4)",
+                                boxShadow: colorScheme === 'light' ? "0 0.15rem 0.3rem rgba(0, 0, 0, 0.2)" : "0 0.1rem 0.5rem rgba(0, 0, 0, 0.4)",
                             },
                             label: {
-                                color: computedColorScheme === 'light' ? "black" : "gray",
+                                color: colorScheme === 'light' ? "black" : "gray",
                             }
                         }}
                     >
@@ -210,7 +210,7 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                             <Text size="xs" c="dimmed" fw={600}>
                                 {field.position}.
                             </Text>
-                            <Text size="xs" c={computedColorScheme === 'light' ? "black" : "white"} fw={600}>
+                            <Text size="xs" c={colorScheme === 'light' ? "black" : "white"} fw={600}>
                                 {definition.label}
                                 {unit ? ` · ${unit.toLowerCase()}` : ''}
                             </Text>
@@ -309,22 +309,46 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
         <Paper
             radius="sm"
             p="sm"
-            bg={computedColorScheme === 'light'
-                ? 'var(--color-background)'
-                : 'var(--mantine-color-dark-6)'
-            }
+            bg={colorScheme === 'light' ? '#f5f7f9' : '#242424'}
             shadow="none"
         >
             <Stack gap="sm">
-                <Group gap={"xs"} justify="space-between">
-                    <Text fw={600} size="xs" c="dimmed" style={{flexGrow: 1}}>
-                        TRACKING FIELDS
-                    </Text>
-                    <Button size="xs" variant="default" onClick={onClose}>
+                <Group gap='xs' justify="space-between">
+                    <Group gap={4} align="center" style={{flexGrow: 1}}>
+                        <Text size="xs" fw={700} c="dimmed">
+                            TRACKING FIELDS
+                        </Text>
+
+                        <Tooltip
+                            label="Choose and customize the metrics this exercise tracks in this workout. These fields become the set/round columns used for targets, workout sessions, and history. This does not change the exercise library."
+                            multiline
+                            w={285}
+                            withArrow
+                            arrowSize={12}
+                            position="top"
+                            events={{ hover: true, focus: true, touch: true }}
+                        >
+                            <ActionIcon
+                                size="sm"
+                                variant="subtle"
+                                color="gray"
+                                mb={2}
+                                aria-label="Tracking fields info"
+                                onClick={event => event.stopPropagation()}
+                            >
+                                <IconHelpCircle size={20} color='gray' />
+                            </ActionIcon>
+                        </Tooltip>
+                    </Group>
+                    <Button size="xs" variant="outline" color='red' onClick={onClose}>
                         Cancel
                     </Button>
 
-                    <Button size="xs" onClick={onSave}>
+                    <Button
+                        size="xs"
+                        variant='outline'
+                        onClick={onSave}
+                    >
                         Save
                     </Button>
                 </Group>
@@ -346,9 +370,10 @@ function ExerciseTrackingConfig({configDraft, onChange, onClose, onSave}) {
                             <Button
                                 aria-label="Add tracking field"
                                 size="sm"
-                                variant={computedColorScheme}
+                                w={70}
+                                variant='default'
                             >
-                                <IconPlus size={16}/>
+                                <IconPlus size={16} stroke={3.4} color={colorScheme === 'light' ? 'gray' : 'darkgray'}/>
                             </Button>
                         </Menu.Target>
 

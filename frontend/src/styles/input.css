@@ -19,9 +19,17 @@
     transition: border-color 120ms ease, background-color 120ms ease;
 }
 
-.subtle-input-container:not([data-locked]):hover:not(:focus-within) ,
-.subtle-input:hover:not(:disabled):not(:read-only):not(:focus-within) {
-    border-color: var(--mantine-color-gray-4);
+[data-mantine-color-scheme='light'] {
+    .subtle-input-container:not([data-locked]):hover:not(:focus-within),
+    .subtle-input:hover:not(:disabled):not(:read-only):not(:focus-within) {
+        border-color: var(--mantine-color-gray-4);
+    }
+}
+[data-mantine-color-scheme='dark'] {
+    .subtle-input-container:not([data-locked]):hover:not(:focus-within),
+    .subtle-input:hover:not(:disabled):not(:read-only):not(:focus-within) {
+        border-color: var(--mantine-color-gray-7);
+    }
 }
 
 .subtle-input-container:not([data-locked]):focus-within,

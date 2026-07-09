@@ -361,6 +361,9 @@ function WorkoutBuilder({
                                 ? 'var(--color-background)'
                                 : 'var(--color-surface)'
                             }
+                            style={{
+                                borderColor: 'var(--color-border)'
+                            }}
                         >
                             <Stack gap="lg">
                                 <Group justify="space-between" align="center" wrap="nowrap">
@@ -383,6 +386,9 @@ function WorkoutBuilder({
                                             input: {
                                                 fontWeight: 600,
                                                 fontSize: '1.3rem',
+                                                ...(computedColorScheme === 'dark' ? {
+                                                    backgroundColor: '#2f2f2f'
+                                                } : {})
                                             },
                                         }}
                                     />
@@ -459,7 +465,7 @@ function WorkoutBuilder({
             <Box
                 style={{
                     padding: isSmallScreen ? 'var(--mantine-spacing-sm)' : 'var(--mantine-spacing-md)',
-                    borderTop: '1px solid var(--color-border)',
+                    borderTop: '2px solid var(--color-border)',
                     backgroundColor: computedColorScheme === 'dark'
                         ? 'var(--color-surface)'
                         : 'var(--color-background)',
@@ -691,7 +697,7 @@ function WorkoutBuilder({
                                 flexShrink: 0,
                                 paddingTop: '0.8rem',
                                 paddingBottom: '0.8rem',
-                                borderBottom: '1px solid var(--color-border)',
+                                borderBottom: '2px solid var(--color-border)',
                                 backgroundColor: computedColorScheme === 'dark'
                                     ? 'var(--color-surface)'
                                     : 'var(--color-background)',
@@ -748,7 +754,7 @@ function WorkoutBuilder({
                                 flexShrink: 0,
                                 paddingTop: '0.8rem',
                                 paddingBottom: '0.8rem',
-                                borderBottom: '1px solid var(--color-border)',
+                                borderBottom: '2px solid var(--color-border)',
                                 backgroundColor: computedColorScheme === 'dark'
                                     ? 'var(--color-surface)'
                                     : 'var(--color-background)',

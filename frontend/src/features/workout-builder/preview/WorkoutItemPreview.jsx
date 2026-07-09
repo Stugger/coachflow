@@ -65,7 +65,10 @@ function ExercisePreview({item, stacked = false, isSmallScreen, onViewExercise})
             withBorder
             radius="sm"
             p={stacked ? 'sm' : (isSmallScreen ? 'sm' : 'md')}
-            bg="var(--color-surface)"
+            bg="var(--color-workout-exercise-bg)"
+            style={{
+                borderColor: 'var(--color-border)'
+            }}
         >
             <Group align="flex-start" wrap="nowrap" gap="sm">
                 <Avatar
@@ -174,7 +177,7 @@ function WorkoutStackPreview({stack, isSmallScreen, onViewExercise}) {
     const option = getStackOption(stack.itemType);
     const StackIcon = option?.icon;
 
-    const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-background)'}, theme);
+    const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-workout-section-bg)'}, theme);
 
     const exercises = sortWorkoutPreviewItems(stack.itemExercises ?? []);
     const rounds = getStackRoundCount(stack);
@@ -190,7 +193,10 @@ function WorkoutStackPreview({stack, isSmallScreen, onViewExercise}) {
             <Paper
                 withBorder
                 radius="md"
-                bg="var(--color-background)"
+                bg="var(--color-workout-stack-bg)"
+                style={{
+                    borderColor: 'var(--color-border)'
+                }}
             >
                 <Box
                     px="sm"

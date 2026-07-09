@@ -41,7 +41,14 @@ function WorkoutStructurePreview({workout}) {
 
     if (sections.length === 0) {
         return (
-            <Paper withBorder radius="md" p="lg">
+            <Paper
+                withBorder
+                radius="md"
+                p="lg"
+                   style={{
+                       borderColor: 'var(--color-border)'
+                   }}
+            >
                 <Stack gap={4} align="center">
                     <Text fw={700}>No sections added yet</Text>
                     <Text size="sm" c="dimmed" ta="center">
@@ -149,7 +156,10 @@ function WorkoutSectionPreview({section, isSmallScreen, onViewExercise}) {
         <Paper
             withBorder
             radius="md"
-            bg="var(--color-background)"
+            bg="var(--color-workout-section-bg)"
+            style={{
+                borderColor: 'var(--color-border)'
+            }}
         >
             <Box
                 px="md"

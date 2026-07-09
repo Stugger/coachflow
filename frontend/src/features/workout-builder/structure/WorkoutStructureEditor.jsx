@@ -39,7 +39,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
     const [sectionPendingDelete, setSectionPendingDelete] = useState(null);
 
     const sectionListEndRef = useRef(null);
-    const pendingNewSectionScrollRef = useRef(false);
+    const pendingBuilderEndScrollRef = useRef(false);
 
     const [creationHighlight, setCreationHighlight] = useState(null);
 
@@ -59,11 +59,11 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
     // ------------------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
-        if (!pendingNewSectionScrollRef.current) {
+        if (!pendingBuilderEndScrollRef.current) {
             return;
         }
 
-        pendingNewSectionScrollRef.current = false;
+        pendingBuilderEndScrollRef.current = false;
 
         const frameId = requestAnimationFrame(() => {
             sectionListEndRef.current?.scrollIntoView({
@@ -73,7 +73,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
         });
 
         return () => cancelAnimationFrame(frameId);
-    }, [sections.length]);
+    }, [sections]);
 
     useEffect(() => {
         if (!creationHighlight) {
@@ -126,7 +126,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
             key: getSectionKey(nextSection),
         });
 
-        pendingNewSectionScrollRef.current = true;
+        pendingBuilderEndScrollRef.current = true;
 
         updateSections(currentSections => [
             ...currentSections,
@@ -230,6 +230,10 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
             key: getWorkoutItemKey(nextItem),
         });
 
+        if (sectionIndex === sections.length - 1) {
+            pendingBuilderEndScrollRef.current = true;
+        }
+
         updateSection(sectionIndex, section => ({
             ...section,
             items: reindexPositions([
@@ -237,7 +241,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
                 nextItem,
             ]),
         }));
-    }, [updateSection]);
+    }, [sections.length, updateSection]);
 
     const addStackToSection = useCallback((sectionIndex, itemType) => {
         const nextStack = createStackItem(itemType, 1); //position irrelevant since reindexPositions overwrites
@@ -247,6 +251,10 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
             key: getWorkoutItemKey(nextStack),
         });
 
+        if (sectionIndex === sections.length - 1) {
+            pendingBuilderEndScrollRef.current = true;
+        }
+
         updateSection(sectionIndex, section => ({
             ...section,
             items: reindexPositions([
@@ -254,7 +262,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
                 nextStack,
             ]),
         }));
-    }, [updateSection]);
+    }, [sections.length, updateSection]);
 
     const deleteItemFromSection = useCallback((sectionIndex, itemIndex) => {
         updateSection(sectionIndex, section => ({
@@ -317,6 +325,13 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
             key: draftId,
         });
 
+        const section = sections[sectionIndex];
+        const lastItemIndex = (section?.items?.length ?? 0) - 1;
+
+        if (sectionIndex === sections.length - 1 && stackItemIndex === lastItemIndex) {
+            pendingBuilderEndScrollRef.current = true;
+        }
+
         updateStackItem(sectionIndex, stackItemIndex, stack => ({
             ...stack,
             itemExercises: reindexPositions([
@@ -329,7 +344,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
                 ),
             ]),
         }));
-    }, [updateStackItem]);
+    }, [sections, updateStackItem]);
 
     const deleteExerciseFromStack = useCallback((sectionIndex, stackItemIndex, exerciseIndex) => {
         updateStackItem(sectionIndex, stackItemIndex, stack => ({
@@ -438,6 +453,9 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
                     radius="md"
                     p="xl"
                     bg={computedColorScheme === 'light' ? 'var(--color-background)' : 'var(--color-surface)'}
+                    style={{
+                        borderColor: 'var(--color-border)'
+                    }}
                 >
                     <Stack gap="sm" align="center">
                         <Text fw={700}>No sections yet</Text>

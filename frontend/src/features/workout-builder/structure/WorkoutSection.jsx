@@ -131,7 +131,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
     function renderAddItemButtons(rail) {
         return (
             <Box mt='0.5rem'>
-                <Menu shadow="md" withinPortal offset={rail && sectionIndex == sectionCount - 1 ? 0 : undefined}>
+                <Menu shadow="md" withinPortal offset={isSmallScreen ? 0 : undefined}>
                     <Menu.Target>
                         {rail ? (
                             <Button
@@ -201,14 +201,15 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
 
             <Paper
                 className={isNew ? 'workout-structure-created' : undefined}
-                withBorder
                 radius="md"
-                bg="var(--color-background)"
+                bg='var(--color-workout-section-bg)'
                 style={{
                     outline: hasSectionValidationIssues
                         ? '2px solid var(--mantine-color-red-5)'
                         : undefined,
                     outlineOffset: '-1px',
+                    borderColor: 'var(--color-border)',
+                    borderBottom: '1px solid var(--color-border)'
                 }}
             >
                 <Box
@@ -401,7 +402,14 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
 
                 <Box p="md">
                     {itemCount === 0 && (
-                        <Paper withBorder radius="md" p="lg">
+                        <Paper
+                            withBorder
+                            radius="md"
+                            p="lg"
+                               style={{
+                                   borderColor: 'var(--color-border)'
+                               }}
+                        >
                             <Stack gap="sm" align="center">
                                 <Text fw={700}>No items in this section</Text>
                                 <Text size="sm" c="dimmed" ta="center">

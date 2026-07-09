@@ -76,11 +76,12 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
 
     const option = getStackOption(stack.itemType);
     const exerciseCount = stack.itemExercises?.length ?? 0;
+    const canAddExercise = canAddExerciseToStack(stack);
     const complete = isStackComplete(stack);
 
     const hasValidationIssues = validationIssues.length > 0;
 
-    const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-background)'}, useMantineTheme());
+    const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-workout-section-bg)'}, useMantineTheme());
     const shadow = computedColorScheme === 'light' ? "var(--mantine-shadow-lg)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"
 
     const stackTypeOptions = WORKOUT_STACK_OPTIONS.map(option => ({
@@ -169,13 +170,16 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                     className={isNew ? 'workout-structure-created' : undefined}
                     withBorder
                     radius="md"
+                    mr={isSmallScreen ? 3 : 5}
                     shadow={shadow}
+                    bg="var(--color-workout-stack-bg)"
                     style={{
-                        backgroundColor: 'var(--color-background)',
                         border: 'none',
                         borderTop: '1px solid var(--color-border)',
                         borderBottom: '1px solid var(--color-border)',
                         borderLeft: '1px solid var(--color-border)',
+                        borderRight: '1px solid var(--color-border)',
+                        borderTopRightRadius: 'var(--mantine-radius-md)',
                         outline: hasValidationIssues
                             ? '2px solid var(--mantine-color-red-5)'
                             : undefined,
@@ -433,7 +437,14 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
 
                     <Stack gap="sm" p="md">
                         {exerciseCount === 0 && (
-                            <Paper withBorder radius="sm" p="md">
+                            <Paper
+                                withBorder
+                                radius="sm"
+                                p="md"
+                                style={{
+                                    borderColor: 'var(--color-border)'
+                                }}
+                            >
                                 <Stack gap="xs" align="center">
                                     <Text fw={700}>No exercises in this stack</Text>
                                     {!complete && !hasValidationIssues && (
@@ -447,7 +458,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                         variant="light"
                                         leftSection={<IconPlus size={14}/>}
                                         onClick={onAddExercise}
-                                        disabled={!canAddExerciseToStack(stack)}
+                                        disabled={!canAddExercise}
                                     >
                                         Add first exercise
                                     </Button>
@@ -488,7 +499,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                     {exerciseCount > 0 && (
                         <Tooltip
                             label="Max exercises for this stack"
-                            disabled={canAddExerciseToStack(stack)}
+                            disabled={canAddExercise}
                             offset={isSmallScreen ? -10 : 0}
                             withArrow
                             arrowSize={10}
@@ -501,15 +512,16 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                     fullWidth
                                     size='xs'
                                     radius='md'
-                                    mt={!complete && !hasValidationIssues ? 0 : '0.75rem'}
+                                    mt={!complete && !hasValidationIssues ? 0 : isSmallScreen ? '0.4rem' : '0.75rem'}
                                     leftSection={<IconPlus size={14}/>}
                                     onClick={onAddExercise}
-                                    disabled={!canAddExerciseToStack(stack)}
+                                    disabled={!canAddExercise}
                                     color={option.color}
+                                    bg={!canAddExercise ? 'transparent' : undefined}
                                     style={{
                                         minHeight: '2.25rem',
                                         borderTopLeftRadius: 0,
-                                        borderTopRightRadius: 0
+                                        borderTopRightRadius: 0,
                                     }}
                                 >
                                     Add exercise to {option?.label?.toLowerCase() ?? 'stack'}

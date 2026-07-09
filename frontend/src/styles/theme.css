@@ -3,6 +3,10 @@
     --color-background: #181818;
     --color-surface: #202020;
 
+    --color-workout-section-bg: #1c1c20;
+    --color-workout-stack-bg: #191919;
+    --color-workout-exercise-bg: #272727;
+
     /* Borders */
     --color-border: #333;
 
@@ -16,6 +20,11 @@
     --color-background: #f8f9fa;
     --color-surface: #ffffff;
 
+    --color-workout-section-bg: #f6f8fc;
+    --color-workout-stack-bg: #f8f8fa;
+    --color-workout-exercise-bg: #ffffff;
+
+    /* Borders */
     --color-border: #dee2e6;
 
     /* Text */

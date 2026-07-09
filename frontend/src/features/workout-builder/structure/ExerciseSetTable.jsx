@@ -38,7 +38,7 @@ const rowCellStyle = {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExerciseSetTable({config, locked, stackControlled, onChange}) {
+function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -308,7 +308,7 @@ function ExerciseSetTable({config, locked, stackControlled, onChange}) {
                             minWidth: SET_COLUMN_WIDTH,
                             textAlign: 'center',
                         }}>
-                            <Text size="sm" fw={600}>
+                            <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
                                 {stackControlled ? 'Round' : 'Set'}
                             </Text>
                         </Table.Th>
@@ -324,7 +324,7 @@ function ExerciseSetTable({config, locked, stackControlled, onChange}) {
                                         textAlign: 'center',
                                     }}
                                 >
-                                    <Text size="sm" fw={600}>
+                                    <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
                                         {definition.label}{field.unit ? ' (' + field.unit.toLowerCase() + ')' : field.mode ? ' (' + getTrackingFieldMode(field).label.toLowerCase() + ')' : ''}
                                     </Text>
                                 </Table.Th>
