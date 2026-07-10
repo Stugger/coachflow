@@ -37,8 +37,8 @@ export const TRACKING_FIELD_DEFINITIONS = {
                 value: 'RANGE',
                 label: 'Range',
                 type: TRACKING_FIELD_TYPE.RANGE,
-                minColumnWidth: '10rem',
-                inputWidth: '3rem',
+                minColumnWidth: '8rem',
+                inputWidth: '3rem', //applies to both inputs (3 + 3 == 6rem)
             },
         ],
     },
@@ -142,8 +142,8 @@ export const TRACKING_FIELD_DEFINITIONS = {
         key: TRACKING_FIELD_KEY.RPE,
         label: 'RPE',
         type: TRACKING_FIELD_TYPE.DECIMAL,
-        minColumnWidth: '7rem',
-        inputWidth: '5rem',
+        minColumnWidth: '4rem',
+        inputWidth: '3rem',
     },
     [TRACKING_FIELD_KEY.REST]: {
         key: TRACKING_FIELD_KEY.REST,

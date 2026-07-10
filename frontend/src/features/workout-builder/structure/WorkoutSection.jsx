@@ -305,7 +305,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
 
                         <Menu shadow="md" withinPortal position="bottom-end">
                             <Menu.Target>
-                                <Tooltip label="Section options" position="top-end">
+                                <Tooltip label="Section options">
                                     <ActionIcon variant="subtle" color="black">
                                         <IconDots size={18} color="white"/>
                                     </ActionIcon>
@@ -406,9 +406,9 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                             withBorder
                             radius="md"
                             p="lg"
-                               style={{
-                                   borderColor: 'var(--color-border)'
-                               }}
+                            style={{
+                               borderColor: 'var(--color-border)'
+                            }}
                         >
                             <Stack gap="sm" align="center">
                                 <Text fw={700}>No items in this section</Text>

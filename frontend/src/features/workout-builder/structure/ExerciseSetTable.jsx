@@ -54,7 +54,7 @@ function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChang
         const sets = config.sets?.length ?? 0;
         return (
             <Text size="sm" c='dimmed'>
-                {sets} Set{sets == 1 ? '' : 's'} — No tracking fields configured.
+                {sets} Set{sets === 1 ? '' : 's'} — No tracking fields configured.
             </Text>
         );
     }
@@ -226,7 +226,7 @@ function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChang
                     <Tooltip label="Set options">
                         <ActionIcon
                             variant="subtle"
-                            color="gray"
+                            color={colorScheme === 'light' ? "gray" : "light"}
                             disabled={locked}
                         >
                             <IconDotsVertical size={18}/>

@@ -238,7 +238,15 @@ function ExerciseItemCard({
                             placeholder="Name this exercise"
                             leftSection={
                                 hasNameOverride && (
-                                    <Tooltip label="Custom exercise name" events={{ hover: true, focus: false, touch: true }}>
+                                    <Tooltip
+                                        label="Custom exercise name"
+                                        position="top-start"
+                                        offset={4}
+                                        withArrow
+                                        arrowSize={10}
+                                        arrowOffset={13}
+                                        events={{ hover: true, focus: false, touch: true }}
+                                    >
                                         <IconAlertTriangle
                                             size={18}
                                             color="var(--mantine-color-yellow-5)"
@@ -282,13 +290,13 @@ function ExerciseItemCard({
                             }}
                         />
 
-                        <Menu shadow="md" withinPortal position="bottom-end">
+                        <Menu shadow="md" withinPortal position="bottom-end" transitionProps={{ duration: 0 }}>
                             <Menu.Target>
-                                <Tooltip label="Exercise options" position="top-end">
+                                <Tooltip label="Exercise options">
                                     <ActionIcon
                                         ref={exerciseOptionsButtonRef}
                                         variant="subtle"
-                                        color="gray"
+                                        color={computedColorScheme === 'light' ? "gray" : "light"}
                                         style={{flexShrink: 0}}
                                     >
                                         <IconDots size={18}/>
@@ -390,7 +398,7 @@ function ExerciseItemCard({
                                     variant="subtle"
                                     size={isSmallScreen ? "xs" : "sm"}
                                     leftSection={independent ? <IconPlus size={16}/> : null}
-                                    rightSection={independent ? null : <IconProgressHelp size={16}/>}
+                                    rightSection={independent ? null : <IconProgressHelp size={isSmallScreen ? 16 : 18}/>}
                                     disabled={!independent || customizingFields}
                                     onClick={addSet}
                                     styles={{

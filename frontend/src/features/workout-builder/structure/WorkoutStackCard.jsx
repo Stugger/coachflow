@@ -161,7 +161,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
         <>
             <Box
                 style={{
-                    borderLeft: `3px solid var(--mantine-color-${option?.color ?? 'gray'}-4)`,
+                    borderLeft: `${isSmallScreen ? '3px' : '4px'} solid var(--mantine-color-${option?.color ?? 'gray'}-4)`,
                     marginLeft: isSmallScreen ? 0 : 'var(--mantine-spacing-sm)',
                     paddingLeft: isSmallScreen ? 'var(--mantine-spacing-xs)' : 'var(--mantine-spacing-sm)',
                 }}
@@ -174,12 +174,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                     shadow={shadow}
                     bg="var(--color-workout-stack-bg)"
                     style={{
-                        border: 'none',
-                        borderTop: '1px solid var(--color-border)',
-                        borderBottom: '1px solid var(--color-border)',
-                        borderLeft: '1px solid var(--color-border)',
-                        borderRight: '1px solid var(--color-border)',
-                        borderTopRightRadius: 'var(--mantine-radius-md)',
+                        border: '1px solid var(--color-border)',
                         outline: hasValidationIssues
                             ? '2px solid var(--mantine-color-red-5)'
                             : undefined,
@@ -312,17 +307,14 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                         </ActionIcon>
                                     </Group>
 
-                                    <Menu shadow="md" withinPortal position="bottom-end">
+                                    <Menu shadow="md" withinPortal position="bottom-end" transitionProps={{ duration: 0 }}>
                                         <Menu.Target>
                                             <Tooltip label="Stack options">
                                                 <ActionIcon
                                                     variant="subtle"
-                                                    color={computedColorScheme === 'light' ? 'gray' : 'white'}
+                                                    color={computedColorScheme === 'light' ? "gray" : "light"}
                                                 >
-                                                    <IconDots
-                                                        size={18}
-                                                        color={computedColorScheme === 'light' ? 'black' : 'white'}
-                                                    />
+                                                    <IconDots size={18}/>
                                                 </ActionIcon>
                                             </Tooltip>
                                         </Menu.Target>
@@ -512,7 +504,9 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                     fullWidth
                                     size='xs'
                                     radius='md'
-                                    mt={!complete && !hasValidationIssues ? 0 : isSmallScreen ? '0.4rem' : '0.75rem'}
+                                    mt={!complete && !hasValidationIssues ? (isSmallScreen ? -3 : 0)
+                                        : !canAddExercise ? (isSmallScreen ? '0.4rem' : '0.6rem')
+                                        : isSmallScreen ? '1rem' : '1.4rem'}
                                     leftSection={<IconPlus size={14}/>}
                                     onClick={onAddExercise}
                                     disabled={!canAddExercise}

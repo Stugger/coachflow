@@ -177,7 +177,7 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
             : field.unit ?? definition.unit;
 
         return (
-            <Menu shadow="md" key={field.key} withinPortal position="bottom-start">
+            <Menu shadow="md" key={field.key} withinPortal position="bottom-start" transitionProps={{ duration: 0 }}>
                 <Menu.Target>
                     <Badge
                         bg={colorScheme === 'light'
@@ -294,7 +294,7 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                         leftSection={<IconTrash size={14} />}
                         onClick={() => removeTrackingField(field.key)}
                     >
-                        Delete field
+                        Remove field
                     </Menu.Item>
                 </Menu.Dropdown>
             </Menu>
@@ -309,18 +309,18 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
         <Paper
             radius="sm"
             p="sm"
-            bg={colorScheme === 'light' ? '#f5f7f9' : '#242424'}
+            bg={colorScheme === 'light' ? '#f5f7fa' : '#242424'}
             shadow="none"
         >
             <Stack gap="sm">
-                <Group gap='xs' justify="space-between">
+                <Group gap={isSmallScreen ? 8 : 'xs'} justify="space-between" wrap='nowrap'>
                     <Group gap={4} align="center" style={{flexGrow: 1}}>
                         <Text size="xs" fw={700} c="dimmed">
                             TRACKING FIELDS
                         </Text>
 
                         <Tooltip
-                            label="Choose and customize the metrics this exercise tracks in this workout. These fields become the set/round columns used for targets, workout sessions, and history. This does not change the exercise library."
+                            label="Choose and configure the metrics this exercise tracks in this workout. These fields become the set/round columns used for targets, workout sessions, and history. This does not change the exercise library."
                             multiline
                             w={285}
                             withArrow
@@ -336,11 +336,16 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                                 aria-label="Tracking fields info"
                                 onClick={event => event.stopPropagation()}
                             >
-                                <IconHelpCircle size={20} color='gray' />
+                                <IconHelpCircle size={20} color='gray'/>
                             </ActionIcon>
                         </Tooltip>
                     </Group>
-                    <Button size="xs" variant="outline" color='red' onClick={onClose}>
+                    <Button
+                        size="xs"
+                        variant="outline"
+                        color='red'
+                        onClick={onClose}
+                    >
                         Cancel
                     </Button>
 
@@ -353,10 +358,10 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                     </Button>
                 </Group>
 
-                <Divider opacity={0.4}/>
+                <Divider opacity={0.75} color='var(--color-border)'/>
 
                 {trackingFields.length === 0 ? (
-                    <Text size="xs" c="dimmed" opacity={0.6} pt={isSmallScreen ? "xs" : "0.9rem"}>No trackers added</Text>
+                    <Text size="xs" c="dimmed" opacity={0.6} pt={isSmallScreen ? "xs" : "0.9rem"}>No tracking fields added yet.</Text>
                 ) : (
                     <Group gap="xs">
                         {trackingFields.map(field => (
