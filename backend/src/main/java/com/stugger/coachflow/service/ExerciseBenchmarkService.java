@@ -110,7 +110,8 @@ public class ExerciseBenchmarkService {
         Client client = getOwnedClientOrThrow(clientId, trainer);
         Exercise exercise = getAvailableExerciseOrThrow(request.exerciseId(), trainer.getId());
 
-        validateBenchmarkSupport(exercise, request.benchmarkType(), request.unit());
+        validateExerciseSupportsBenchmark(exercise, request.benchmarkType());
+        validateBenchmarkUnit(request.benchmarkType(), request.unit());
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -136,7 +137,7 @@ public class ExerciseBenchmarkService {
         getOwnedClientOrThrow(clientId, trainer);
 
         ClientExerciseBenchmark benchmark = getOwnedBenchmarkOrThrow(benchmarkId, clientId, trainer);
-        validateBenchmarkSupport(benchmark.getExercise(), benchmark.getBenchmarkType(), request.unit());
+        validateBenchmarkUnit(benchmark.getBenchmarkType(), request.unit());
 
         benchmark.setValue(request.value());
         benchmark.setUnit(request.unit());
@@ -188,7 +189,7 @@ public class ExerciseBenchmarkService {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Exercise with id " + exerciseId + " not found.");
     }
 
-    private void validateBenchmarkSupport(Exercise exercise, ExerciseBenchmarkType benchmarkType, ExerciseUnit unit) {
+    private void validateExerciseSupportsBenchmark(Exercise exercise, ExerciseBenchmarkType benchmarkType) {
         Set<ExerciseTrackingField> trackingFields = exerciseRepository.findDefaultTrackingFieldKeysById(exercise.getId())
                 .stream()
                 .map(ExerciseTrackingField::findByKey)
@@ -198,6 +199,9 @@ public class ExerciseBenchmarkService {
         if (!benchmarkType.isSupportedBy(trackingFields)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exercise.getName() + " does not support the " + benchmarkType.getLabel() + " benchmark.");
         }
+    }
+
+    private void validateBenchmarkUnit(ExerciseBenchmarkType benchmarkType, ExerciseUnit unit) {
         if (!benchmarkType.supportsUnit(unit)) {
             if (unit == null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A unit is required by the " + benchmarkType.getLabel() + " benchmark.");
