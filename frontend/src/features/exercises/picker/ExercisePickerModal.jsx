@@ -75,7 +75,10 @@ function getExerciseSummary(exercise) {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
+function ExercisePickerModal({opened, exercises,
+                                 title = 'Add exercise', description, emptyTitle = 'No exercises found', emptyMessage = 'Try a different search.', countLabel,
+                                 onClose,
+                                 onAdd}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -122,6 +125,12 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                 }}
             >
                 <Stack gap="xs">
+                    {description && (
+                        <Text size="sm" c="dimmed">
+                            {description}
+                        </Text>
+                    )}
+
                     <TextInput
                         ref={searchInputRef}
                         placeholder="Search exercises..."
@@ -130,8 +139,12 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                         onChange={event => setSearchText(event.currentTarget.value)}
                     />
 
+
                     <Text size="sm" c="dimmed" pt={2}>
-                        {filteredExercises.length} exercise{filteredExercises.length === 1 ? '' : 's'}
+                        {countLabel
+                            ? countLabel(filteredExercises.length)
+                            : `${filteredExercises.length} exercise${filteredExercises.length === 1 ? '' : 's'}`
+                        }
                     </Text>
                 </Stack>
             </Box>
@@ -152,9 +165,9 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                     p="xl"
                 >
                     <Stack gap={2} align="center">
-                        <Text fw={700}>No exercises found</Text>
+                        <Text fw={700}>{emptyTitle}</Text>
                         <Text size="sm" c="dimmed" ta="center">
-                            Try a different search.
+                            {emptyMessage}
                         </Text>
                     </Stack>
                 </Box>
@@ -271,7 +284,7 @@ function ExercisePickerModal({opened, exercises, onClose, onAdd}) {
                         <Group gap="0.5rem" wrap="nowrap" style={{ minWidth: 0 }}>
                             <IconBarbell stroke={1.2}/>
                             <Text size="1.2rem" fw={500}>
-                                Add exercise
+                                {title}
                             </Text>
                         </Group>
                     </Modal.Title>

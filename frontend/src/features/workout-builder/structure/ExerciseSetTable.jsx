@@ -21,6 +21,7 @@ import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 import {reindexSets} from '../draft/workout-draft-mappers';
 import {createDraftId} from '../draft/workout-draft-factory';
 import {TRACKING_FIELD_DEFINITIONS} from '../../exercises/exercise-tracking-fields';
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants
@@ -325,7 +326,7 @@ function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChang
                                     }}
                                 >
                                     <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
-                                        {definition.label}{field.unit ? ' (' + field.unit.toLowerCase() + ')' : field.mode ? ' (' + getTrackingFieldMode(field).label.toLowerCase() + ')' : ''}
+                                        {definition.label}{field.unit ? ' (' + getExerciseUnitLabel(field.unit) + ')' : field.mode ? ' (' + getTrackingFieldMode(field).label.toLowerCase() + ')' : ''}
                                     </Text>
                                 </Table.Th>
                             );

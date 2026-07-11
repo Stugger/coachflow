@@ -5,6 +5,7 @@ import {
     Accordion,
     Badge,
     Button,
+    Divider,
     Group,
     Loader,
     Modal,
@@ -16,6 +17,7 @@ import {
     IconCheck,
     IconClipboardCheck,
     IconCircleDashedCheck,
+    IconTrophy,
 } from '@tabler/icons-react';
 
 import {
@@ -29,11 +31,21 @@ import {
 
 import IntakeRecordCard from './IntakeRecordCard';
 import InitialAssessmentRecordCard from './InitialAssessmentRecordCard';
+import ExerciseBenchmarksRecordCard from '../records/ExerciseBenchmarksRecordCard.jsx';
 
-const RECORD_IDS = [
+const SETUP_RECORD_IDS = [
     'intake',
     'initial-assessment',
     'initial-measurements',
+];
+
+const CLIENT_RECORD_IDS = [
+    'benchmarks',
+];
+
+const RECORD_IDS = [
+    ...SETUP_RECORD_IDS,
+    ...CLIENT_RECORD_IDS,
 ];
 
 function isRecordId(recordId) {
@@ -257,12 +269,19 @@ function ClientRecordsTab({client, refreshKey,
         }
     }
 
-    function handleExpandedRecordsChange(nextExpandedRecords) {
-        const newlyOpenedRecord = nextExpandedRecords.find(
-            recordId => !expandedRecords.includes(recordId)
+    function handleExpandedRecordsChange(nextGroupRecords, groupRecordIds) {
+        const previousGroupRecords = expandedRecords.filter(
+            recordId => groupRecordIds.includes(recordId)
         );
 
-        setExpandedRecords(nextExpandedRecords);
+        const newlyOpenedRecord = nextGroupRecords.find(
+            recordId => !previousGroupRecords.includes(recordId)
+        );
+
+        setExpandedRecords(currentRecords => [
+            ...currentRecords.filter(recordId => !groupRecordIds.includes(recordId)),
+            ...nextGroupRecords,
+        ]);
 
         const nextHash = newlyOpenedRecord
             ? `#${newlyOpenedRecord}`
@@ -285,17 +304,17 @@ function ClientRecordsTab({client, refreshKey,
     return (
         <>
             <Stack gap="md">
-                <Stack gap={2} pl='0.25rem'>
+                <Stack gap={2} pl="0.25rem">
                     <Text fw={700}>Records</Text>
                     <Text size="sm" c="dimmed">
-                        Review client onboarding records and manage the initial assessment setup.
+                        Review client onboarding records and manage ongoing client records.
                     </Text>
                 </Stack>
 
                 <Accordion
                     multiple
-                    value={expandedRecords}
-                    onChange={handleExpandedRecordsChange}
+                    value={expandedRecords.filter(recordId => SETUP_RECORD_IDS.includes(recordId))}
+                    onChange={records => handleExpandedRecordsChange(records, SETUP_RECORD_IDS)}
                     variant="separated"
                     radius="md"
                     transitionDuration={isSmallScreen ? 100 : 200} //mobile flickers so we speed it up
@@ -304,27 +323,25 @@ function ClientRecordsTab({client, refreshKey,
                         value="intake"
                         id="intake"
                         style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
-                        bg='var(--color-surface)'
+                        bg="var(--color-surface)"
                     >
                         <Accordion.Control
                             icon={!intakeLoaded
-                                ?
-                                <Loader size={20} color="gray"/>
-                                :
-                                intake?.status === 'COMPLETED'
-                                    ?
-                                    <ThemeIcon size={20} radius="xl" color="green">
-                                        <IconCheck size={16} stroke={3}/>
-                                    </ThemeIcon>
-                                    :
-                                    <IconCircleDashedCheck size={20} color='gray'/>
+                                ? <Loader size={20} color="gray"/>
+                                : intake?.status === 'COMPLETED'
+                                    ? (
+                                        <ThemeIcon size={20} radius="xl" color="green">
+                                            <IconCheck size={16} stroke={3}/>
+                                        </ThemeIcon>
+                                    )
+                                    : <IconCircleDashedCheck size={20} color="gray"/>
                             }
                         >
                             {intake?.status === 'COMPLETED' ? (
                                 <Text fw={600}>Intake</Text>
                             ) : (
                                 <Group justify="space-between" pr="sm" wrap="nowrap">
-                                    <Text fw={600} c='dimmed'>Intake</Text>
+                                    <Text fw={600} c="dimmed">Intake</Text>
                                     {intakeLoaded && (
                                         <Badge color="red" variant="light">
                                             {intake === null ? 'Missing' : 'Incomplete'}
@@ -352,25 +369,28 @@ function ClientRecordsTab({client, refreshKey,
                         value="initial-assessment"
                         id="initial-assessment"
                         style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
-                        bg='var(--color-surface)'
+                        bg="var(--color-surface)"
                     >
                         {/*TODO completed assessment style: no badge, not dimmed, green circle check (like intake)*/}
                         <Accordion.Control
                             icon={!initialAssessmentLoaded
-                                ?
-                                <Loader size={20} color="gray"/>
-                                :
-                                initialAssessmentWorkout
-                                    ?
-                                    <ThemeIcon size={20} radius="xl" color="yellow">
-                                        <IconClipboardCheck size={14} stroke={2.5}/>
-                                    </ThemeIcon>
-                                    :
-                                    <IconCircleDashedCheck size={20} color='gray'/>
+                                ? <Loader size={20} color="gray"/>
+                                : initialAssessmentWorkout
+                                    ? (
+                                        <ThemeIcon size={20} radius="xl" color="yellow">
+                                            <IconClipboardCheck size={14} stroke={2.5}/>
+                                        </ThemeIcon>
+                                    )
+                                    : <IconCircleDashedCheck size={20} color="gray"/>
                             }
                         >
                             <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text fw={600} c={initialAssessmentLoaded && initialAssessmentWorkout ? undefined : 'dimmed'}>Initial Assessment</Text>
+                                <Text
+                                    fw={600}
+                                    c={initialAssessmentLoaded && initialAssessmentWorkout ? undefined : 'dimmed'}
+                                >
+                                    Initial Assessment
+                                </Text>
                                 {initialAssessmentLoaded && (
                                     <Badge
                                         color={initialAssessmentWorkout ? 'yellow' : 'gray'}
@@ -403,9 +423,9 @@ function ClientRecordsTab({client, refreshKey,
                         bg="var(--color-surface)"
                     >
                         {/*TODO completed initial measurements style: no badge, not dimmed, green circle check (like intake)*/}
-                        <Accordion.Control icon={<IconCircleDashedCheck size={20} color='gray'/>}>
+                        <Accordion.Control icon={<IconCircleDashedCheck size={20} color="gray"/>}>
                             <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text fw={600} c='dimmed'>Initial Measurements</Text>
+                                <Text fw={600} c="dimmed">Initial Measurements</Text>
                             </Group>
                         </Accordion.Control>
 
@@ -413,6 +433,32 @@ function ClientRecordsTab({client, refreshKey,
                             <Text size="sm" c="dimmed">
                                 Initial measurements will be added in a later workflow.
                             </Text>
+                        </Accordion.Panel>
+                    </Accordion.Item>
+                </Accordion>
+
+                <Divider label="Progress records" labelPosition="left"/>
+
+                <Accordion
+                    multiple
+                    value={expandedRecords.filter(recordId => CLIENT_RECORD_IDS.includes(recordId))}
+                    onChange={records => handleExpandedRecordsChange(records, CLIENT_RECORD_IDS)}
+                    variant="separated"
+                    radius="md"
+                    transitionDuration={isSmallScreen ? 100 : 200}
+                >
+                    <Accordion.Item
+                        value="benchmarks"
+                        id="benchmarks"
+                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
+                        bg="var(--color-surface)"
+                    >
+                        <Accordion.Control icon={<IconTrophy size={20} color="gray"/>}>
+                            <Text fw={600}>Benchmarks</Text>
+                        </Accordion.Control>
+
+                        <Accordion.Panel>
+                            <ExerciseBenchmarksRecordCard clientId={clientId}/>
                         </Accordion.Panel>
                     </Accordion.Item>
                 </Accordion>

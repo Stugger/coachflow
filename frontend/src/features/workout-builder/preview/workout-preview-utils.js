@@ -11,6 +11,7 @@ import {
 } from '../../exercises/exercise-tracking-fields';
 
 import {parseWorkoutConfig} from '../draft/workout-draft-factory';
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
 
 export function sortWorkoutPreviewItems(items = []) {
     return [...items].sort((first, second) =>
@@ -179,12 +180,10 @@ function formatTrackingFieldLabel(field) {
     }
 
     const activeMode = getActiveTrackingFieldMode(definition, field);
-    const unit = getUnitLabel(field, definition, activeMode);
+    const unitLabel = getUnitLabel(field, definition, activeMode);
 
-    const detail = unit ?? activeMode?.label;
-
-    return detail
-        ? `${definition.label} (${String(detail).toLowerCase()})`
+    return unitLabel || activeMode?.label
+        ? `${definition.label} (${unitLabel ?? activeMode.label.toLowerCase()})`
         : definition.label;
 }
 
@@ -247,7 +246,7 @@ function formatTrackingTarget(field, value) {
             ? formatRange(value)
             : formatNumber(value);
 
-        return reps ? `${reps} reps` : null;
+        return reps ? `${reps} ${reps == 1 ? 'rep' : 'reps'}` : null;
     }
 
     if (field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST) {
@@ -266,8 +265,11 @@ function formatTrackingTarget(field, value) {
         return `RPE ${formatNumber(value)}`;
     }
 
-    if (field.key === TRACKING_FIELD_KEY.RESISTANCE && field.mode === 'LEVEL') {
-        return `Level ${value}`;
+    if (field.key === TRACKING_FIELD_KEY.RESISTANCE) {
+        if (field.mode === 'LEVEL') {
+            return `Level ${value}`;
+        }
+        return `${value} ${unit} resistance`;
     }
 
     const formattedValue = formatNumber(value);
@@ -357,15 +359,5 @@ function getUnitLabel(field, definition, activeMode) {
         ?? activeMode?.unit
         ?? definition.unit;
 
-    if (!unit) {
-        return null;
-    }
-
-    const availableUnits = activeMode?.units
-        ?? definition.units
-        ?? [];
-
-    return availableUnits.find(
-        option => option.value === unit,
-    )?.label ?? String(unit).toLowerCase();
+    return unit ? getExerciseUnitLabel(unit) : null;
 }

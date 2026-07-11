@@ -27,6 +27,7 @@ import {
     TRACKING_FIELD_DEFINITIONS,
     createTrackingField,
 } from '../../exercises/exercise-tracking-fields';
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
 
 function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, onSave}) {
 
@@ -212,7 +213,7 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                             </Text>
                             <Text size="xs" c={colorScheme === 'light' ? "black" : "white"} fw={600}>
                                 {definition.label}
-                                {unit ? ` · ${unit.toLowerCase()}` : ''}
+                                {unit ? ` · ${getExerciseUnitLabel(unit)}` : ''}
                             </Text>
                         </Group>
                     </Badge>
