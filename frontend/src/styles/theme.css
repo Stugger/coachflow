@@ -1,4 +1,9 @@
 :root[data-mantine-color-scheme='dark'] {
+    /* Mantine overrides */
+    .mantine-LoadingOverlay-overlay {
+        background: rgba(18, 18, 18, 0.6);
+    }
+
     /* Backgrounds */
     --color-background: #181818;
     --color-surface: #202020;
