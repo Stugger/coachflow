@@ -7,7 +7,6 @@ import {
     Box,
     Button,
     Collapse,
-    Divider,
     Drawer,
     Group,
     Loader,
@@ -441,7 +440,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                         </Group>
                     </Group>
 
-                    <Stack gap={2} pl={23}>
+                    <Stack gap={2} pl={24}>
                         <Text size="xs" c="dimmed">
                             {formatDisplayLongDate(benchmark.achievedAt)}
                             {' · '}
@@ -469,9 +468,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
 
         return (
             <Collapse expanded={expanded}>
-                <Divider mb="sm" size={2} color={'var(--color-border)'}/>
-
-                <Stack gap={4}>
+                <Stack gap={4} pt={4}>
                     <Group gap={6}>
                         <IconHistory size={16}/>
                         <Text size="sm" fw={700} mb={2}>
@@ -575,11 +572,12 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
 
                     <Box
                         px="xs"
-                        bg={colorScheme === 'light' ? '#f7f8f9' : '#222222'}
+                        bg={colorScheme === 'light' ? '#f8f9fa' : '#222222'}
                         style={{
                             borderLeft: `3px solid ${colorScheme === 'light' ? 'var(--color-border)' : '#363636'}`,
+                            borderBottom: expanded ? `2px solid ${colorScheme === 'light' ? 'var(--color-border)' : '#363636'}` : 0,
                             borderTopRightRadius: 'var(--mantine-radius-md)',
-                            borderBottomRightRadius: 'var(--mantine-radius-md)',
+                            borderBottomRightRadius: expanded ? 0 : 'var(--mantine-radius-md)',
                         }}
                     >
                         {group.benchmarks.map(benchmark => (

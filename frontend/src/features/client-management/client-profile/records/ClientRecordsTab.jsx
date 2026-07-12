@@ -5,7 +5,6 @@ import {
     Accordion,
     Badge,
     Button,
-    Divider,
     Group,
     Loader,
     Modal,
@@ -355,6 +354,8 @@ function ClientRecordsTab({client, refreshKey,
                     </Text>
                 </Stack>
 
+                {/* Onboarding records */}
+
                 <Accordion
                     multiple
                     value={expandedRecords.filter(recordId => SETUP_RECORD_IDS.includes(recordId))}
@@ -482,7 +483,7 @@ function ClientRecordsTab({client, refreshKey,
                     </Accordion.Item>
                 </Accordion>
 
-                <Divider label="Progress records" labelPosition="left"/>
+                {/* Progress records */}
 
                 <Accordion
                     multiple

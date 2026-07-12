@@ -20,10 +20,10 @@ import {
 } from '@tabler/icons-react';
 
 import {
+    EXERCISE_BENCHMARK_VALUE_TYPE,
     getAvailableExerciseBenchmarkDefinitions,
     getExerciseBenchmarkDefinition,
 } from '../exercise-benchmark-definitions.js';
-import {EXERCISE_BENCHMARK_TYPE} from "../exercise-benchmark-types.js";
 
 import DurationInput from "../../../../components/input/DurationInput.jsx";
 
@@ -235,12 +235,13 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
                         disabled={Boolean(benchmark)}
                         error={errors.benchmarkType}
                         required
+                        allowDeselect={false}
                         onChange={updateBenchmarkType}
                         comboboxProps={{ offset: 2 }}
                     />
 
                     <Group grow align="flex-start">
-                        {(form.benchmarkType === EXERCISE_BENCHMARK_TYPE.FASTEST_TIME || form.benchmarkType === EXERCISE_BENCHMARK_TYPE.MAX_DURATION) ? (
+                        {(definition?.valueType === EXERCISE_BENCHMARK_VALUE_TYPE.DURATION) ? (
                             <DurationInput
                                 label="Value"
                                 value={form.value}
@@ -267,12 +268,13 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
                             />
                         )}
 
-                        {definition?.units?.length > 0 && (
+                        {definition?.units?.length > 1 && (
                             <Select
                                 label="Unit"
                                 data={definition.units}
                                 value={form.unit}
                                 required
+                                allowDeselect={false}
                                 error={errors.unit}
                                 onChange={unit => setForm(current => ({
                                     ...current,
