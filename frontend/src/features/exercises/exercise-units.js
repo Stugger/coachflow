@@ -54,3 +54,35 @@ export function getExerciseUnit(value) {
 export function getExerciseUnitLabel(value) {
     return getExerciseUnit(value)?.label ?? value ?? null;
 }
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Conversions
+// ------------------------------------------------------------------------------------------------------------------------
+
+const POUNDS_PER_KILOGRAM = 2.2046226218487757;
+
+export function convertExerciseUnitValue(value, fromUnit, toUnit) {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+        return null;
+    }
+
+    if (fromUnit === toUnit) {
+        return numericValue;
+    }
+
+    if (fromUnit === EXERCISE_UNITS.POUNDS.value && toUnit === EXERCISE_UNITS.KILOGRAMS.value) {
+        return numericValue / POUNDS_PER_KILOGRAM;
+    }
+
+    if (fromUnit === EXERCISE_UNITS.KILOGRAMS.value && toUnit === EXERCISE_UNITS.POUNDS.value) {
+        return numericValue * POUNDS_PER_KILOGRAM;
+    }
+
+    return null;
+}

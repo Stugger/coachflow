@@ -1,0 +1,3 @@
+export const EXERCISE_BENCHMARK_TYPE = {
+    ONE_REP_MAX: 'ONE_REP_MAX',
+};

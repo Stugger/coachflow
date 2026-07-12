@@ -351,6 +351,7 @@ function ExerciseItemCard({
 
                     <Collapse expanded={customizingFields}>
                         <ExerciseTrackingConfig
+                            exercise={exercise}
                             configDraft={configDraft}
                             colorScheme={computedColorScheme}
                             onChange={setConfigDraft}
@@ -360,6 +361,7 @@ function ExerciseItemCard({
                     </Collapse>
 
                     <ExerciseSetTable
+                        exerciseId={exercise?.id}
                         config={activeConfig}
                         locked={customizingFields}
                         stackControlled={!independent}

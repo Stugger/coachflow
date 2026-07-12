@@ -1,4 +1,5 @@
 import {EXERCISE_UNITS} from './exercise-units.js';
+import {EXERCISE_BENCHMARK_TYPE} from '../client-management/benchmarks/exercise-benchmark-types.js'
 
 export const TRACKING_FIELD_KEY = {
     REPS: 'reps',
@@ -21,6 +22,7 @@ export const TRACKING_FIELD_TYPE = {
     TIME: 'TIME',
     TEXT: 'TEXT',
     TEXT_LONG: 'TEXT_LONG',
+    BENCHMARK_PERCENT: 'BENCHMARK_PERCENT',
 };
 
 export const TRACKING_FIELD_DEFINITIONS = {
@@ -47,14 +49,28 @@ export const TRACKING_FIELD_DEFINITIONS = {
     [TRACKING_FIELD_KEY.WEIGHT]: {
         key: TRACKING_FIELD_KEY.WEIGHT,
         label: 'Weight',
-        type: TRACKING_FIELD_TYPE.DECIMAL,
         unit: EXERCISE_UNITS.POUNDS.value,
         units: [
             EXERCISE_UNITS.POUNDS,
             EXERCISE_UNITS.KILOGRAMS,
         ],
-        minColumnWidth: '7rem',
-        inputWidth: '5rem',
+        modes: [
+            {
+                value: 'FIXED_LOAD',
+                label: 'Fixed load',
+                type: TRACKING_FIELD_TYPE.DECIMAL,
+                minColumnWidth: '7rem',
+                inputWidth: '5rem',
+            },
+            {
+                value: 'PERCENT_1RM',
+                label: '% 1RM',
+                type: TRACKING_FIELD_TYPE.BENCHMARK_PERCENT,
+                benchmarkType: EXERCISE_BENCHMARK_TYPE.ONE_REP_MAX,
+                minColumnWidth: '8rem',
+                inputWidth: '6rem',
+            },
+        ],
     },
     [TRACKING_FIELD_KEY.TIME]: {
         key: TRACKING_FIELD_KEY.TIME,

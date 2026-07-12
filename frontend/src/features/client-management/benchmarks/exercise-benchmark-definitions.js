@@ -4,10 +4,7 @@ import {
 
 import * as ExerciseMetadataUtils from '../../exercises/exercise-metadata-utils.js';
 import {EXERCISE_UNITS, getExerciseUnitLabel} from '../../exercises/exercise-units.js';
-
-export const EXERCISE_BENCHMARK_TYPE = {
-    ONE_REP_MAX: 'ONE_REP_MAX',
-};
+import {EXERCISE_BENCHMARK_TYPE} from "./exercise-benchmark-types.js";
 
 export const EXERCISE_BENCHMARK_BASIS = {
     MANUAL: 'MANUAL',
