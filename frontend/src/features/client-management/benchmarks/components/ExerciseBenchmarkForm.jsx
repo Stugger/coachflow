@@ -23,6 +23,9 @@ import {
     getAvailableExerciseBenchmarkDefinitions,
     getExerciseBenchmarkDefinition,
 } from '../exercise-benchmark-definitions.js';
+import {EXERCISE_BENCHMARK_TYPE} from "../exercise-benchmark-types.js";
+
+import DurationInput from "../../../../components/input/DurationInput.jsx";
 
 import {resolveMediaUrl} from '../../../../utils/media-url-utils.js';
 import {getDateKeyFromDate} from '../../../../utils/time-utils.js';
@@ -79,10 +82,7 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
             benchmark.benchmarkType,
         );
 
-        if (
-            !existingDefinition
-            || availableDefinitions.some(item => item.type === existingDefinition.type)
-        ) {
+        if (!existingDefinition || availableDefinitions.some(item => item.type === existingDefinition.type)) {
             return availableDefinitions;
         }
 
@@ -90,6 +90,11 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
     }, [exercise, benchmark]);
 
     const definition = getExerciseBenchmarkDefinition(form.benchmarkType);
+
+    const benchmarkOptions = definitions.map(item => ({
+        value: item.type,
+        label: item.label,
+    }));
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -111,12 +116,20 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
     // ------------------------------------------------------------------------------------------------------------------------
 
     function updateBenchmarkType(benchmarkType) {
-        const nextDefinition = getExerciseBenchmarkDefinition(benchmarkType);
+        const definition = getExerciseBenchmarkDefinition(benchmarkType);
 
         setForm(current => ({
             ...current,
-            benchmarkType: benchmarkType || '',
-            unit: nextDefinition?.defaultUnit ?? null,
+            benchmarkType,
+            value: null,
+            unit: definition?.defaultUnit ?? null,
+        }));
+
+        setErrors(current => ({
+            ...current,
+            benchmarkType: '',
+            value: '',
+            unit: '',
         }));
     }
 
@@ -170,11 +183,6 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
     // ------------------------------------------------------------------------------------------------------------------------
-
-    const benchmarkOptions = definitions.map(item => ({
-        value: item.type,
-        label: item.label,
-    }));
 
     return (
         <Modal
@@ -232,19 +240,32 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
                     />
 
                     <Group grow align="flex-start">
-                        <NumberInput
-                            label="Value"
-                            value={form.value}
-                            min={0}
-                            decimalScale={3}
-                            hideControls
-                            required
-                            error={errors.value}
-                            onChange={value => setForm(current => ({
-                                ...current,
-                                value,
-                            }))}
-                        />
+                        {(form.benchmarkType === EXERCISE_BENCHMARK_TYPE.FASTEST_TIME || form.benchmarkType === EXERCISE_BENCHMARK_TYPE.MAX_DURATION) ? (
+                            <DurationInput
+                                label="Value"
+                                value={form.value}
+                                required
+                                error={errors.value}
+                                onChange={value => setForm(current => ({
+                                    ...current,
+                                    value,
+                                }))}
+                            />
+                        ) : (
+                            <NumberInput
+                                label="Value"
+                                value={form.value}
+                                min={0}
+                                decimalScale={3}
+                                hideControls
+                                required
+                                error={errors.value}
+                                onChange={value => setForm(current => ({
+                                    ...current,
+                                    value,
+                                }))}
+                            />
+                        )}
 
                         {definition?.units?.length > 0 && (
                             <Select
@@ -300,10 +321,13 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
                         minRows={3}
                         maxRows={6}
                         error={errors.notes}
-                        onChange={event => setForm(current => ({
-                            ...current,
-                            notes: event.currentTarget.value,
-                        }))}
+                        onChange={event => {
+                            const notes = event.currentTarget.value;
+                            setForm(current => ({
+                                ...current,
+                                notes,
+                            }));
+                        }}
                     />
 
                     <Group justify="flex-end">

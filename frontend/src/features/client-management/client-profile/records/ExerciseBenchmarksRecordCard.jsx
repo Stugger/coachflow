@@ -4,7 +4,6 @@ import {
     ActionIcon,
     Alert,
     Avatar,
-    Badge,
     Box,
     Button,
     Collapse,
@@ -18,6 +17,7 @@ import {
     Stack,
     Text,
     ThemeIcon,
+    Tooltip,
     UnstyledButton,
 } from '@mantine/core';
 import {
@@ -28,7 +28,9 @@ import {
     IconEdit,
     IconHistory,
     IconPhoto,
+    IconPin,
     IconPlus,
+    IconStarFilled,
     IconTrash,
     IconTrophy,
 } from '@tabler/icons-react';
@@ -41,6 +43,7 @@ import {
 } from '../../benchmarks/client-exercise-benchmarks-api.js';
 
 import {
+    findBestExerciseBenchmark,
     formatExerciseBenchmarkValue,
     getAvailableExerciseBenchmarkDefinitions,
     getExerciseBenchmarkBasisLabel,
@@ -75,6 +78,31 @@ function groupBenchmarksByExercise(benchmarks) {
     }
 
     return Array.from(groups.values());
+}
+
+function getBestBenchmarkIds(benchmarks) {
+    const benchmarksByType = new Map();
+
+    for (const benchmark of benchmarks) {
+        const typeBenchmarks = benchmarksByType.get(benchmark.benchmarkType) ?? [];
+
+        typeBenchmarks.push(benchmark);
+        benchmarksByType.set(benchmark.benchmarkType, typeBenchmarks);
+    }
+
+    const bestIds = new Set();
+
+    for (const [benchmarkType, typeBenchmarks] of benchmarksByType) {
+        const definition = getExerciseBenchmarkDefinition(benchmarkType);
+
+        const bestBenchmark = findBestExerciseBenchmark(typeBenchmarks, definition);
+
+        if (bestBenchmark) {
+            bestIds.add(bestBenchmark.id);
+        }
+    }
+
+    return bestIds;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -346,7 +374,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
         );
     }
 
-    function renderBenchmarkRecord(benchmark, {current = false, badge = true} = {}) {
+    function renderBenchmarkRecord(benchmark, {current = false, best = false} = {}) {
         const definition = getExerciseBenchmarkDefinition(benchmark.benchmarkType);
 
         return (
@@ -358,26 +386,71 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                 py="xs"
             >
                 <Stack gap={2} style={{minWidth: 0}}>
-                    <Group gap="xs">
-                        <Text size="sm" fw={700}>
-                            {definition?.shortLabel ?? benchmark.benchmarkType}
-                        </Text>
-                        <Text size="sm" fw={600}>
-                            {formatExerciseBenchmarkValue(benchmark)}
-                        </Text>
-                        {current && badge && (
-                            <Badge size="xs" variant="light" color="blue">
-                                Current
-                            </Badge>
+                    <Group gap={6}>
+                        {current && (
+                            <Tooltip
+                                label="Current result"
+                                withArrow
+                                arrowSize={8}
+                                events={{hover: true, focus: true, touch: true}}
+                            >
+                                <Box
+                                    component="span"
+                                    tabIndex={0}
+                                    aria-label="Current result"
+                                    style={{
+                                        display: 'inline-flex',
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    <IconPin size={18}/>
+                                </Box>
+                            </Tooltip>
                         )}
+                        <Group gap={6} pl={!current ? 24 : 0}>
+                            <Text size="sm" fw={700} c={current ? undefined : "dimmed"}>
+                                {definition?.shortLabel ?? benchmark.benchmarkType}
+                            </Text>
+                            <Text size="sm" fw={600} c={current ? undefined : "dimmed"}>
+                                {'·'}
+                            </Text>
+                            <Text size="sm" fw={600} c={current ? undefined : "dimmed"}>
+                                {formatExerciseBenchmarkValue(benchmark)}
+                            </Text>
+                            {best && (
+                                <Tooltip
+                                    label="Best result"
+                                    withArrow
+                                    arrowSize={8}
+                                    events={{hover: true, focus: true, touch: true,}}
+                                >
+                                    <Box
+                                        component="span"
+                                        tabIndex={0}
+                                        aria-label="Best result"
+                                        style={{
+                                            display: 'inline-flex',
+                                            flexShrink: 0,
+                                            paddingLeft: 2,
+                                        }}
+                                    >
+                                        <IconStarFilled size={15} color="var(--mantine-color-yellow-4)" style={{opacity: current ? 1.0 : 0.75}}/>
+                                    </Box>
+                                </Tooltip>
+                            )}
+                        </Group>
                     </Group>
 
-                    <Text size="xs" c="dimmed">
-                        {formatDisplayLongDate(benchmark.achievedAt)}
-                        {' · '}
-                        {getExerciseBenchmarkBasisLabel(benchmark.basis)}
-                        {benchmark.notes?.trim() ? ` · ${benchmark.notes.trim()}` : ''}
-                    </Text>
+                    <Stack gap={2} pl={23}>
+                        <Text size="xs" c="dimmed">
+                            {formatDisplayLongDate(benchmark.achievedAt)}
+                            {' · '}
+                            {getExerciseBenchmarkBasisLabel(benchmark.basis)}
+                        </Text>
+                        <Text size="xs" c="dimmed" fs="italic" style={{whiteSpace: 'pre-wrap'}}>
+                            {benchmark.notes?.trim() ? `${benchmark.notes.trim()}` : ''}
+                        </Text>
+                    </Stack>
                 </Stack>
 
                 {renderBenchmarkActions(benchmark, current)}
@@ -392,6 +465,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
         const history = historyByExerciseId[exerciseId] ?? [];
         const error = historyErrors[exerciseId];
         const currentIds = new Set(group.benchmarks.map(benchmark => benchmark.id));
+        const bestIds = getBestBenchmarkIds(history);
 
         return (
             <Collapse expanded={expanded}>
@@ -435,6 +509,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                         >
                             {renderBenchmarkRecord(benchmark, {
                                 current: currentIds.has(benchmark.id),
+                                best: bestIds.has(benchmark.id),
                             })}
                         </Box>
                     ))}
@@ -453,7 +528,6 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                 radius="md"
                 p="sm"
                 bg={colorScheme === 'light' ? "#fcfdfe" : "#252525"}
-                style={{borderColor: 'var(--color-border)'}}
             >
                 <Stack gap="xs">
                     <Group justify="space-between" wrap="nowrap">
@@ -465,7 +539,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                                 <Avatar
                                     src={resolveMediaUrl(group.exercise.thumbnailUrl)}
                                     alt={group.exercise.name}
-                                    size={isSmallScreen ? 40 : 52}
+                                    size={isSmallScreen ? 40 : 48}
                                     radius="sm"
                                 >
                                     <IconPhoto size={20}/>
@@ -501,7 +575,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
 
                     <Box
                         px="xs"
-                        bg={colorScheme === 'light' ? '#ffffff' : '#222222'}
+                        bg={colorScheme === 'light' ? '#f7f8f9' : '#222222'}
                         style={{
                             borderLeft: `3px solid ${colorScheme === 'light' ? 'var(--color-border)' : '#363636'}`,
                             borderTopRightRadius: 'var(--mantine-radius-md)',
@@ -512,7 +586,9 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                             <Box
                                 key={benchmark.id}
                             >
-                                {renderBenchmarkRecord(benchmark, {current: true, badge: false})}
+                                {renderBenchmarkRecord(benchmark, {
+                                    current: true,
+                                })}
                             </Box>
                         ))}
                     </Box>

@@ -18,6 +18,8 @@ import {
     resolveExerciseBenchmarkPercentageTarget,
 } from '../../client-management/benchmarks/exercise-benchmark-resolution.js';
 
+import {formatDurationSeconds} from "../../../utils/time-utils.js";
+
 export function sortWorkoutPreviewItems(items = []) {
     return [...items].sort((first, second) =>
         (first.position ?? 0) - (second.position ?? 0)
@@ -270,7 +272,7 @@ function formatTrackingTarget(field, value, {exerciseId = null, benchmarks = nul
     }
 
     if (field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST) {
-        const duration = formatDuration(value);
+        const duration = formatDurationSeconds(value);
 
         if (!duration) {
             return null;
@@ -373,19 +375,6 @@ function formatRange(value) {
     }
 
     return minimum || maximum || null;
-}
-
-function formatDuration(value) {
-    const totalSeconds = Number(value);
-
-    if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
-        return null;
-    }
-
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
 function formatNumber(value) {
