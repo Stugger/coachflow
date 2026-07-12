@@ -17,6 +17,9 @@ public enum ExerciseBenchmarkType {
 
     ONE_REP_MAX("1 Rep Max", ExerciseTrackingField.WEIGHT, ExerciseTrackingField.REPS),
 
+    FASTEST_TIME("Fastest Time", ExerciseTrackingField.TIME),
+    MAX_DURATION("Max Duration", ExerciseTrackingField.TIME),
+
     ;
 
     private final String label;
