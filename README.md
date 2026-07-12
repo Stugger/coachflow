@@ -6,7 +6,8 @@
 
 The live development build supports trainer registration and provides each account with an isolated workspace.
 
-CoachFlow is being designed and tested in collaboration with a working personal trainer. It is an active product build rather than a finished SaaS application: the current focus is giving trainers a clean, responsive workspace for client onboarding, workout design, and initial assessments. Next phases expand into programs and recorded live-session results.
+CoachFlow is being designed and tested in collaboration with a working personal trainer. 
+It is an active product build rather than a finished SaaS application: the current focus is giving trainers a clean, responsive workspace for client onboarding, workout design, and initial assessments. Next phases expand into programs and recorded live-session results.
 
 ---
 
@@ -68,6 +69,17 @@ CoachFlow is being designed and tested in collaboration with a working personal 
 <p align="center">
   <img src="images/initial-assessment-setup.gif" alt="Setting up an initial assessment workout for a CoachFlow client" width="100%" />
 </p>
+
+</details>
+<br>
+<details>
+<summary><strong>Exercise benchmarks</strong> — Record current performance benchmarks and review progress history</summary>
+
+- Record exercise-specific benchmarks such as one-rep max, fastest time, and maximum duration
+- Maintain reassessment history while distinguishing the current result from the best-ever result
+- Support measured, estimated, and manually entered benchmark values
+- Resolve percentage-based workout targets from a client’s current one-rep max
+- Preserve benchmark history when exercise tracking configurations change
 
 </details>
 <br>
@@ -147,7 +159,7 @@ flowchart TD
 ```
 
 The frontend is a React single-page application with route-based navigation and reusable, feature-oriented UI. 
-The backend exposes a REST API, owns validation and authorization, and persists the core trainer, client, intake, exercise, workout-template, and client-workout domains in PostgreSQL.
+The backend exposes a REST API, owns validation and authorization, and persists the core trainer, client, intake, exercise, benchmark, workout-template, and client-workout domains in PostgreSQL.
 
 The workout builder uses a nested workout-definition model:
 
@@ -312,10 +324,10 @@ Current work is focused on expanding the workout-design workflow and building to
 
 - Printable workout templates with browser print / Save as PDF support
 - Exercise creation, editing, and copying directly from the workout builder
-- Exercise-library domain refactor into a dedicated feature module
 - Larger multi-panel workout-builder layout for desktop workflows
 - Drag-and-drop reordering for sections, workout items, and stacked exercises
 - Live workout sessions with recorded exercise results and session history
+- Benchmark-driven progress reporting and session-derived benchmark suggestions
 - Program templates and client-specific program assignment workflows
 - Measurement check-ins with supporting scans and photos
 - A redesigned calendar and scheduling workflow, including trainer availability and client self-booking links
@@ -325,7 +337,8 @@ Current work is focused on expanding the workout-design workflow and building to
 ## Status
 
 CoachFlow is actively under development and being refined through ongoing trainer feedback and hands-on testing. 
-The current build establishes the trainer-side foundation for client onboarding, workout design, and initial assessment setup; measurements, programs, live sessions, and expanded scheduling are the next major product areas.
+The current build establishes the trainer-side foundation for client onboarding, exercise management, workout design, initial assessment setup, and client exercise benchmarks; 
+live sessions, programs, measurements, and expanded scheduling are the next major product areas.
 
 ---
 
