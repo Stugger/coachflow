@@ -25,13 +25,15 @@ import {
     sortWorkoutPreviewItems,
 } from './workout-preview-utils';
 
+import WorkoutBenchmarkProvider from '../WorkoutBenchmarkProvider.jsx';
+
 import ExerciseViewer from "../../exercises/components/ExerciseViewer.jsx";
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Workout structure
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutStructurePreview({workout}) {
+function WorkoutStructurePreview({workout, benchmarks = null}) {
 
     const isSmallScreen = useIsSmallScreen();
 
@@ -116,8 +118,9 @@ function WorkoutStructurePreview({workout}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <>
+        <WorkoutBenchmarkProvider benchmarks={benchmarks}>
             {renderExerciseOverlay()}
+
             <Stack gap="md">
                 {sections.map((section, sectionIndex) => (
                     <WorkoutSectionPreview
@@ -127,16 +130,16 @@ function WorkoutStructurePreview({workout}) {
                         )}
                         section={section}
                         isSmallScreen={isSmallScreen}
-                        onViewExercise={(exercise) => {
+                        onViewExercise={exercise => {
                             setExerciseOverlay({
                                 mode: 'VIEW',
                                 exercise,
-                            })
+                            });
                         }}
                     />
                 ))}
             </Stack>
-        </>
+        </WorkoutBenchmarkProvider>
     );
 }
 

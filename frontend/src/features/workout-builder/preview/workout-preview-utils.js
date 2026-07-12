@@ -11,6 +11,14 @@ import {
 } from '../../exercises/exercise-tracking-fields';
 
 import {parseWorkoutConfig} from '../draft/workout-draft-factory';
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
+
+import {
+    getBenchmarkTargetResolutionMessage,
+    resolveExerciseBenchmarkPercentageTarget,
+} from '../../client-management/benchmarks/exercise-benchmark-resolution.js';
+
+import {formatDurationSeconds} from "../../../utils/time-utils.js";
 
 export function sortWorkoutPreviewItems(items = []) {
     return [...items].sort((first, second) =>
@@ -55,7 +63,7 @@ export function getExerciseDisplayName(item) {
         || 'Unnamed exercise';
 }
 
-export function getExercisePreviewSummary(configJson, {stackControlled = false} = {}) {
+export function getExercisePreviewSummary(configJson, {stackControlled = false, exerciseId = null, benchmarks = null} = {}) {
     const config = parseWorkoutConfig(configJson);
     const trackingFields = sortWorkoutPreviewItems(config.trackingFields ?? []);
     const sets = config.sets ?? [];
@@ -66,6 +74,10 @@ export function getExercisePreviewSummary(configJson, {stackControlled = false} 
             sets,
             trackingFields,
             stackControlled,
+            {
+                exerciseId,
+                benchmarks,
+            },
         ),
         noTargetTrackingFields: getNoTargetTrackingFields(
             sets,
@@ -90,7 +102,7 @@ export function getStackRoundCount(stack) {
     return parseWorkoutConfig(firstExercise.configJson).sets.length;
 }
 
-function createSetGroups(sets, trackingFields, stackControlled) {
+function createSetGroups(sets, trackingFields, stackControlled, benchmarkContext) {
     const groups = [];
 
     for (const set of sets) {
@@ -98,7 +110,7 @@ function createSetGroups(sets, trackingFields, stackControlled) {
 
         const targetParts = trackingFields
             .filter(field => field.key !== TRACKING_FIELD_KEY.NOTES)
-            .map(field => formatTrackingTarget(field, set.targets?.[field.key]))
+            .map(field => formatTrackingTarget(field, set.targets?.[field.key], benchmarkContext))
             .filter(Boolean);
 
         const noteParts = trackingFields
@@ -129,14 +141,16 @@ function createSetGroups(sets, trackingFields, stackControlled) {
     }
 
     return groups.map(group => ({
+        signature: group.signature,
         count: group.count,
         setType: group.setType,
         targetParts: group.targetParts,
         noteParts: group.noteParts,
-        label: [
-            formatSetGroupLead(group.setType, group.count, stackControlled),
-            ...group.targetParts,
-        ].join(' · '),
+        lead: formatSetGroupLead(
+            group.setType,
+            group.count,
+            stackControlled,
+        ),
     }));
 }
 
@@ -179,12 +193,15 @@ function formatTrackingFieldLabel(field) {
     }
 
     const activeMode = getActiveTrackingFieldMode(definition, field);
-    const unit = getUnitLabel(field, definition, activeMode);
 
-    const detail = unit ?? activeMode?.label;
+    if (activeMode?.type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT) {
+        return `${definition.label} (${activeMode.label})`;
+    }
 
-    return detail
-        ? `${definition.label} (${String(detail).toLowerCase()})`
+    const unitLabel = getUnitLabel(field, definition, activeMode);
+
+    return unitLabel || activeMode?.label
+        ? `${definition.label} (${unitLabel ?? activeMode.label.toLowerCase()})`
         : definition.label;
 }
 
@@ -226,7 +243,11 @@ function formatSetGroupLead(setType, count, stackControlled) {
     return `${count} ${label}${count === 1 ? '' : 's'}`;
 }
 
-function formatTrackingTarget(field, value) {
+function createTrackingTargetPart(text, warning = null) {
+    return text ? {text, warning} : null;
+}
+
+function formatTrackingTarget(field, value, {exerciseId = null, benchmarks = null} = {}) {
     if (!hasTargetValue(value)) {
         return null;
     }
@@ -247,27 +268,29 @@ function formatTrackingTarget(field, value) {
             ? formatRange(value)
             : formatNumber(value);
 
-        return reps ? `${reps} reps` : null;
+        return createTrackingTargetPart(reps ? `${reps} ${reps == 1 ? 'rep' : 'reps'}` : null);
     }
 
     if (field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST) {
-        const duration = formatDuration(value);
+        const duration = formatDurationSeconds(value);
 
         if (!duration) {
             return null;
         }
 
-        return field.key === TRACKING_FIELD_KEY.REST
-            ? `Rest ${duration}`
-            : duration;
+        return createTrackingTargetPart(field.key === TRACKING_FIELD_KEY.REST ? `Rest ${duration}` : duration);
     }
 
     if (field.key === TRACKING_FIELD_KEY.RPE) {
-        return `RPE ${formatNumber(value)}`;
+        return createTrackingTargetPart(`RPE ${formatNumber(value)}`);
     }
 
-    if (field.key === TRACKING_FIELD_KEY.RESISTANCE && field.mode === 'LEVEL') {
-        return `Level ${value}`;
+    if (field.key === TRACKING_FIELD_KEY.RESISTANCE) {
+        if (field.mode === 'LEVEL') {
+            return createTrackingTargetPart(`Level ${value}`);
+        }
+
+        return createTrackingTargetPart(`${value} ${unit} resistance`);
     }
 
     const formattedValue = formatNumber(value);
@@ -276,13 +299,44 @@ function formatTrackingTarget(field, value) {
         return null;
     }
 
-    if (field.key === TRACKING_FIELD_KEY.INCLINE) {
-        return `${formattedValue}${unit || '%'}`;
+    if (type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT) {
+        const percentageLabel = `${formattedValue}${activeMode?.label ?? '%'}`;
+
+        if (!Array.isArray(benchmarks) || !exerciseId || !activeMode?.benchmarkType) {
+            return createTrackingTargetPart(percentageLabel);
+        }
+
+        const resolution =
+            resolveExerciseBenchmarkPercentageTarget({
+                benchmarks,
+                exerciseId,
+                benchmarkType: activeMode.benchmarkType,
+                percentage: value,
+                targetUnit: field.unit
+                    ?? activeMode.unit
+                    ?? definition.unit
+                    ?? null,
+            });
+
+        if (!resolution.resolved) {
+            return createTrackingTargetPart(
+                percentageLabel,
+                getBenchmarkTargetResolutionMessage(resolution, activeMode.benchmarkType),
+            );
+        }
+
+        const resolvedValue = formatNumber(resolution.resolvedValue);
+
+        const resolvedUnit = getExerciseUnitLabel(resolution.resolvedUnit);
+
+        return createTrackingTargetPart(resolvedUnit ? `${resolvedValue} ${resolvedUnit}` : resolvedValue);
     }
 
-    return unit
-        ? `${formattedValue} ${unit}`
-        : formattedValue;
+    if (field.key === TRACKING_FIELD_KEY.INCLINE) {
+        return createTrackingTargetPart(`${formattedValue}${unit || '%'}`);
+    }
+
+    return createTrackingTargetPart(unit ? `${formattedValue} ${unit}` : formattedValue);
 }
 
 function formatNotesTarget(value) {
@@ -323,19 +377,6 @@ function formatRange(value) {
     return minimum || maximum || null;
 }
 
-function formatDuration(value) {
-    const totalSeconds = Number(value);
-
-    if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
-        return null;
-    }
-
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-
-    return `${minutes}:${String(seconds).padStart(2, '0')}`;
-}
-
 function formatNumber(value) {
     if (value === null || value === undefined || value === '') {
         return null;
@@ -357,15 +398,5 @@ function getUnitLabel(field, definition, activeMode) {
         ?? activeMode?.unit
         ?? definition.unit;
 
-    if (!unit) {
-        return null;
-    }
-
-    const availableUnits = activeMode?.units
-        ?? definition.units
-        ?? [];
-
-    return availableUnits.find(
-        option => option.value === unit,
-    )?.label ?? String(unit).toLowerCase();
+    return unit ? getExerciseUnitLabel(unit) : null;
 }

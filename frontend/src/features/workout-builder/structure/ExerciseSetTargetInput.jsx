@@ -1,16 +1,50 @@
 import {
     Group,
     NumberInput,
+    Stack,
     Text,
     Textarea,
     TextInput,
+    Tooltip,
 } from '@mantine/core';
+import {
+    IconAlertTriangle,
+} from '@tabler/icons-react';
 
 import DurationInput from '../../../components/input/DurationInput';
 
 import {TRACKING_FIELD_DEFINITIONS, TRACKING_FIELD_TYPE} from '../../exercises/exercise-tracking-fields';
 
-function ExerciseSetTargetInput({field, value, locked, onChange}) {
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
+
+import {
+    getBenchmarkTargetResolutionMessage,
+    resolveExerciseBenchmarkPercentageTarget,
+} from '../../client-management/benchmarks/exercise-benchmark-resolution.js';
+
+import {useWorkoutBenchmarks} from '../workout-benchmark-context.js';
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Utility
+// ------------------------------------------------------------------------------------------------------------------------
+
+function formatResolvedBenchmarkValue(value, unit) {
+    const formattedValue = new Intl.NumberFormat(undefined, {
+        maximumFractionDigits: 2,
+    }).format(value);
+
+    const unitLabel = getExerciseUnitLabel(unit);
+
+    return unitLabel
+        ? `${formattedValue} ${unitLabel}`
+        : formattedValue;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Component
+// ------------------------------------------------------------------------------------------------------------------------
+
+function ExerciseSetTargetInput({exerciseId, field, value, locked, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -24,6 +58,11 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
 
     const type = activeMode?.type ?? definition.type;
 
+    const {
+        enabled: benchmarkResolutionEnabled,
+        benchmarks,
+    } = useWorkoutBenchmarks();
+
     const inputWidth =
         activeMode?.inputWidth
         ?? definition.inputWidth
@@ -33,6 +72,26 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
         width: inputWidth,
         marginInline: 'auto',
     };
+
+    const hasTargetValue = value !== null && value !== undefined && value !== '';
+
+    const benchmarkResolution =
+        type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT
+        && benchmarkResolutionEnabled
+        && exerciseId
+        && activeMode?.benchmarkType
+        && hasTargetValue
+            ? resolveExerciseBenchmarkPercentageTarget({
+                benchmarks,
+                exerciseId,
+                benchmarkType: activeMode.benchmarkType,
+                percentage: value,
+                targetUnit: field.unit
+                    ?? activeMode.unit
+                    ?? definition.unit
+                    ?? null,
+            })
+            : null;
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Utility
@@ -96,6 +155,93 @@ function ExerciseSetTargetInput({field, value, locked, onChange}) {
                     },
                 }}
             />
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Return benchmark percentage input
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    if (type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT) {
+        const resolutionMessage =
+            benchmarkResolution
+            && !benchmarkResolution.resolved
+                ? getBenchmarkTargetResolutionMessage(
+                    benchmarkResolution,
+                    activeMode?.benchmarkType,
+                )
+                : null;
+
+        return (
+            <Stack gap={2} align="center">
+                <NumberInput
+                    readOnly={locked}
+                    classNames={{input: 'subtle-input'}}
+                    variant="unstyled"
+                    value={value ?? ''}
+                    onChange={onChange}
+                    placeholder="—%"
+                    suffix="%"
+                    decimalScale={2}
+                    hideControls
+                    min={0}
+                    style={inputStyle}
+                    styles={{
+                        input: {
+                            textAlign: 'center',
+                            cursor: locked ? 'default' : undefined,
+                        },
+                    }}
+                />
+
+                {benchmarkResolution?.resolved && (
+                    <Text
+                        size="xs"
+                        c="dimmed"
+                        fw={600}
+                        lh={1.1}
+                        style={{whiteSpace: 'nowrap'}}
+                    >
+                        {formatResolvedBenchmarkValue(
+                            benchmarkResolution.resolvedValue,
+                            benchmarkResolution.resolvedUnit,
+                        )}
+                    </Text>
+                )}
+
+                {resolutionMessage && (
+                    <Tooltip
+                        label={resolutionMessage}
+                        position="bottom"
+                        withArrow
+                        arrowSize={12}
+                        multiline
+                        events={{ hover: true, focus: false, touch: true }}
+                    >
+                        <Group
+                            gap={3}
+                            wrap="nowrap"
+                            c="yellow"
+                            style={{cursor: 'help'}}
+                        >
+                            <IconAlertTriangle
+                                size={13}
+                                style={{flexShrink: 0}}
+                            />
+
+                            <Text
+                                size="xs"
+                                c="yellow"
+                                fw={600}
+                                lh={1.1}
+                                style={{whiteSpace: 'nowrap'}}
+                            >
+                                Missing benchmark
+                            </Text>
+                        </Group>
+                    </Tooltip>
+                )}
+            </Stack>
         );
     }
 

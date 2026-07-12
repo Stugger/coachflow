@@ -23,12 +23,20 @@ import {
 } from '@tabler/icons-react';
 
 import {reindexTrackingFields} from '../draft/workout-draft-mappers';
+
 import {
     TRACKING_FIELD_DEFINITIONS,
+    TRACKING_FIELD_TYPE,
     createTrackingField,
 } from '../../exercises/exercise-tracking-fields';
 
-function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, onSave}) {
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
+
+import {
+    getAvailableExerciseBenchmarkDefinitions,
+} from '../../client-management/benchmarks/exercise-benchmark-definitions.js';
+
+function ExerciseTrackingConfig({exercise, configDraft, colorScheme, onChange, onClose, onSave}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -42,6 +50,10 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
 
     const trackingFields = [...(configDraft?.trackingFields ?? [])]
         .sort((a, b) => a.position - b.position);
+
+    const availableBenchmarkTypes = new Set(getAvailableExerciseBenchmarkDefinitions(exercise)
+        .map(definition => definition.type)
+    );
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Draft update helpers
@@ -150,15 +162,49 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
     // Utility
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function getTrackingFieldMode(field) {
+    function getAvailableTrackingFieldModes(field) {
         const definition = TRACKING_FIELD_DEFINITIONS[field.key];
+        const modes = definition?.modes ?? [];
 
-        if (!definition.modes) {
-            return null;
+        return modes.filter(mode => {
+            if (!mode.benchmarkType) {
+                return true;
+            }
+            return availableBenchmarkTypes.has(mode.benchmarkType) || field.mode === mode.value;
+        });
+    }
+
+    function getTrackingFieldMode(field) {
+        const availableModes = getAvailableTrackingFieldModes(field);
+
+        return availableModes.find(mode => mode.value === field.mode)
+            ?? availableModes[0]
+            ?? null;
+    }
+
+    function getTrackingFieldUnit(field, definition, activeMode) {
+        return field.unit
+            ?? activeMode?.unit
+            ?? definition.unit
+            ?? null;
+    }
+
+    function getTrackingFieldUnits(definition, activeMode) {
+        return activeMode?.units
+            ?? definition.units
+            ?? [];
+    }
+
+    function getUnitForMode(field, definition, mode) {
+        const availableUnits = getTrackingFieldUnits(definition, mode);
+
+        if (availableUnits.some(unit => unit.value === field.unit)) {
+            return field.unit;
         }
 
-        return definition.modes.find(mode => mode.value === field.mode)
-            ?? definition.modes[0];
+        return mode?.unit
+            ?? definition.unit
+            ?? null;
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -168,13 +214,19 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
     function renderTrackingFieldPill(field) {
         const definition = TRACKING_FIELD_DEFINITIONS[field.key];
 
+        const availableModes = getAvailableTrackingFieldModes(field);
         const activeMode = getTrackingFieldMode(field);
+        const availableUnits = getTrackingFieldUnits(definition, activeMode);
+        const unit = getTrackingFieldUnit(field, definition, activeMode);
 
-        const availableUnits = activeMode?.units ?? definition.units ?? [];
+        const benchmarkPercentageMode =
+            activeMode?.type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT;
 
-        const unit = activeMode
-            ? field.unit ?? activeMode.unit
-            : field.unit ?? definition.unit;
+        const detailLabel = benchmarkPercentageMode
+            ? `${activeMode.label} · ${getExerciseUnitLabel(unit)}`
+            : unit
+                ? getExerciseUnitLabel(unit)
+                : null;
 
         return (
             <Menu shadow="md" key={field.key} withinPortal position="bottom-start" transitionProps={{ duration: 0 }}>
@@ -212,13 +264,13 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                             </Text>
                             <Text size="xs" c={colorScheme === 'light' ? "black" : "white"} fw={600}>
                                 {definition.label}
-                                {unit ? ` · ${unit.toLowerCase()}` : ''}
+                                {detailLabel ? ` · ${detailLabel}` : ''}
                             </Text>
                         </Group>
                     </Badge>
                 </Menu.Target>
                 <Menu.Dropdown>
-                    {definition.modes?.length > 0 && (
+                    {availableModes.length > 1 && (
                         <Menu.Sub>
                             <Menu.Sub.Target>
                                 <Menu.Sub.Item>
@@ -227,18 +279,26 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                             </Menu.Sub.Target>
 
                             <Menu.Sub.Dropdown>
-                                {definition.modes.map(mode => (
-                                    <Menu.Item
-                                        key={mode.value}
-                                        rightSection={field.mode === mode.value ? <IconCheck size={18}/>: null}
-                                        onClick={() => updateTrackingField(field.key, {
-                                            mode: mode.value,
-                                            ...(mode.unit ? {unit: mode.unit} : {unit: null}),
-                                        })}
-                                    >
-                                        {mode.label}
-                                    </Menu.Item>
-                                ))}
+                                {availableModes.map(mode => {
+                                    const selected = activeMode?.value === mode.value;
+
+                                    return (
+                                        <Menu.Item
+                                            key={mode.value}
+                                            rightSection={selected ? <IconCheck size={18}/> : null}
+                                            onClick={() => {
+                                                const nextUnit = getUnitForMode(field, definition, mode);
+
+                                                updateTrackingField(field.key, {
+                                                    mode: mode.value,
+                                                    unit: nextUnit,
+                                                });
+                                            }}
+                                        >
+                                            {mode.label}
+                                        </Menu.Item>
+                                    );
+                                })}
                             </Menu.Sub.Dropdown>
                         </Menu.Sub>
                     )}
@@ -255,7 +315,11 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                                 {availableUnits.map(unit => (
                                     <Menu.Item
                                         key={unit.value}
-                                        rightSection={field.unit === unit.value ? <IconCheck size={18}/>: null}
+                                        rightSection={
+                                            getTrackingFieldUnit(field, definition, activeMode) === unit.value
+                                                ? <IconCheck size={18}/>
+                                                : null
+                                        }
                                         onClick={() => updateTrackingField(field.key, {
                                             unit: unit.value,
                                         })}
@@ -267,8 +331,8 @@ function ExerciseTrackingConfig({configDraft, colorScheme, onChange, onClose, on
                         </Menu.Sub>
                     )}
 
-                    {(definition.modes?.length > 0 || availableUnits.length > 0) && (
-                        <Menu.Divider />
+                    {(availableModes.length > 1 || availableUnits.length > 0) && (
+                        <Menu.Divider/>
                     )}
 
                     <Menu.Item

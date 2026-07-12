@@ -14,6 +14,10 @@ import {
     apiGetWorkoutTemplate,
 } from '../../workout-library/workout-template-api';
 
+import {
+    apiGetCurrentClientExerciseBenchmarks,
+} from '../benchmarks/client-exercise-benchmarks-api.js';
+
 import {createEmptyWorkoutDraft} from '../../workout-builder/draft/workout-draft-factory';
 
 import {
@@ -32,6 +36,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
 
     const [initialDraft, setInitialDraft] = useState(null);
     const [exercises, setExercises] = useState([]);
+    const [benchmarks, setBenchmarks] = useState(null);
     const [loaded, setLoaded] = useState(false);
     const [loadError, setLoadError] = useState('');
     const [persistedWorkoutId, setPersistedWorkoutId] = useState(null);
@@ -67,6 +72,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
     const resetBuilderState = useCallback(() => {
         setInitialDraft(null);
         setExercises([]);
+        setBenchmarks(null);
         setLoaded(false);
         setLoadError('');
         setPersistedWorkoutId(null);
@@ -87,19 +93,35 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         return createEmptyWorkoutDraft();
     }, [clientWorkoutId, isEditing, sourceWorkoutTemplateId]);
 
+    const loadCurrentBenchmarks = useCallback(async () => {
+        try {
+            return await apiGetCurrentClientExerciseBenchmarks(client.id);
+        } catch (error) {
+            console.error(
+                'Failed to load client exercise benchmarks:',
+                error,
+            );
+
+            return null;
+        }
+    }, [client.id]);
+
     const loadBuilderData = useCallback(() => {
         setLoaded(false);
         setLoadError('');
         setInitialDraft(null);
         setExercises([]);
+        setBenchmarks(null);
 
         return Promise.all([
             apiGetExercises(),
             loadInitialDraft(),
+            loadCurrentBenchmarks(),
         ])
-            .then(([loadedExercises, loadedDraft]) => {
+            .then(([loadedExercises, loadedDraft, loadedBenchmarks]) => {
                 setExercises(loadedExercises);
                 setInitialDraft(loadedDraft);
+                setBenchmarks(loadedBenchmarks);
             })
             .catch(error => {
                 console.error('Failed to load initial assessment builder:', error);
@@ -111,7 +133,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             .finally(() => {
                 setLoaded(true);
             });
-    }, [loadInitialDraft]);
+    }, [loadInitialDraft, loadCurrentBenchmarks]);
 
     useEffect(() => {
         if (!opened) {
@@ -181,6 +203,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             loadError={loadError}
             initialDraft={initialDraft}
             exercises={exercises}
+            benchmarks={benchmarks}
             recoveryKey={recoveryKey}
             isDraft={!isPersisted}
             isNew={!isPersisted && !sourceWorkoutTemplateId}

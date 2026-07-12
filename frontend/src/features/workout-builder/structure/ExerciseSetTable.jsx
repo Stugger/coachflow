@@ -20,7 +20,12 @@ import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
 import {reindexSets} from '../draft/workout-draft-mappers';
 import {createDraftId} from '../draft/workout-draft-factory';
-import {TRACKING_FIELD_DEFINITIONS} from '../../exercises/exercise-tracking-fields';
+
+import {
+    TRACKING_FIELD_DEFINITIONS,
+    TRACKING_FIELD_TYPE,
+} from '../../exercises/exercise-tracking-fields';
+import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants
@@ -38,7 +43,7 @@ const rowCellStyle = {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChange}) {
+function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorScheme, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -198,6 +203,39 @@ function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChang
             ?? definition.modes[0];
     }
 
+    function getTrackingFieldHeaderLabel(field) {
+        const definition = TRACKING_FIELD_DEFINITIONS[field.key];
+        const activeMode = getTrackingFieldMode(field);
+
+        const unit = field.unit
+            ?? activeMode?.unit
+            ?? definition.unit
+            ?? null;
+
+        const unitLabel = unit
+            ? getExerciseUnitLabel(unit)
+            : null;
+
+        if (activeMode?.type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT) {
+            const details = [
+                activeMode.label,
+                unitLabel,
+            ].filter(Boolean);
+
+            return `${definition.label} (${details.join(' · ')})`;
+        }
+
+        if (unitLabel) {
+            return `${definition.label} (${unitLabel})`;
+        }
+
+        if (activeMode?.label) {
+            return `${definition.label} (${activeMode.label.toLowerCase()})`;
+        }
+
+        return definition.label;
+    }
+
     function getColumnMinWidth(field) {
         const activeMode = getTrackingFieldMode(field);
 
@@ -313,23 +351,20 @@ function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChang
                             </Text>
                         </Table.Th>
 
-                        {trackingFields.map(field => {
-                            const definition = TRACKING_FIELD_DEFINITIONS[field.key];
-                            return (
-                                <Table.Th
-                                    key={field.key}
-                                    style={{
-                                        minWidth: getColumnMinWidth(field),
-                                        whiteSpace: 'nowrap',
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
-                                        {definition.label}{field.unit ? ' (' + field.unit.toLowerCase() + ')' : field.mode ? ' (' + getTrackingFieldMode(field).label.toLowerCase() + ')' : ''}
-                                    </Text>
-                                </Table.Th>
-                            );
-                        })}
+                        {trackingFields.map(field => (
+                            <Table.Th
+                                key={field.key}
+                                style={{
+                                    minWidth: getColumnMinWidth(field),
+                                    whiteSpace: 'nowrap',
+                                    textAlign: 'center',
+                                }}
+                            >
+                                <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
+                                    {getTrackingFieldHeaderLabel(field)}
+                                </Text>
+                            </Table.Th>
+                        ))}
 
                         <Table.Th
                             style={{
@@ -383,6 +418,7 @@ function ExerciseSetTable({config, locked, stackControlled, colorScheme, onChang
                                         }}
                                     >
                                         <ExerciseSetTargetInput
+                                            exerciseId={exerciseId}
                                             field={field}
                                             value={set.targets?.[field.key]}
                                             locked={locked}

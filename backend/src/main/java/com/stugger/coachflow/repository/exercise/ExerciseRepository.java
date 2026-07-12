@@ -28,4 +28,18 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
             """)
     List<Exercise> findAvailableForTrainer(@Param("trainerId") Long trainerId);
 
+    @Query(value = """
+            SELECT tracking_field.value
+            FROM exercises exercise
+            CROSS JOIN LATERAL jsonb_array_elements_text(
+                CASE
+                    WHEN jsonb_typeof(exercise.metadata_json -> 'defaultTrackingFields') = 'array'
+                        THEN exercise.metadata_json -> 'defaultTrackingFields'
+                    ELSE '[]'::jsonb
+                END
+            ) AS tracking_field(value)
+            WHERE exercise.id = :exerciseId
+            """, nativeQuery = true)
+    List<String> findDefaultTrackingFieldKeysById(@Param("exerciseId") Long exerciseId);
+
 }

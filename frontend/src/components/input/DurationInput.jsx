@@ -1,7 +1,8 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useId, useState} from 'react';
 import {
     Box,
     Group,
+    Input,
     Text,
     TextInput,
 } from '@mantine/core';
@@ -70,7 +71,15 @@ function getTotalSeconds(parts) {
 
 //TODO typing from left input should move caret into right input when maxed, backspacing from second input should bring caret to end of first input when empty, left/right arrows should move between inputs when no more characters left to move between
 
-function DurationInput({value, locked, variant = 'default', width, onChange}) {
+function DurationInput({value, locked, variant = 'default', width, label, description, required = false, error, onChange}) {
+
+    const generatedId = useId();
+
+    const minutesInputId = `${generatedId}-minutes`;
+    const descriptionId = description ? `${generatedId}-description` : undefined;
+    const errorId = error ? `${generatedId}-error` : undefined;
+
+    const describedBy = [descriptionId, errorId,].filter(Boolean).join(' ') || undefined;
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -150,65 +159,103 @@ function DurationInput({value, locked, variant = 'default', width, onChange}) {
     // ------------------------------------------------------------------------------------------------------------------------
 
     return (
-        <Box
-            className={variant === 'subtle' ? "subtle-input-container" : "duration-input"}
-            data-locked={locked || undefined}
-            style={{
-                width: width,
-                marginInline: 'auto',
-                paddingInline: 0,
+        <Input.Wrapper
+            label={label}
+            description={description}
+            required={required}
+            error={error}
+            labelProps={{
+                htmlFor: minutesInputId,
+            }}
+            descriptionProps={{
+                id: descriptionId,
+            }}
+            errorProps={{
+                id: errorId,
+                style: {paddingTop: '0.3rem'},
             }}
         >
-            <Group gap={0} wrap="nowrap" justify="center">
-                <TextInput
-                    readOnly={locked}
-                    value={parts.minutes}
-                    onFocus={() => handleFocus('minutes')}
-                    onChange={event => updatePart('minutes', event.currentTarget.value)}
-                    onBlur={handleBlur}
-                    placeholder="––"
-                    inputMode="numeric"
-                    maxLength={2}
-                    aria-label="Minutes"
-                    style={{width: 'calc(50% - 0.35rem)'}}
-                    styles={{
-                        input: {
-                            border: 0,
-                            background: 'transparent',
-                            textAlign: 'right',
-                            paddingRight: '0.2rem',
-                            cursor: locked ? 'default' : undefined,
-                        },
-                    }}
-                />
+            <Box
+                className={variant === 'subtle' ? 'subtle-input-container' : 'duration-input'}
+                data-locked={locked || undefined}
+                data-error={Boolean(error) || undefined}
+                role="group"
+                aria-label={label || 'Duration'}
+                aria-describedby={describedBy}
+                style={{
+                    width,
+                    marginInline: 'auto',
+                    paddingInline: 0,
+                }}
+            >
+                <Group
+                    gap={0}
+                    wrap="nowrap"
+                    justify="center"
+                    style={{ marginBlock: -1 }}
+                >
+                    <TextInput
+                        id={minutesInputId}
+                        readOnly={locked}
+                        value={parts.minutes}
+                        onFocus={() => handleFocus('minutes')}
+                        onChange={event => updatePart('minutes', event.currentTarget.value)}
+                        onBlur={handleBlur}
+                        placeholder="––"
+                        inputMode="numeric"
+                        maxLength={2}
+                        aria-label="Minutes"
+                        aria-describedby={describedBy}
+                        aria-invalid={Boolean(error) || undefined}
+                        style={{width: 'calc(50% - 0.35rem)'}}
+                        styles={{
+                            input: {
+                                border: 0,
+                                background: 'transparent',
+                                color: error ? "var(--mantine-color-error)" : undefined,
+                                textAlign: 'right',
+                                paddingRight: '0.2rem',
+                                cursor: locked ? 'default' : undefined,
+                            },
+                        }}
+                    />
 
-                <Text size="sm" c="dimmed" fw={600} styles={{root: {cursor: 'default'}}}>
-                    :
-                </Text>
+                    <Text
+                        size="sm"
+                        c={error ? "var(--mantine-color-error)" : "dimmed"}
+                        fw={600}
+                        styles={{ root: {cursor: 'default'} }}
+                    >
+                        :
+                    </Text>
 
-                <TextInput
-                    readOnly={locked}
-                    value={parts.seconds}
-                    onFocus={() => handleFocus('seconds')}
-                    onChange={event => updatePart('seconds', event.currentTarget.value)}
-                    onBlur={handleBlur}
-                    placeholder="00"
-                    inputMode="numeric"
-                    maxLength={2}
-                    aria-label="Seconds"
-                    style={{width: 'calc(50% - 0.35rem)'}}
-                    styles={{
-                        input: {
-                            border: 0,
-                            background: 'transparent',
-                            textAlign: 'left',
-                            paddingLeft: '0.2rem',
-                            cursor: locked ? 'default' : undefined,
-                        },
-                    }}
-                />
-            </Group>
-        </Box>
+                    <TextInput
+                        readOnly={locked}
+                        value={parts.seconds}
+                        onFocus={() => handleFocus('seconds')}
+                        onChange={event => updatePart('seconds', event.currentTarget.value)}
+                        onBlur={handleBlur}
+                        placeholder="00"
+                        inputMode="numeric"
+                        maxLength={2}
+                        aria-label="Seconds"
+                        aria-describedby={describedBy}
+                        aria-invalid={Boolean(error) || undefined}
+                        style={{width: 'calc(50% - 0.35rem)'}}
+                        styles={{
+                            input: {
+                                border: 0,
+                                background: 'transparent',
+                                color: error ? "var(--mantine-color-error)" : undefined,
+                                textAlign: 'left',
+                                paddingLeft: '0.2rem',
+                                cursor: locked ? 'default' : undefined,
+                            },
+                        }}
+                    />
+                </Group>
+            </Box>
+        </Input.Wrapper>
     );
 }
 

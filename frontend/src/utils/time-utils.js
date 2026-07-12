@@ -71,3 +71,16 @@ export function formatDayHeading(date) {
         day: 'numeric'
     });
 }
+
+export function formatDurationSeconds(value) {
+    const totalSeconds = Number(value);
+
+    if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
+        return null;
+    }
+
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}

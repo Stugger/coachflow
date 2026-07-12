@@ -4,13 +4,16 @@ import {
     Box,
     Group,
     Paper,
+    ScrollArea,
     Stack,
     Text,
+    Tooltip,
     useComputedColorScheme,
     getGradient,
     useMantineTheme,
 } from '@mantine/core';
 import {
+    IconAlertTriangle,
     IconPhoto,
 } from '@tabler/icons-react';
 
@@ -31,6 +34,10 @@ import {
     getWorkoutPreviewKey,
     sortWorkoutPreviewItems,
 } from './workout-preview-utils';
+
+import {
+    useWorkoutBenchmarks,
+} from '../workout-benchmark-context.js';
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Workout item
@@ -53,10 +60,21 @@ function ExercisePreview({item, stacked = false, isSmallScreen, onViewExercise})
     const exercise = item.exercise;
 
     const {
+        enabled: benchmarkResolutionEnabled,
+        benchmarks,
+    } = useWorkoutBenchmarks();
+
+    const {
         eachSide,
         setGroups,
         noTargetTrackingFields,
-    } = getExercisePreviewSummary(item.configJson, {stackControlled: stacked});
+    } = getExercisePreviewSummary(item.configJson, {
+        stackControlled: stacked,
+        exerciseId: exercise?.id ?? item.exerciseId,
+        benchmarks: benchmarkResolutionEnabled
+            ? benchmarks
+            : null,
+    });
 
     const thumbnailSize = (stacked ? 38 : 48) / (isSmallScreen ? 1.2 : 1.0);
 
@@ -83,14 +101,20 @@ function ExercisePreview({item, stacked = false, isSmallScreen, onViewExercise})
                     variant="light"
                     style={{
                         flexShrink: 0,
-                        cursor: exercise && onViewExercise ? 'pointer' : 'default'
+                        cursor: exercise && onViewExercise ? 'pointer' : 'default',
                     }}
                     onClick={() => exercise && onViewExercise?.(exercise)}
                 >
                     <IconPhoto size={stacked ? 18 : 22}/>
                 </Avatar>
 
-                <Stack gap={stacked ? 4 : 6} style={{flex: 1, minWidth: 0}}>
+                <Stack
+                    gap={6}
+                    style={{
+                        flex: 1,
+                        minWidth: 0,
+                    }}
+                >
                     <Group gap="xs" wrap="wrap">
                         <Text
                             fw={700}
@@ -107,50 +131,131 @@ function ExercisePreview({item, stacked = false, isSmallScreen, onViewExercise})
                         )}
                     </Group>
 
-                    <Stack gap={2}>
-                        {setGroups.map((group, index) => (
-                            <Box
-                                key={`${group.signature}-${index}`}
-                            >
-                                <Text
-                                    size={isSmallScreen || stacked ? 'xs' : 'sm'}
-                                    c="dimmed"
-                                >
-                                    {group.label}
-                                </Text>
-
-                                {group.noteParts.map((note, noteIndex) => (
-                                    <Text
-                                        key={`${note}-${noteIndex}`}
-                                        size="xs"
-                                        c="dimmed"
-                                        fs="italic"
-                                        mt={2}
+                    <ScrollArea
+                        type="auto"
+                        scrollbars="x"
+                        scrollbarSize={6}
+                        offsetScrollbars="present"
+                    >
+                        <Stack
+                            gap={2}
+                            style={{
+                                width: 'max-content',
+                                minWidth: '100%',
+                            }}
+                        >
+                            {setGroups.map((group, index) => (
+                                <Box key={`${group.signature}-${index}`}>
+                                    <Group
+                                        gap={4}
+                                        wrap="nowrap"
+                                        style={{
+                                            width: 'max-content',
+                                            minWidth: '100%',
+                                        }}
                                     >
-                                        {note}
-                                    </Text>
-                                ))}
-                            </Box>
-                        ))}
-                    </Stack>
+                                        <Text
+                                            size={isSmallScreen || stacked ? 'xs' : 'sm'}
+                                            c="dimmed"
+                                            style={{
+                                                whiteSpace: 'nowrap',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            {group.lead}
+                                        </Text>
 
-                    {noTargetTrackingFields.length > 0 && (
-                        <Text size={isSmallScreen ? '0.6rem' : 'xs'} c="dimmed">
-                            <strong>No default target:</strong>
-                            {' '}
-                            {noTargetTrackingFields
-                                .map(field => field.label)
-                                .join(' · ')}
-                        </Text>
-                    )}
+                                        {group.targetParts.map((target, targetIndex) => (
+                                            <Group
+                                                key={`${target.text}-${targetIndex}`}
+                                                gap={3}
+                                                wrap="nowrap"
+                                                style={{flexShrink: 0}}
+                                            >
+                                                <Text
+                                                    size={isSmallScreen || stacked ? 'xs' : 'sm'}
+                                                    c="dimmed"
+                                                    style={{whiteSpace: 'nowrap'}}
+                                                >
+                                                    · {target.text}
+                                                </Text>
+
+                                                {target.warning && (
+                                                    <Tooltip
+                                                        label={target.warning}
+                                                        withArrow
+                                                        arrowSize={8}
+                                                        multiline
+                                                        events={{
+                                                            hover: true,
+                                                            focus: true,
+                                                            touch: true,
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            component="span"
+                                                            aria-label={target.warning}
+                                                            tabIndex={0}
+                                                            style={{
+                                                                display: 'inline-flex',
+                                                                flexShrink: 0,
+                                                                cursor: 'help',
+                                                            }}
+                                                        >
+                                                            <IconAlertTriangle
+                                                                size={13}
+                                                                color="var(--mantine-color-yellow-6)"
+                                                            />
+                                                        </Box>
+                                                    </Tooltip>
+                                                )}
+                                            </Group>
+                                        ))}
+                                    </Group>
+
+                                    {group.noteParts.map((note, noteIndex) => (
+                                        <Text
+                                            key={`${note}-${noteIndex}`}
+                                            size="xs"
+                                            c="dimmed"
+                                            fs="italic"
+                                            mt={2}
+                                        >
+                                            {note}
+                                        </Text>
+                                    ))}
+                                </Box>
+                            ))}
+
+                            {noTargetTrackingFields.length > 0 && (
+                                <Text
+                                    size={isSmallScreen ? '0.6rem' : 'xs'}
+                                    c="dimmed"
+                                    style={{whiteSpace: 'nowrap'}}
+                                    pt={4}
+                                >
+                                    <strong>No default target:</strong>
+                                    {' '}
+                                    {noTargetTrackingFields
+                                        .map(field => field.label)
+                                        .join(' · ')}
+                                </Text>
+                            )}
+                        </Stack>
+                    </ScrollArea>
 
                     {item.notes?.trim() && (
-                        <Box bg="rgba(255, 209, 0, 0.1)" style={{borderRadius: 'var(--mantine-radius-md)'}}>
+                        <Box
+                            bg="rgba(255, 209, 0, 0.075)"
+                            style={{
+                                borderRadius: 'var(--mantine-radius-md)',
+                            }}
+                        >
                             <Text
                                 size="xs"
                                 c="dimmed"
                                 fs="italic"
-                                p='0.4rem'
+                                p="0.4rem"
                                 style={{
                                     whiteSpace: 'pre-wrap',
                                 }}

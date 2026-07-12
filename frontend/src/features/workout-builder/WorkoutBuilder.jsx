@@ -28,6 +28,7 @@ import {
 
 import ExerciseViewer from '../exercises/components/ExerciseViewer';
 import WorkoutStructureEditor from './structure/WorkoutStructureEditor';
+import WorkoutBenchmarkProvider from './WorkoutBenchmarkProvider.jsx';
 
 import {getWorkoutEquipment} from './draft/workout-draft-mappers';
 import {
@@ -49,6 +50,7 @@ function WorkoutBuilder({
                         loadError,
                         initialDraft,
                         exercises = [],
+                        benchmarks = null,
                         recoveryKey,
                         isDraft = false,
                         isNew = false,
@@ -447,13 +449,15 @@ function WorkoutBuilder({
                             </Stack>
                         </Paper>
 
-                        <WorkoutStructureEditor
-                            draft={draft}
-                            exercises={exercises}
-                            validationIssues={activeValidationIssues}
-                            onChange={setDraft}
-                            onViewExercise={openExerciseViewer}
-                        />
+                        <WorkoutBenchmarkProvider benchmarks={benchmarks}>
+                            <WorkoutStructureEditor
+                                draft={draft}
+                                exercises={exercises}
+                                validationIssues={activeValidationIssues}
+                                onChange={setDraft}
+                                onViewExercise={openExerciseViewer}
+                            />
+                        </WorkoutBenchmarkProvider>
                     </>
                 )}
             </Stack>

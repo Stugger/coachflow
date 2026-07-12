@@ -31,7 +31,7 @@ import {
     getWorkoutStructureCounts,
 } from '../../../workout-builder/preview/workout-preview-utils';
 
-function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete}) {
+function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -162,7 +162,10 @@ function InitialAssessmentRecordCard({workout, loaded, error, deleting, onNewWor
                     }}
                 >
                     <Box ref={previewContentRef}>
-                        <WorkoutStructurePreview workout={workout}/>
+                        <WorkoutStructurePreview
+                            workout={workout}
+                            benchmarks={benchmarks}
+                        />
                     </Box>
                 </Box>
 
