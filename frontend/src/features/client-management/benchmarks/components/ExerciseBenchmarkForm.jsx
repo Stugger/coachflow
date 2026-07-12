@@ -342,7 +342,7 @@ function ExerciseBenchmarkForm({opened, exercise, benchmark, initialBenchmarkTyp
                             Cancel
                         </Button>
 
-                        <Button type="submit" loading={saving}>
+                        <Button type="submit" loading={saving} disabled={!benchmark && exercise?.archived}>
                             {benchmark ? 'Save changes' : 'Record benchmark'}
                         </Button>
                     </Group>

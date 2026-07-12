@@ -328,6 +328,7 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
 
     function renderBenchmarkActions(benchmark, includeRecordAction) {
         const canRecordAnother = includeRecordAction
+            && !benchmark.exercise?.archived
             && getAvailableExerciseBenchmarkDefinitions(benchmark.exercise)
                 .some(definition => definition.type === benchmark.benchmarkType);
 
@@ -524,15 +525,17 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                 withBorder
                 radius="md"
                 p="sm"
+                shadow="sm"
                 bg={colorScheme === 'light' ? "#fcfdfe" : "#252525"}
+                style={{opacity: group.exercise.archived ? 0.6 : 1.0}}
             >
                 <Stack gap="xs">
-                    <Group justify="space-between" wrap="nowrap">
+                    <Group gap={4} justify="space-between" wrap="nowrap">
                         <UnstyledButton
                             onClick={() => setViewerExercise(group.exercise)}
                             style={{minWidth: 0, flex: 1}}
                         >
-                            <Group wrap="nowrap">
+                            <Group gap="sm" wrap="nowrap">
                                 <Avatar
                                     src={resolveMediaUrl(group.exercise.thumbnailUrl)}
                                     alt={group.exercise.name}
@@ -546,9 +549,15 @@ function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadEr
                                     <Text fw={700} truncate="end">
                                         {group.exercise.name}
                                     </Text>
-                                    <Text size="xs" c="dimmed">
-                                        View exercise details
-                                    </Text>
+                                    {group.exercise.archived ? (
+                                        <Text size="xs" fw={600} c="dimmed">
+                                            This exercise is archived
+                                        </Text>
+                                    ) : (
+                                        <Text size="xs" c="dimmed">
+                                            View exercise details
+                                        </Text>
+                                    )}
                                 </Stack>
                             </Group>
                         </UnstyledButton>
