@@ -59,25 +59,21 @@ export const TRACKING_FIELD_DEFINITIONS = {
                 value: 'FIXED_LOAD',
                 label: 'Fixed load',
                 type: TRACKING_FIELD_TYPE.DECIMAL,
-                minColumnWidth: '7rem',
-                inputWidth: '5rem',
             },
             {
                 value: 'PERCENT_1RM',
                 label: '% 1RM',
                 type: TRACKING_FIELD_TYPE.BENCHMARK_PERCENT,
                 benchmarkType: EXERCISE_BENCHMARK_TYPE.ONE_REP_MAX,
-                minColumnWidth: '8rem',
-                inputWidth: '6rem',
             },
         ],
+        minColumnWidth: '7rem',
+        inputWidth: '5rem',
     },
     [TRACKING_FIELD_KEY.TIME]: {
         key: TRACKING_FIELD_KEY.TIME,
         label: 'Time',
         type: TRACKING_FIELD_TYPE.TIME,
-        minColumnWidth: '8rem',
-        inputWidth: '6rem',
         modes: [
             {
                 value: 'TIMER',
@@ -88,6 +84,8 @@ export const TRACKING_FIELD_DEFINITIONS = {
                 label: 'Stopwatch',
             },
         ],
+        minColumnWidth: '8rem',
+        inputWidth: '6rem',
     },
     [TRACKING_FIELD_KEY.DISTANCE]: {
         key: TRACKING_FIELD_KEY.DISTANCE,

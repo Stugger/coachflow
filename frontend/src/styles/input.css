@@ -51,6 +51,9 @@
     border: 1px solid var(--mantine-color-dark-4);
     background-color: var(--mantine-color-dark-6);
 }
-.duration-input:not([data-locked]):focus-within {
+.duration-input:not([data-locked]):not([data-error]):focus-within {
     border-color: var(--mantine-primary-color-filled);
+}
+.duration-input[data-error] {
+    border-color: var(--mantine-color-error);
 }
