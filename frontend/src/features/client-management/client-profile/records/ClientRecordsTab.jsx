@@ -29,6 +29,10 @@ import {
     apiGetInitialAssessmentWorkout,
 } from '../../client-workouts/client-workout-api';
 
+import {
+    apiGetCurrentClientExerciseBenchmarks,
+} from '../../benchmarks/client-exercise-benchmarks-api.js';
+
 import IntakeRecordCard from './IntakeRecordCard';
 import InitialAssessmentRecordCard from './InitialAssessmentRecordCard';
 import ExerciseBenchmarksRecordCard from '../records/ExerciseBenchmarksRecordCard.jsx';
@@ -80,6 +84,10 @@ function ClientRecordsTab({client, refreshKey,
     const [initialAssessmentWorkout, setInitialAssessmentWorkout] = useState(null);
     const [initialAssessmentLoaded, setInitialAssessmentLoaded] = useState(false);
     const [initialAssessmentError, setInitialAssessmentError] = useState('');
+
+    const [benchmarks, setBenchmarks] = useState([]);
+    const [benchmarksLoaded, setBenchmarksLoaded] = useState(false);
+    const [benchmarksError, setBenchmarksError] = useState('');
 
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
     const [deletingInitialAssessment, setDeletingInitialAssessment] = useState(false);
@@ -147,6 +155,38 @@ function ClientRecordsTab({client, refreshKey,
             });
     }, [clientId]);
 
+    const loadCurrentBenchmarks = useCallback((showLoader = true) => {
+        if (!clientId) {
+            return Promise.resolve();
+        }
+
+        if (showLoader) {
+            setBenchmarksLoaded(false);
+        }
+
+        setBenchmarksError('');
+
+        return apiGetCurrentClientExerciseBenchmarks(clientId)
+            .then(result => {
+                const currentBenchmarks = result ?? [];
+
+                setBenchmarks(currentBenchmarks);
+
+                return currentBenchmarks;
+            })
+            .catch(error => {
+                console.error('Failed to load exercise benchmarks:', error);
+
+                setBenchmarks([]);
+                setBenchmarksError(
+                    error.message || 'Failed to load exercise benchmarks.'
+                );
+            })
+            .finally(() => {
+                setBenchmarksLoaded(true);
+            });
+    }, [clientId]);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
     // ------------------------------------------------------------------------------------------------------------------------
@@ -158,6 +198,10 @@ function ClientRecordsTab({client, refreshKey,
     useEffect(() => {
         loadIntake();
     }, [loadIntake]);
+
+    useEffect(() => {
+        loadCurrentBenchmarks();
+    }, [loadCurrentBenchmarks]);
 
     useEffect(() => {
         if (!clientId) {
@@ -405,6 +449,7 @@ function ClientRecordsTab({client, refreshKey,
                         <Accordion.Panel>
                             <InitialAssessmentRecordCard
                                 workout={initialAssessmentWorkout}
+                                benchmarks={benchmarksLoaded && !benchmarksError ? benchmarks : null}
                                 loaded={initialAssessmentLoaded}
                                 error={initialAssessmentError}
                                 deleting={deletingInitialAssessment}
@@ -458,7 +503,13 @@ function ClientRecordsTab({client, refreshKey,
                         </Accordion.Control>
 
                         <Accordion.Panel>
-                            <ExerciseBenchmarksRecordCard clientId={clientId}/>
+                            <ExerciseBenchmarksRecordCard
+                                clientId={clientId}
+                                benchmarks={benchmarks}
+                                loaded={benchmarksLoaded}
+                                loadError={benchmarksError}
+                                onReload={loadCurrentBenchmarks}
+                            />
                         </Accordion.Panel>
                     </Accordion.Item>
                 </Accordion>

@@ -17,10 +17,8 @@ import {TRACKING_FIELD_DEFINITIONS, TRACKING_FIELD_TYPE} from '../../exercises/e
 
 import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
 
-import {getExerciseBenchmarkDefinition} from '../../client-management/benchmarks/exercise-benchmark-definitions.js';
-
 import {
-    BENCHMARK_TARGET_RESOLUTION_REASON,
+    getBenchmarkTargetResolutionMessage,
     resolveExerciseBenchmarkPercentageTarget,
 } from '../../client-management/benchmarks/exercise-benchmark-resolution.js';
 
@@ -40,30 +38,6 @@ function formatResolvedBenchmarkValue(value, unit) {
     return unitLabel
         ? `${formattedValue} ${unitLabel}`
         : formattedValue;
-}
-
-function getBenchmarkResolutionMessage(resolution, benchmarkType) {
-    const benchmarkDefinition =
-        getExerciseBenchmarkDefinition(benchmarkType);
-
-    const benchmarkLabel =
-        benchmarkDefinition?.shortLabel
-        ?? benchmarkDefinition?.label
-        ?? 'Benchmark';
-
-    switch (resolution?.reason) {
-        case BENCHMARK_TARGET_RESOLUTION_REASON.MISSING_BENCHMARK:
-            return `${benchmarkLabel} benchmark required`;
-
-        case BENCHMARK_TARGET_RESOLUTION_REASON.UNSUPPORTED_UNIT_CONVERSION:
-            return 'The benchmark unit cannot be converted to this workout unit';
-
-        case BENCHMARK_TARGET_RESOLUTION_REASON.INVALID_BENCHMARK_VALUE:
-            return `The saved ${benchmarkLabel} value is invalid`;
-
-        default:
-            return 'Unable to resolve this benchmark target';
-    }
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -192,7 +166,7 @@ function ExerciseSetTargetInput({exerciseId, field, value, locked, onChange}) {
         const resolutionMessage =
             benchmarkResolution
             && !benchmarkResolution.resolved
-                ? getBenchmarkResolutionMessage(
+                ? getBenchmarkTargetResolutionMessage(
                     benchmarkResolution,
                     activeMode?.benchmarkType,
                 )

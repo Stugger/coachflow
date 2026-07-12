@@ -37,7 +37,6 @@ import {
     apiCreateClientExerciseBenchmark,
     apiDeleteClientExerciseBenchmark,
     apiGetClientExerciseBenchmarkHistory,
-    apiGetCurrentClientExerciseBenchmarks,
     apiUpdateClientExerciseBenchmark,
 } from '../../benchmarks/client-exercise-benchmarks-api.js';
 
@@ -82,7 +81,7 @@ function groupBenchmarksByExercise(benchmarks) {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExerciseBenchmarksRecordCard({clientId}) {
+function ExerciseBenchmarksRecordCard({clientId, benchmarks = [], loaded, loadError, onReload}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -95,9 +94,6 @@ function ExerciseBenchmarksRecordCard({clientId}) {
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
-    const [benchmarks, setBenchmarks] = useState([]);
-    const [loaded, setLoaded] = useState(false);
-    const [loadError, setLoadError] = useState('');
     const [actionError, setActionError] = useState('');
 
     const [eligibleExercises, setEligibleExercises] = useState(null);
@@ -126,30 +122,6 @@ function ExerciseBenchmarksRecordCard({clientId}) {
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects & Callbacks
     // ------------------------------------------------------------------------------------------------------------------------
-
-    const loadCurrentBenchmarks = useCallback((showLoader = true) => {
-        if (!clientId) {
-            return Promise.resolve();
-        }
-
-        if (showLoader) {
-            setLoaded(false);
-        }
-
-        setLoadError('');
-
-        return apiGetCurrentClientExerciseBenchmarks(clientId)
-            .then(result => {
-                setBenchmarks(result ?? []);
-            })
-            .catch(error => {
-                console.error('Failed to load exercise benchmarks:', error);
-                setLoadError(error.message || 'Failed to load exercise benchmarks.');
-            })
-            .finally(() => {
-                setLoaded(true);
-            });
-    }, [clientId]);
 
     const loadExerciseHistory = useCallback((exerciseId) => {
         setHistoryLoadingExerciseIds(current => {
@@ -192,8 +164,7 @@ function ExerciseBenchmarksRecordCard({clientId}) {
         setExpandedHistoryExerciseIds(new Set());
         setHistoryByExerciseId({});
         setHistoryErrors({});
-        loadCurrentBenchmarks();
-    }, [clientId, loadCurrentBenchmarks]);
+    }, [clientId]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
@@ -269,7 +240,7 @@ function ExerciseBenchmarksRecordCard({clientId}) {
             await apiCreateClientExerciseBenchmark(clientId, payload);
         }
 
-        await loadCurrentBenchmarks(false);
+        await onReload?.(false);
 
         if (Object.hasOwn(historyByExerciseId, exerciseId)) {
             await loadExerciseHistory(exerciseId);
@@ -291,7 +262,7 @@ function ExerciseBenchmarksRecordCard({clientId}) {
         try {
             await apiDeleteClientExerciseBenchmark(clientId, deleteTarget.id);
             setDeleteTarget(null);
-            await loadCurrentBenchmarks(false);
+            await onReload?.(false);
 
             if (Object.hasOwn(historyByExerciseId, exerciseId)) {
                 await loadExerciseHistory(exerciseId);
