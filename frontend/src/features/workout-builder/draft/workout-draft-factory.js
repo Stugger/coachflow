@@ -9,6 +9,10 @@ export function createDraftId(prefix) {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+export function createSetKey() {
+    return createDraftId('set');
+}
+
 export function createEmptyWorkoutDraft() {
     return {
         id: null,
@@ -109,7 +113,7 @@ export function createEmptyWorkoutConfig() {
 
 export function createWorkoutSet(position = 1) {
     return {
-        draftId: createDraftId('set'),
+        setKey: createSetKey(),
         position,
         setType: WORKOUT_SET_TYPE.STANDARD,
         targets: {},
@@ -128,7 +132,7 @@ export function resizeExerciseSetCount(configJson, count, {duplicateLastSet = fa
             duplicateLastSet && previousSet
                 ? {
                     ...structuredClone(previousSet),
-                    draftId: createDraftId('set'),
+                    setKey: createSetKey(),
                     position: nextSets.length + 1,
                 }
                 : createWorkoutSet(nextSets.length + 1),
@@ -144,6 +148,22 @@ export function resizeExerciseSetCount(configJson, count, {duplicateLastSet = fa
         sets: nextSets.map((set, index) => ({
             ...set,
             position: index + 1,
+        })),
+    });
+}
+
+export function regenerateWorkoutConfigSetKeys(configJson) {
+    if (!configJson) {
+        return null;
+    }
+
+    const config = parseWorkoutConfig(configJson);
+
+    return stringifyWorkoutConfig({
+        ...config,
+        sets: config.sets.map(set => ({
+            ...set,
+            setKey: createSetKey(),
         })),
     });
 }
@@ -169,7 +189,7 @@ export function parseWorkoutConfig(configJson) {
             const position = set.position ?? index + 1;
 
             return {
-                draftId: set.draftId ?? `set-${position}`,
+                setKey: set.setKey ?? set.draftId ?? createSetKey(),
                 position,
                 setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
                 targets: set.targets ?? {},
@@ -200,6 +220,7 @@ export function stringifyWorkoutConfig(config) {
                 ...(field.unit ? {unit: field.unit} : {}),
             })),
         sets: (config.sets ?? []).map((set, index) => ({
+            setKey: set.setKey ?? createSetKey(),
             position: index + 1,
             setType: set.setType ?? WORKOUT_SET_TYPE.STANDARD,
             targets: normalizeTargets(set.targets),

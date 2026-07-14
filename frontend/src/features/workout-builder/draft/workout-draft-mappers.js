@@ -5,6 +5,7 @@ import {
     createDraftId,
     createEmptyWorkoutDraft,
     parseWorkoutConfig,
+    regenerateWorkoutConfigSetKeys,
     stringifyWorkoutConfig,
 } from './workout-draft-factory';
 
@@ -135,10 +136,14 @@ export function stripIdsFromDraft(draft) {
                 ...item,
                 id: null,
                 draftId: createDraftId('item'),
+                configJson: regenerateWorkoutConfigSetKeys(item.configJson),
                 itemExercises: (item.itemExercises ?? []).map(itemExercise => ({
                     ...itemExercise,
                     id: null,
                     draftId: createDraftId('item-exercise'),
+                    configJson: regenerateWorkoutConfigSetKeys(
+                        itemExercise.configJson,
+                    ),
                 })),
             })),
         })),

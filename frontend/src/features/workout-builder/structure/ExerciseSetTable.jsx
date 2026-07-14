@@ -19,7 +19,7 @@ import ExerciseSetTargetInput from './ExerciseSetTargetInput';
 import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
 import {reindexSets} from '../draft/workout-draft-mappers';
-import {createDraftId} from '../draft/workout-draft-factory';
+import {createSetKey} from '../draft/workout-draft-factory';
 
 import {
     TRACKING_FIELD_DEFINITIONS,
@@ -123,7 +123,7 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorSch
 
         const duplicatedSet = {
             ...structuredClone(sourceSet),
-            draftId: createDraftId('set'),
+            setKey: createSetKey(),
         };
 
         onChange({
@@ -381,7 +381,7 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorSch
                         const isLastRow = setIndex === sets.length - 1;
 
                         return (
-                            <Table.Tr key={set.position}>
+                            <Table.Tr key={set.setKey ?? set.position}>
                                 <Table.Td
                                     style={{
                                         ...rowCellStyle,
