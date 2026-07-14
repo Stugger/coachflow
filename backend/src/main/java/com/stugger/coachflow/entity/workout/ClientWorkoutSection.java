@@ -23,7 +23,7 @@ public class ClientWorkoutSection extends AbstractWorkoutSection {
     @JoinColumn(name = "client_workout_id", nullable = false)
     private ClientWorkout clientWorkout;
 
-    @OneToMany(mappedBy = "clientWorkoutSection", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "clientWorkoutSection", cascade = CascadeType.ALL)
     @OrderBy("position ASC")
     private List<ClientWorkoutItem> items = new ArrayList<>();
 

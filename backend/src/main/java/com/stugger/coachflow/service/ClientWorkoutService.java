@@ -9,6 +9,7 @@ import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.entity.workout.*;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
+import com.stugger.coachflow.repository.workout.ClientWorkoutItemRepository;
 import com.stugger.coachflow.repository.workout.ClientWorkoutRepository;
 import com.stugger.coachflow.repository.workout.WorkoutTemplateRepository;
 import com.stugger.coachflow.security.CurrentTrainerService;
@@ -21,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Jake
@@ -32,16 +33,18 @@ public class ClientWorkoutService {
 
     private final ClientWorkoutRepository clientWorkoutRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
+    private final ClientWorkoutItemRepository clientWorkoutItemRepository;
     private final ClientRepository clientRepository;
     private final CurrentTrainerService currentTrainerService;
     private final ExerciseRepository exerciseRepository;
 
     private final WorkoutStructureValidator workoutStructureValidator;
 
-    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, WorkoutTemplateRepository workoutTemplateRepository,
+    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository, WorkoutTemplateRepository workoutTemplateRepository,
                                 ClientRepository clientRepository, CurrentTrainerService currentTrainerService, ExerciseRepository exerciseRepository,
                                 WorkoutStructureValidator workoutStructureValidator) {
         this.clientWorkoutRepository = clientWorkoutRepository;
+        this.clientWorkoutItemRepository = clientWorkoutItemRepository;
         this.workoutTemplateRepository = workoutTemplateRepository;
         this.clientRepository = clientRepository;
         this.currentTrainerService = currentTrainerService;
@@ -66,15 +69,14 @@ public class ClientWorkoutService {
         clientWorkout.setDescription(TextUtils.trimToNull(request.description()));
         clientWorkout.setUpdatedAt(now);
 
-        clientWorkout.getSections().clear();
-        clientWorkoutRepository.saveAndFlush(clientWorkout);
-        setSections(clientWorkout, request.sections(), trainer.getId(), now);
+        reconcileSections(clientWorkout, request.sections(), trainer.getId(), now);
 
-        return new ClientWorkoutResponse(clientWorkoutRepository.save(clientWorkout));
+        clientWorkoutRepository.saveAndFlush(clientWorkout);
+        return new ClientWorkoutResponse(clientWorkout);
     }
 
     @Transactional
-    public void deleteClientWorkout(Long clientWorkoutId) { //TODO delete if no references to a WorkoutSession otherwise set archivedAt
+    public void deleteClientWorkout(Long clientWorkoutId) { // TODO archive once lifecycle or result records make hard deletion unsafe
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
 
@@ -140,13 +142,197 @@ public class ClientWorkoutService {
     //
     //---------------------------------------------------------------------------------------------------------
 
-    private void setSections(ClientWorkout clientWorkout, List<WorkoutSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
+    /* Structure Update */
+
+    private void reconcileSections(ClientWorkout clientWorkout, List<WorkoutSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
         workoutStructureValidator.validate(sectionRequests);
 
+        List<WorkoutSectionRequest> requests = sectionRequests == null ? List.of() : sectionRequests;
+
+        Map<Long, ClientWorkoutSection> existingSectionsById = new HashMap<>();
+        Map<Long, ClientWorkoutItem> existingItemsById = new HashMap<>();
+
+        for (ClientWorkoutSection section : clientWorkout.getSections()) {
+            existingSectionsById.put(section.getId(), section);
+            for (ClientWorkoutItem item : section.getItems()) {
+                existingItemsById.put(item.getId(), item);
+            }
+        }
+
+        Set<Long> retainedSectionIds = new HashSet<>();
+        List<ClientWorkoutSection> newSections = new ArrayList<>();
+
+        /*
+         * LinkedHashMap preserves request order while associating each resolved
+         * section entity with the items it should contain after reconciliation.
+         */
+        Map<ClientWorkoutSection, List<WorkoutItemRequest>> itemRequestsBySection = new LinkedHashMap<>();
+
+        for (WorkoutSectionRequest sectionRequest : requests) {
+            ClientWorkoutSection section;
+            if (sectionRequest.id() == null) {
+                section = new ClientWorkoutSection();
+                section.setClientWorkout(clientWorkout);
+                section.setCreatedAt(now);
+                newSections.add(section);
+            } else {
+                if (!retainedSectionIds.add(sectionRequest.id())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section with id " + sectionRequest.id() + " was included more than once.");
+                }
+                section = existingSectionsById.get(sectionRequest.id());
+                if (section == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Section with id " + sectionRequest.id() + " does not belong to client workout with id " + clientWorkout.getId() + ".");
+                }
+            }
+            updateSection(section, sectionRequest, now);
+            itemRequestsBySection.put(section, sectionRequest.items() == null ? List.of() : sectionRequest.items());
+        }
+
+        Set<ClientWorkoutItem> retainedItems = reconcileItems(clientWorkout, itemRequestsBySection, existingItemsById, trainerId, now);
+
+        /*
+         * Items omitted from the entire request are actual deletions.
+         * Items assigned to another section remain retained and are merely removed from the old section's in-memory collection.
+         */
+        List<ClientWorkoutItem> removedItems = existingItemsById.values().stream()
+                .filter(item -> !retainedItems.contains(item))
+                .toList();
+
+        Set<ClientWorkoutItem> removedItemSet = new HashSet<>(removedItems);
+
+        for (ClientWorkoutSection existingSection : clientWorkout.getSections()) {
+            existingSection.getItems().removeIf(item -> retainedItems.contains(item) && item.getClientWorkoutSection() != existingSection);
+            existingSection.getItems().removeIf(removedItemSet::contains);
+        }
+        if (!removedItems.isEmpty()) {
+            clientWorkoutItemRepository.deleteAll(removedItems);
+        }
+        clientWorkout.getSections().removeIf(section -> !retainedSectionIds.contains(section.getId()));
+        clientWorkout.getSections().addAll(newSections);
+        clientWorkout.getSections().sort(Comparator.comparing(ClientWorkoutSection::getPosition));
+    }
+
+    private void updateSection(ClientWorkoutSection section, WorkoutSectionRequest sectionRequest, LocalDateTime now) {
+        section.setPosition(sectionRequest.position());
+        section.setName(TextUtils.trimToNull(sectionRequest.name()));
+        section.setSectionType(sectionRequest.sectionType());
+        section.setNotes(TextUtils.trimToNull(sectionRequest.notes()));
+        section.setUpdatedAt(now);
+    }
+
+    private Set<ClientWorkoutItem> reconcileItems(ClientWorkout clientWorkout, Map<ClientWorkoutSection, List<WorkoutItemRequest>> itemRequestsBySection, Map<Long, ClientWorkoutItem> existingItemsById,
+                                                  Long trainerId, LocalDateTime now) {
+        Set<Long> retainedItemIds = new HashSet<>();
+        Set<ClientWorkoutItem> retainedItems = new HashSet<>();
+
+        for (Map.Entry<ClientWorkoutSection, List<WorkoutItemRequest>> entry : itemRequestsBySection.entrySet()) {
+            ClientWorkoutSection targetSection = entry.getKey();
+            List<ClientWorkoutItem> desiredItems = new ArrayList<>();
+
+            for (WorkoutItemRequest itemRequest : entry.getValue()) {
+                ClientWorkoutItem item;
+                if (itemRequest.id() == null) {
+                    item = new ClientWorkoutItem();
+                    item.setClientWorkoutSection(targetSection);
+                    item.setCreatedAt(now);
+                } else {
+                    if (!retainedItemIds.add(itemRequest.id())) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item with id " + itemRequest.id() + " was included more than once.");
+                    }
+                    item = existingItemsById.get(itemRequest.id());
+                    if (item == null) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item with id " + itemRequest.id() + " does not belong to client workout with id " + clientWorkout.getId() + ".");
+                    }
+                    /*
+                     * The owning side of the relationship determines the database foreign key.
+                     * Changing this parent moves the existing item.
+                     */
+                    item.setClientWorkoutSection(targetSection);
+                }
+                updateItem(item, itemRequest, trainerId, now);
+                desiredItems.add(item);
+                retainedItems.add(item);
+            }
+            /*
+             * orphanRemoval is intentionally disabled for this collection.
+             * We can therefore rebuild the in-memory membership safely while preserving entities that moved from another section.
+             */
+            targetSection.getItems().clear();
+            targetSection.getItems().addAll(desiredItems);
+        }
+
+        return retainedItems;
+    }
+
+    private void updateItem(ClientWorkoutItem item, WorkoutItemRequest itemRequest, Long trainerId, LocalDateTime now) {
+        item.setPosition(itemRequest.position());
+        item.setItemType(itemRequest.itemType());
+        item.setExercise(resolveDirectExercise(item, itemRequest, trainerId));
+        item.setName(TextUtils.trimToNull(itemRequest.name()));
+        item.setRounds(itemRequest.rounds());
+        item.setNotes(TextUtils.trimToNull(itemRequest.notes()));
+        item.setConfigJson(itemRequest.configJson());
+        item.setUpdatedAt(now);
+        reconcileItemExercises(item, itemRequest.itemExercises(), trainerId, now);
+    }
+
+    private void reconcileItemExercises(ClientWorkoutItem item, List<WorkoutItemExerciseRequest> itemExerciseRequests, Long trainerId, LocalDateTime now) {
+        List<WorkoutItemExerciseRequest> requests = itemExerciseRequests == null ? List.of() : itemExerciseRequests;
+
+        Map<Long, ClientWorkoutItemExercise> existingItemExercisesById = new HashMap<>();
+
+        for (ClientWorkoutItemExercise itemExercise : item.getItemExercises()) {
+            existingItemExercisesById.put(itemExercise.getId(), itemExercise);
+        }
+
+        Set<Long> retainedItemExerciseIds = new HashSet<>();
+        List<ClientWorkoutItemExercise> newItemExercises = new ArrayList<>();
+
+        for (WorkoutItemExerciseRequest itemExerciseRequest : requests) {
+            ClientWorkoutItemExercise itemExercise;
+            if (itemExerciseRequest.id() == null) {
+                itemExercise = new ClientWorkoutItemExercise();
+                itemExercise.setClientWorkoutItem(item);
+                itemExercise.setCreatedAt(now);
+                newItemExercises.add(itemExercise);
+            } else {
+                if (!retainedItemExerciseIds.add(itemExerciseRequest.id())) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item exercise with id " + itemExerciseRequest.id() + " was included more than once.");
+                }
+                itemExercise = existingItemExercisesById.get(
+                        itemExerciseRequest.id()
+                );
+                if (itemExercise == null) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Item exercise with id " + itemExerciseRequest.id() + " does not belong to workout item with id " + item.getId() + ".");
+                }
+            }
+            updateItemExercise(itemExercise, itemExerciseRequest, trainerId, now);
+        }
+        /*
+         * Existing stack exercises omitted from the request are deleted through orphan removal.
+         * Exercises that remain retain their database identities.
+         */
+        item.getItemExercises().removeIf(itemExercise -> itemExercise.getId() != null && !retainedItemExerciseIds.contains(itemExercise.getId()));
+        item.getItemExercises().addAll(newItemExercises);
+        item.getItemExercises().sort(Comparator.comparing(ClientWorkoutItemExercise::getPosition));
+    }
+
+    private void updateItemExercise(ClientWorkoutItemExercise itemExercise, WorkoutItemExerciseRequest itemExerciseRequest, Long trainerId, LocalDateTime now) {
+        itemExercise.setExercise(resolveStackExercise(itemExercise, itemExerciseRequest, trainerId));
+        itemExercise.setPosition(itemExerciseRequest.position());
+        itemExercise.setName(TextUtils.trimToNull(itemExerciseRequest.name()));
+        itemExercise.setNotes(TextUtils.trimToNull(itemExerciseRequest.notes()));
+        itemExercise.setConfigJson(itemExerciseRequest.configJson());
+        itemExercise.setUpdatedAt(now);
+    }
+
+    /* Structure Create */
+
+    private void setSections(ClientWorkout clientWorkout, List<WorkoutSectionRequest> sectionRequests, Long trainerId, LocalDateTime now) {
+        workoutStructureValidator.validate(sectionRequests);
         if (sectionRequests == null) {
             return;
         }
-
         for (WorkoutSectionRequest sectionRequest : sectionRequests) {
             ClientWorkoutSection section = new ClientWorkoutSection();
             section.setClientWorkout(clientWorkout);
@@ -166,13 +352,12 @@ public class ClientWorkoutService {
         if (itemRequests == null) {
             return;
         }
-
         for (WorkoutItemRequest itemRequest : itemRequests) {
             ClientWorkoutItem item = new ClientWorkoutItem();
             item.setClientWorkoutSection(section);
             item.setPosition(itemRequest.position());
             item.setItemType(itemRequest.itemType());
-            item.setExercise(resolveDirectExercise(itemRequest, trainerId));
+            item.setExercise(resolveDirectExercise(item, itemRequest, trainerId));
             item.setName(TextUtils.trimToNull(itemRequest.name()));
             item.setRounds(itemRequest.rounds());
             item.setNotes(TextUtils.trimToNull(itemRequest.notes()));
@@ -189,11 +374,10 @@ public class ClientWorkoutService {
         if (itemExerciseRequests == null) {
             return;
         }
-
         for (WorkoutItemExerciseRequest itemExerciseRequest : itemExerciseRequests) {
             ClientWorkoutItemExercise itemExercise = new ClientWorkoutItemExercise();
             itemExercise.setClientWorkoutItem(item);
-            itemExercise.setExercise(getAvailableExerciseOrThrow(itemExerciseRequest.exerciseId(), trainerId));
+            itemExercise.setExercise(resolveStackExercise(itemExercise, itemExerciseRequest, trainerId));
             itemExercise.setPosition(itemExerciseRequest.position());
             itemExercise.setName(TextUtils.trimToNull(itemExerciseRequest.name()));
             itemExercise.setNotes(TextUtils.trimToNull(itemExerciseRequest.notes()));
@@ -204,11 +388,27 @@ public class ClientWorkoutService {
         }
     }
 
-    private Exercise resolveDirectExercise(WorkoutItemRequest itemRequest, Long trainerId) {
+    /*
+     * Exercise Resolve:
+     * An exercise may be archived after the workout was created.
+     * Keeping that existing reference is allowed, while selecting a different exercise must pass the normal availability checks.
+     */
+
+    private Exercise resolveDirectExercise(AbstractWorkoutItem existingItem, WorkoutItemRequest itemRequest, Long trainerId) {
         if (itemRequest.itemType() != WorkoutItemType.EXERCISE) {
             return null;
         }
+        if (existingItem.getExercise() != null && Objects.equals(existingItem.getExercise().getId(), itemRequest.exerciseId())) {
+            return existingItem.getExercise();
+        }
         return getAvailableExerciseOrThrow(itemRequest.exerciseId(), trainerId);
+    }
+
+    private Exercise resolveStackExercise(AbstractWorkoutItemExercise existingItemExercise, WorkoutItemExerciseRequest itemExerciseRequest, Long trainerId) {
+        if (existingItemExercise.getExercise() != null && Objects.equals(existingItemExercise.getExercise().getId(), itemExerciseRequest.exerciseId())) {
+            return existingItemExercise.getExercise();
+        }
+        return getAvailableExerciseOrThrow(itemExerciseRequest.exerciseId(), trainerId);
     }
 
     //---------------------------------------------------------------------------------------------------------

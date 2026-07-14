@@ -23,7 +23,7 @@ public class WorkoutTemplateSection extends AbstractWorkoutSection {
     @JoinColumn(name = "workout_template_id", nullable = false)
     private WorkoutTemplate workoutTemplate;
 
-    @OneToMany(mappedBy = "workoutTemplateSection", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "workoutTemplateSection", cascade = CascadeType.ALL)
     @OrderBy("position ASC")
     private List<WorkoutTemplateItem> items = new ArrayList<>();
 

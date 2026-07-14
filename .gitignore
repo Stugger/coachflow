@@ -1,6 +1,7 @@
-# Backend (Spring/Gradle)
+# Backend (Spring/Gradle/Scripts)
 backend/.gradle/
 backend/build/
+backend/scripts/
 
 !backend/gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
