@@ -1,9 +1,15 @@
 import {useEffect, useState} from 'react';
-import {useNavigate, useParams} from 'react-router-dom';
+import {
+    useLocation,
+    useNavigate,
+    useParams,
+} from 'react-router-dom';
 import {
     Alert,
     Badge,
+    Box,
     Button,
+    Container,
     Group,
     Loader,
     Paper,
@@ -11,13 +17,17 @@ import {
     Text,
     Title,
 } from '@mantine/core';
+import {IconArrowLeft} from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
 import {apiGetClientWorkout} from './client-workout-api.js';
-import {getClientWorkoutOriginLabel} from "./client-workout-constants.js";
+import {getClientWorkoutOriginLabel} from './client-workout-constants.js';
+import {getClientWorkoutSourceNavigation} from './client-workout-navigation.js';
 
 function ClientWorkoutSessionPage() {
+
     const navigate = useNavigate();
+    const location = useLocation();
     const {clientWorkoutId} = useParams();
 
     const [workout, setWorkout] = useState(null);
@@ -41,6 +51,28 @@ function ClientWorkoutSessionPage() {
             });
     }, [clientWorkoutId]);
 
+    function returnToSource() {
+        if (!workout) {
+            return;
+        }
+
+        const sourceNavigation =
+            location.state?.sourceNavigation
+            ?? getClientWorkoutSourceNavigation(
+                workout.clientId,
+                workout,
+            );
+
+        navigate(
+            sourceNavigation?.to
+            ?? ROUTES.clientProfile(workout.clientId),
+            {
+                replace: true,
+                state: sourceNavigation?.state ?? null,
+            },
+        );
+    }
+
     if (!loaded) {
         return (
             <Group gap="sm">
@@ -60,61 +92,73 @@ function ClientWorkoutSessionPage() {
         );
     }
 
-    const originLabel = getClientWorkoutOriginLabel(workout.origin) ?? 'Client Workout';
+    const originLabel = getClientWorkoutOriginLabel(workout.origin);
 
     return (
-        <Stack gap="md">
-            <Button
-                variant="subtle"
-                w="fit-content"
-                onClick={() => navigate(
-                    ROUTES.clientProfile(workout.clientId)
-                )}
+        <Box
+            mih="100dvh"
+            bg="var(--mantine-color-body)"
+            py={{base: 'sm', sm: 'lg'}}
+        >
+            <Container
+                fluid
+                px={{base: 'sm', sm: 'lg'}}
             >
-                ← Back to client
-            </Button>
+                <Stack gap="md">
+                    <Button
+                        variant="subtle"
+                        w="fit-content"
+                        leftSection={<IconArrowLeft size={16}/>}
+                        onClick={returnToSource}
+                    >
+                        Exit Workout
+                    </Button>
 
-            <Paper withBorder radius="md" p="lg">
-                <Stack gap="xs">
-                    <Group gap="sm">
-                        <Badge
-                            color={workout.status === 'IN_PROGRESS' ? 'green' : 'gray'}
-                            variant="light"
-                            leftSection={
-                                workout.status === 'IN_PROGRESS'
-                                    ? (
-                                        <span
-                                            className="client-session-live-dot"
-                                        />
-                                    )
-                                    : null
-                            }
-                        >
-                            {workout.status === 'IN_PROGRESS' ? 'In progress' : workout.status}
-                        </Badge>
+                    <Paper withBorder radius="md" p="lg">
+                        <Stack gap="xs">
+                            <Group gap="sm">
+                                <Badge
+                                    color={
+                                        workout.status === 'IN_PROGRESS'
+                                            ? 'green'
+                                            : 'gray'
+                                    }
+                                    variant="light"
+                                    leftSection={
+                                        workout.status === 'IN_PROGRESS'
+                                            ? <span className={'client-session-live-dot'}/>
+                                            : null
+                                    }
+                                >
+                                    {workout.status === 'IN_PROGRESS'
+                                        ? 'In progress'
+                                        : workout.status}
+                                </Badge>
 
-                        <Text size="sm" c="dimmed">
-                            {originLabel}
-                        </Text>
-                    </Group>
+                                <Text size="sm" c="dimmed">
+                                    {originLabel}
+                                </Text>
+                            </Group>
 
-                    <Title order={2}>
-                        {workout.name}
-                    </Title>
+                            <Title order={2}>
+                                {workout.name}
+                            </Title>
 
-                    {workout.description?.trim() && (
-                        <Text c="dimmed">
-                            {workout.description}
-                        </Text>
-                    )}
+                            {workout.description?.trim() && (
+                                <Text c="dimmed">
+                                    {workout.description}
+                                </Text>
+                            )}
+                        </Stack>
+                    </Paper>
+
+                    <Alert color="blue">
+                        Live result entry and session-aware workout editing
+                        will be added in the next implementation slices.
+                    </Alert>
                 </Stack>
-            </Paper>
-
-            <Alert color="blue">
-                Live result entry and session-aware workout editing will be
-                added in the next implementation slices.
-            </Alert>
-        </Stack>
+            </Container>
+        </Box>
     );
 }
 

@@ -3,7 +3,7 @@ import './styles/global.css';
 import './styles/input.css';
 
 import {useCallback, useEffect, useState} from 'react';
-import {Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
+import {matchPath, Navigate, Route, Routes, useLocation, useNavigate} from 'react-router-dom';
 
 import {clearStoredAuth, getStoredAuth, saveAuth} from './utils/auth-storage.js';
 
@@ -93,6 +93,34 @@ function App() {
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
+    // Workout session routes
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const clientWorkoutSessionRoute = matchPath(
+        {
+            path: ROUTES.CLIENT_WORKOUT_SESSION,
+            end: true,
+        },
+        location.pathname,
+    );
+
+    if (clientWorkoutSessionRoute) {
+        return (
+            <Routes>
+                <Route
+                    path={ROUTES.CLIENT_WORKOUT_SESSION}
+                    element={<ClientWorkoutSessionPage/>}
+                />
+
+                <Route
+                    path="*"
+                    element={<Navigate to={ROUTES.HOME} replace/>}
+                />
+            </Routes>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
     // App routes
     // ------------------------------------------------------------------------------------------------------------------------
 
@@ -108,7 +136,6 @@ function App() {
                 <Route path={ROUTES.CLIENT_RECORDS} element={<ClientProfilePage/>}/>
                 <Route path={ROUTES.CLIENT_HABITS} element={<ClientProfilePage/>}/>
                 <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage/>}/>
-                <Route path={ROUTES.CLIENT_WORKOUT_SESSION} element={<ClientWorkoutSessionPage/>}/>
 
                 <Route path={ROUTES.EXERCISES} element={<ExerciseLibraryPage/>}/>
                 <Route path={ROUTES.WORKOUT_TEMPLATES} element={<WorkoutLibraryPage trainerId={auth.trainer.id}/>}/>

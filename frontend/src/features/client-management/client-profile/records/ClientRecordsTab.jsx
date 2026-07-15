@@ -16,6 +16,7 @@ import {
     IconCheck,
     IconClipboardCheck,
     IconCircleDashedCheck,
+    IconPlayerPlay,
     IconTrophy,
 } from '@tabler/icons-react';
 
@@ -26,7 +27,12 @@ import {
 import {
     apiDeleteClientWorkout,
     apiGetInitialAssessmentWorkout,
+    apiStartClientWorkout,
 } from '../../client-workouts/client-workout-api';
+
+import {
+    getClientWorkoutSessionNavigation,
+} from '../../client-workouts/client-workout-navigation.js';
 
 import {
     apiGetCurrentClientExerciseBenchmarks,
@@ -87,6 +93,9 @@ function ClientRecordsTab({client, refreshKey,
     const [benchmarks, setBenchmarks] = useState([]);
     const [benchmarksLoaded, setBenchmarksLoaded] = useState(false);
     const [benchmarksError, setBenchmarksError] = useState('');
+
+    const [startConfirmationOpen, setStartConfirmationOpen] = useState(false);
+    const [startingInitialAssessment, setStartingInitialAssessment] = useState(false);
 
     const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
     const [deletingInitialAssessment, setDeletingInitialAssessment] = useState(false);
@@ -312,6 +321,47 @@ function ClientRecordsTab({client, refreshKey,
         }
     }
 
+    function openInitialAssessmentSession(workout = initialAssessmentWorkout) {
+        const navigation = getClientWorkoutSessionNavigation(
+            clientId,
+            workout,
+        );
+
+        if (!navigation) {
+            console.log(clientId + ", " + workout);
+            return;
+        }
+
+        navigate(navigation.to, {
+            state: navigation.state,
+        });
+    }
+
+    async function startInitialAssessmentWorkout() {
+        if (!initialAssessmentWorkout || initialAssessmentWorkout.status !== 'READY') {
+            return;
+        }
+
+        setStartingInitialAssessment(true);
+        setInitialAssessmentError('');
+
+        try {
+            const startedWorkout = await apiStartClientWorkout(initialAssessmentWorkout.id);
+
+            setInitialAssessmentWorkout(startedWorkout);
+            setStartConfirmationOpen(false);
+
+            openInitialAssessmentSession(startedWorkout);
+        } catch (error) {
+            console.error('Failed to start initial assessment workout:', error,);
+
+            setStartConfirmationOpen(false);
+            setInitialAssessmentError(error.message || 'Failed to start the initial assessment workout.');
+        } finally {
+            setStartingInitialAssessment(false);
+        }
+    }
+
     function handleExpandedRecordsChange(nextGroupRecords, groupRecordIds) {
         const previousGroupRecords = expandedRecords.filter(
             recordId => groupRecordIds.includes(recordId)
@@ -341,181 +391,55 @@ function ClientRecordsTab({client, refreshKey,
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
-    // Main return
+    // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    return (
-        <>
-            <Stack gap="md">
-                <Stack gap={2} pl="0.25rem">
-                    <Text fw={700}>Records</Text>
+    function renderStartAssessmentModal() {
+        return (
+            <Modal
+                opened={startConfirmationOpen}
+                onClose={() => {
+                    if (!startingInitialAssessment) {
+                        setStartConfirmationOpen(false);
+                    }
+                }}
+                title="Start initial assessment?"
+                centered
+                closeOnClickOutside={!startingInitialAssessment}
+                closeOnEscape={!startingInitialAssessment}
+                withCloseButton={!startingInitialAssessment}
+            >
+                <Stack gap="lg">
                     <Text size="sm" c="dimmed">
-                        Review client onboarding records and manage ongoing client records.
+                        This marks the assessment workout as in progress. No other
+                        workout can be started for this client until this session is
+                        completed.
                     </Text>
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            disabled={startingInitialAssessment}
+                            onClick={() => setStartConfirmationOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            leftSection={<IconPlayerPlay size={16}/>}
+                            loading={startingInitialAssessment}
+                            onClick={startInitialAssessmentWorkout}
+                        >
+                            Start assessment
+                        </Button>
+                    </Group>
                 </Stack>
+            </Modal>
+        );
+    }
 
-                {/* Onboarding records */}
-
-                <Accordion
-                    multiple
-                    value={expandedRecords.filter(recordId => SETUP_RECORD_IDS.includes(recordId))}
-                    onChange={records => handleExpandedRecordsChange(records, SETUP_RECORD_IDS)}
-                    variant="separated"
-                    radius="md"
-                    transitionDuration={isSmallScreen ? 100 : 200} //mobile flickers so we speed it up
-                >
-                    <Accordion.Item
-                        value="intake"
-                        id="intake"
-                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
-                        bg="var(--color-surface)"
-                    >
-                        <Accordion.Control
-                            icon={!intakeLoaded
-                                ? <Loader size={20} color="gray"/>
-                                : intake?.status === 'COMPLETED'
-                                    ? (
-                                        <ThemeIcon size={20} radius="xl" color="green">
-                                            <IconCheck size={16} stroke={3}/>
-                                        </ThemeIcon>
-                                    )
-                                    : <IconCircleDashedCheck size={20} color="gray"/>
-                            }
-                        >
-                            {intake?.status === 'COMPLETED' ? (
-                                <Text fw={600}>Intake</Text>
-                            ) : (
-                                <Group justify="space-between" pr="sm" wrap="nowrap">
-                                    <Text fw={600} c="dimmed">Intake</Text>
-                                    {intakeLoaded && (
-                                        <Badge color="red" variant="light">
-                                            {intake === null ? 'Missing' : 'Incomplete'}
-                                        </Badge>
-                                    )}
-                                </Group>
-                            )}
-                        </Accordion.Control>
-
-                        <Accordion.Panel>
-                            <IntakeRecordCard
-                                intake={intake}
-                                client={client}
-                                loaded={intakeLoaded}
-                                error={intakeError}
-                                onOpen={onOpenIntake}
-                                onEditClientDetails={onEditClientDetails}
-                                onEditIntakeSection={onEditIntakeSection}
-                                showIntakeReview={Boolean(location.state?.showIntakeReview)}
-                            />
-                        </Accordion.Panel>
-                    </Accordion.Item>
-
-                    <Accordion.Item
-                        value="initial-assessment"
-                        id="initial-assessment"
-                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
-                        bg="var(--color-surface)"
-                    >
-                        {/*TODO completed assessment style: no badge, not dimmed, green circle check (like intake)*/}
-                        <Accordion.Control
-                            icon={!initialAssessmentLoaded
-                                ? <Loader size={20} color="gray"/>
-                                : initialAssessmentWorkout
-                                    ? (
-                                        <ThemeIcon size={20} radius="xl" color="yellow">
-                                            <IconClipboardCheck size={14} stroke={2.5}/>
-                                        </ThemeIcon>
-                                    )
-                                    : <IconCircleDashedCheck size={20} color="gray"/>
-                            }
-                        >
-                            <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text
-                                    fw={600}
-                                    c={initialAssessmentLoaded && initialAssessmentWorkout ? undefined : 'dimmed'}
-                                >
-                                    Initial Assessment
-                                </Text>
-                                {initialAssessmentLoaded && (
-                                    <Badge
-                                        color={initialAssessmentWorkout ? 'yellow' : 'gray'}
-                                        variant="light"
-                                    >
-                                        {initialAssessmentWorkout ? 'Ready' : 'Not set up'}
-                                    </Badge>
-                                )}
-                            </Group>
-                        </Accordion.Control>
-
-                        <Accordion.Panel>
-                            <InitialAssessmentRecordCard
-                                workout={initialAssessmentWorkout}
-                                benchmarks={benchmarksLoaded && !benchmarksError ? benchmarks : null}
-                                loaded={initialAssessmentLoaded}
-                                error={initialAssessmentError}
-                                deleting={deletingInitialAssessment}
-                                onNewWorkout={onNewInitialAssessment}
-                                onFromTemplate={onInitialAssessmentFromTemplate}
-                                onEdit={onEditInitialAssessment}
-                                onDelete={() => setDeleteConfirmationOpen(true)}
-                            />
-                        </Accordion.Panel>
-                    </Accordion.Item>
-
-                    <Accordion.Item
-                        value="initial-measurements"
-                        id="initial-measurements"
-                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
-                        bg="var(--color-surface)"
-                    >
-                        {/*TODO completed initial measurements style: no badge, not dimmed, green circle check (like intake)*/}
-                        <Accordion.Control icon={<IconCircleDashedCheck size={20} color="gray"/>}>
-                            <Group justify="space-between" pr="sm" wrap="nowrap">
-                                <Text fw={600} c="dimmed">Initial Measurements</Text>
-                            </Group>
-                        </Accordion.Control>
-
-                        <Accordion.Panel>
-                            <Text size="sm" c="dimmed">
-                                Initial measurements will be added in a later workflow.
-                            </Text>
-                        </Accordion.Panel>
-                    </Accordion.Item>
-                </Accordion>
-
-                {/* Progress records */}
-
-                <Accordion
-                    multiple
-                    value={expandedRecords.filter(recordId => CLIENT_RECORD_IDS.includes(recordId))}
-                    onChange={records => handleExpandedRecordsChange(records, CLIENT_RECORD_IDS)}
-                    variant="separated"
-                    radius="md"
-                    transitionDuration={isSmallScreen ? 100 : 200}
-                >
-                    <Accordion.Item
-                        value="benchmarks"
-                        id="benchmarks"
-                        style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
-                        bg="var(--color-surface)"
-                    >
-                        <Accordion.Control icon={<IconTrophy size={20} color="gray"/>}>
-                            <Text fw={600}>Benchmarks</Text>
-                        </Accordion.Control>
-
-                        <Accordion.Panel>
-                            <ExerciseBenchmarksRecordCard
-                                clientId={clientId}
-                                benchmarks={benchmarks}
-                                loaded={benchmarksLoaded}
-                                loadError={benchmarksError}
-                                onReload={loadCurrentBenchmarks}
-                            />
-                        </Accordion.Panel>
-                    </Accordion.Item>
-                </Accordion>
-            </Stack>
-
+    function renderDeleteAssessmentModal() {
+        return (
             <Modal
                 opened={deleteConfirmationOpen}
                 onClose={() => setDeleteConfirmationOpen(false)}
@@ -545,6 +469,232 @@ function ClientRecordsTab({client, refreshKey,
                     </Group>
                 </Stack>
             </Modal>
+        );
+    }
+
+    function renderIntakeAccordionItem() {
+        return (
+            <Accordion.Item
+                value="intake"
+                id="intake"
+                style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
+                bg="var(--color-surface)"
+            >
+                <Accordion.Control
+                    icon={!intakeLoaded
+                        ? <Loader size={20} color="gray"/>
+                        : intake?.status === 'COMPLETED'
+                            ? (
+                                <ThemeIcon size={20} radius="xl" color="green">
+                                    <IconCheck size={16} stroke={3}/>
+                                </ThemeIcon>
+                            )
+                            : <IconCircleDashedCheck size={20} color="gray"/>
+                    }
+                >
+                    {intake?.status === 'COMPLETED' ? (
+                        <Text fw={600}>Intake</Text>
+                    ) : (
+                        <Group justify="space-between" pr="sm" wrap="nowrap">
+                            <Text fw={600} c="dimmed">Intake</Text>
+                            {intakeLoaded && (
+                                <Badge color="red" variant="light">
+                                    {intake === null ? 'Missing' : 'Incomplete'}
+                                </Badge>
+                            )}
+                        </Group>
+                    )}
+                </Accordion.Control>
+
+                <Accordion.Panel>
+                    <IntakeRecordCard
+                        intake={intake}
+                        client={client}
+                        loaded={intakeLoaded}
+                        error={intakeError}
+                        onOpen={onOpenIntake}
+                        onEditClientDetails={onEditClientDetails}
+                        onEditIntakeSection={onEditIntakeSection}
+                        showIntakeReview={Boolean(location.state?.showIntakeReview)}
+                    />
+                </Accordion.Panel>
+            </Accordion.Item>
+        );
+    }
+
+    function renderInitialAssessmentAccordionItem() {
+        const initialAssessmentStatus = initialAssessmentWorkout?.status ?? null;
+        const initialAssessmentInProgress = initialAssessmentStatus === 'IN_PROGRESS';
+        const initialAssessmentCompleted = initialAssessmentStatus === 'COMPLETED';
+
+        return (
+            <Accordion.Item
+                value="initial-assessment"
+                id="initial-assessment"
+                style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
+                bg="var(--color-surface)"
+            >
+                <Accordion.Control
+                    icon={
+                        !initialAssessmentLoaded
+                            ? <Loader size={20} color="gray"/>
+                            : initialAssessmentCompleted
+                                ? (
+                                    <ThemeIcon size={20} radius="xl" color="green">
+                                        <IconCheck size={16} stroke={3}/>
+                                    </ThemeIcon>
+                                )
+                                : initialAssessmentInProgress
+                                    ? (
+                                        <ThemeIcon size={20} radius="xl" color="green">
+                                            <IconPlayerPlay size={13} stroke={3}/>
+                                        </ThemeIcon>
+                                    )
+                                    : initialAssessmentWorkout
+                                        ? (
+                                            <ThemeIcon size={20} radius="xl" color="yellow">
+                                                <IconClipboardCheck size={14} stroke={2.5}
+                                                />
+                                            </ThemeIcon>
+                                        )
+                                        : <IconCircleDashedCheck size={20} color="gray"/>
+                    }
+                >
+                    <Group justify="space-between" pr="sm" wrap="nowrap">
+                        <Text fw={600} c={initialAssessmentLoaded && initialAssessmentWorkout ? undefined : 'dimmed'}>
+                            Initial Assessment
+                        </Text>
+
+                        {initialAssessmentLoaded && !initialAssessmentCompleted && (
+                            <Badge
+                                color={initialAssessmentInProgress ? 'green' : initialAssessmentWorkout ? 'yellow' : 'gray'}
+                                variant="light"
+                            >
+                                {initialAssessmentInProgress
+                                    ? 'In progress'
+                                    : initialAssessmentWorkout
+                                        ? 'Ready'
+                                        : 'Not set up'}
+                            </Badge>
+                        )}
+                    </Group>
+                </Accordion.Control>
+
+                <Accordion.Panel>
+                    <InitialAssessmentRecordCard
+                        workout={initialAssessmentWorkout}
+                        benchmarks={benchmarksLoaded && !benchmarksError ? benchmarks : null}
+                        loaded={initialAssessmentLoaded}
+                        error={initialAssessmentError}
+                        deleting={deletingInitialAssessment}
+                        onNewWorkout={onNewInitialAssessment}
+                        onFromTemplate={onInitialAssessmentFromTemplate}
+                        onEdit={onEditInitialAssessment}
+                        onDelete={() => setDeleteConfirmationOpen(true)}
+                        onStart={() => setStartConfirmationOpen(true)}
+                        onOpenSession={openInitialAssessmentSession}
+                    />
+                </Accordion.Panel>
+            </Accordion.Item>
+        );
+    }
+
+    function renderInitialMeasurementsAccordionItem() {
+        return (
+            <Accordion.Item
+                value="initial-measurements"
+                id="initial-measurements"
+                style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
+                bg="var(--color-surface)"
+            >
+                {/*TODO completed initial measurements style: no badge, not dimmed, green circle check (like intake)*/}
+                <Accordion.Control icon={<IconCircleDashedCheck size={20} color="gray"/>}>
+                    <Group justify="space-between" pr="sm" wrap="nowrap">
+                        <Text fw={600} c="dimmed">Initial Measurements</Text>
+                    </Group>
+                </Accordion.Control>
+
+                <Accordion.Panel>
+                    <Text size="sm" c="dimmed">
+                        Initial measurements will be added in a later workflow.
+                    </Text>
+                </Accordion.Panel>
+            </Accordion.Item>
+        );
+    }
+
+    function renderBenchmarksAccordionItem() {
+        return (
+            <Accordion.Item
+                value="benchmarks"
+                id="benchmarks"
+                style={{scrollMarginTop: isSmallScreen ? '4.5rem' : '1rem'}}
+                bg="var(--color-surface)"
+            >
+                <Accordion.Control icon={<IconTrophy size={20} color="gray"/>}>
+                    <Text fw={600}>Benchmarks</Text>
+                </Accordion.Control>
+
+                <Accordion.Panel>
+                    <ExerciseBenchmarksRecordCard
+                        clientId={clientId}
+                        benchmarks={benchmarks}
+                        loaded={benchmarksLoaded}
+                        loadError={benchmarksError}
+                        onReload={loadCurrentBenchmarks}
+                    />
+                </Accordion.Panel>
+            </Accordion.Item>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    return (
+        <>
+            <Stack gap="md">
+                <Stack gap={2} pl="0.25rem">
+                    <Text fw={700}>Records</Text>
+                    <Text size="sm" c="dimmed">
+                        Review client onboarding records and manage ongoing client records.
+                    </Text>
+                </Stack>
+
+                {/* Onboarding records */}
+
+                <Accordion
+                    multiple
+                    value={expandedRecords.filter(recordId => SETUP_RECORD_IDS.includes(recordId))}
+                    onChange={records => handleExpandedRecordsChange(records, SETUP_RECORD_IDS)}
+                    variant="separated"
+                    radius="md"
+                    transitionDuration={isSmallScreen ? 100 : 200} //mobile flickers so we speed it up
+                >
+                    {renderIntakeAccordionItem()}
+
+                    {renderInitialAssessmentAccordionItem()}
+
+                    {renderInitialMeasurementsAccordionItem()}
+                </Accordion>
+
+                {/* Progress records */}
+
+                <Accordion
+                    multiple
+                    value={expandedRecords.filter(recordId => CLIENT_RECORD_IDS.includes(recordId))}
+                    onChange={records => handleExpandedRecordsChange(records, CLIENT_RECORD_IDS)}
+                    variant="separated"
+                    radius="md"
+                    transitionDuration={isSmallScreen ? 100 : 200}
+                >
+                    {renderBenchmarksAccordionItem()}
+                </Accordion>
+            </Stack>
+
+            {renderStartAssessmentModal()}
+            {renderDeleteAssessmentModal()}
         </>
     );
 }

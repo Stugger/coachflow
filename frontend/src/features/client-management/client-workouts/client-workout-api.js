@@ -20,6 +20,10 @@ export function apiUpdateClientWorkout(clientWorkoutId, payload) {
     return sendJson(`/api/client-workouts/${clientWorkoutId}`, 'PUT', payload);
 }
 
+export function apiStartClientWorkout(clientWorkoutId) {
+    return sendJson(`/api/client-workouts/${clientWorkoutId}/start`, 'POST');
+}
+
 export function apiDeleteClientWorkout(clientWorkoutId) {
     return deleteRequest(`/api/client-workouts/${clientWorkoutId}`);
 }

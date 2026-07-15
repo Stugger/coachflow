@@ -18,6 +18,8 @@ import {
     IconChevronDown,
     IconChevronUp,
     IconEdit,
+    IconEye,
+    IconPlayerPlay,
     IconTrash,
 } from '@tabler/icons-react';
 
@@ -31,7 +33,7 @@ import {
     getWorkoutStructureCounts,
 } from '../../../workout-builder/preview/workout-preview-utils';
 
-function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete}) {
+function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete, onStart, onOpenSession}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -92,7 +94,7 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
         );
     }
 
-    if (error) {
+    if (error && !workout) {
         return (
             <Alert color="red">
                 {error}
@@ -124,10 +126,19 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
 
     const counts = getWorkoutStructureCounts(workout);
 
+    const isReady = workout.status === 'READY';
+    const isInProgress = workout.status === 'IN_PROGRESS';
+    const isCompleted = workout.status === 'COMPLETED';
+
     const shouldClipPreview = previewOverflows && !previewExpanded;
 
     return (
         <Stack gap="md">
+            {error && (
+                <Alert color="red">
+                    {error}
+                </Alert>
+            )}
             <Stack gap={4}>
                 <Text fw={700}>
                     {workout.name}
@@ -216,23 +227,45 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
                     borderTop: '1px solid var(--color-border)',
                 }}
             >
-                <Group justify="flex-end">
-                    <Button
-                        leftSection={<IconEdit size={16}/>}
-                        onClick={() => onEdit(workout.id)}
-                    >
-                        Edit
-                    </Button>
+                <Group gap="sm" justify="flex-end">
+                    {(isReady || isInProgress) && (
+                        <>
+                            <Button
+                                variant="light"
+                                color="red"
+                                leftSection={<IconTrash size={16}/>}
+                                disabled={isInProgress}
+                                loading={deleting}
+                                onClick={onDelete}
+                            >
+                                Delete
+                            </Button>
 
-                    <Button
-                        variant="light"
-                        color="red"
-                        leftSection={<IconTrash size={16}/>}
-                        loading={deleting}
-                        onClick={onDelete}
-                    >
-                        Delete
-                    </Button>
+                            <Button
+                                variant="default"
+                                leftSection={<IconEdit size={16}/>}
+                                onClick={() => onEdit(workout.id)}
+                            >
+                                Edit
+                            </Button>
+
+                            <Button
+                                leftSection={<IconPlayerPlay size={16}/>}
+                                onClick={isReady ? onStart : () => onOpenSession(workout)}
+                                color="green"
+                            >
+                                {isReady ? 'Start' : 'Resume'}{isSmallScreen ? '' : isReady ? ' Assessment' : ' Workout'}
+                            </Button>
+                        </>
+                    )}
+                    {isCompleted && (
+                        <Button
+                            leftSection={<IconEye size={16}/>}
+                            onClick={() => onOpenSession(workout)}
+                        >
+                            View Record
+                        </Button>
+                    )}
                 </Group>
             </Box>
         </Stack>

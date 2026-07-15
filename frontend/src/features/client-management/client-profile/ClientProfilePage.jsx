@@ -45,6 +45,11 @@ import {
     INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM,
 } from '../initial-assessment/initial-assessment-builder-route-state';
 
+import {
+    getClientWorkoutSessionNavigation,
+    getClientWorkoutSourceNavigation,
+} from '../client-workouts/client-workout-navigation.js';
+
 import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
 
 import {formatDisplayDate, formatDisplayTime} from '../../../utils/time-utils.js';
@@ -180,27 +185,33 @@ function ClientProfilePage() {
     }
 
     function resumeActiveWorkout() {
-        const activeWorkoutId = client.activeWorkout?.id;
+        const navigation = getClientWorkoutSessionNavigation(
+            client.id,
+            client.activeWorkout,
+        );
 
-        if (!activeWorkoutId) {
+        if (!navigation) {
             return;
         }
 
-        navigate(ROUTES.clientWorkoutSession(activeWorkoutId));
+        navigate(navigation.to, {
+            state: navigation.state,
+        });
     }
 
     function viewActiveWorkoutSource() {
-        const activeWorkout = client.activeWorkout;
+        const navigation = getClientWorkoutSourceNavigation(
+            client.id,
+            client.activeWorkout,
+        );
 
-        if (!activeWorkout) {
+        if (!navigation) {
             return;
         }
 
-        if (activeWorkout.origin === 'INITIAL_ASSESSMENT') {
-            navigateToClientRecord('initial-assessment', {
-                scroll: true,
-            });
-        }
+        navigate(navigation.to, {
+            state: navigation.state,
+        });
     }
 
     function openIntakeAction() {
@@ -484,7 +495,7 @@ function ClientProfilePage() {
                                     leftSection={<IconPlayerPlay size={16}/>}
                                     onClick={resumeActiveWorkout}
                                 >
-                                    Resume{isSmallScreen ? '' : ''}
+                                    Resume{isSmallScreen ? '' : ' Workout'}
                                 </Button>
 
                                 {activeWorkoutHasSource && (
