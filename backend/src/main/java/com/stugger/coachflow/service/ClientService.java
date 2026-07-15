@@ -6,6 +6,7 @@ import com.stugger.coachflow.api.dto.response.person.ClientResponse;
 import com.stugger.coachflow.api.dto.response.person.ClientReviewStatusResponse;
 import com.stugger.coachflow.api.dto.response.person.InitialAssessmentReviewStatus;
 import com.stugger.coachflow.api.dto.response.person.IntakeReviewStatus;
+import com.stugger.coachflow.api.dto.response.workout.ActiveClientWorkoutResponse;
 import com.stugger.coachflow.entity.intake.ClientIntake;
 import com.stugger.coachflow.entity.intake.IntakeStatus;
 import com.stugger.coachflow.entity.person.Client;
@@ -105,10 +106,14 @@ public class ClientService {
 
         List<Client> clients = clientRepository.findByTrainerId(trainer.getId(), sort);
 
-        Map<Long, ClientReviewStatusResponse> reviewStatuses = getReviewStatuses(clients.stream().map(Client::getId).toList(), trainer.getId());
+        List<Long> clientIds = clients.stream().map(Client::getId).toList();
+
+        Map<Long, ClientReviewStatusResponse> reviewStatuses = getReviewStatuses(clientIds, trainer.getId());
+
+        Map<Long, ActiveClientWorkoutResponse> activeWorkouts = getActiveWorkouts(clientIds, trainer.getId());
 
         return clients.stream()
-                .map(client -> new ClientResponse(client, reviewStatuses.get(client.getId())))
+                .map(client -> new ClientResponse(client, reviewStatuses.get(client.getId()), activeWorkouts.get(client.getId())))
                 .toList();
     }
 
@@ -119,8 +124,14 @@ public class ClientService {
     //---------------------------------------------------------------------------------------------------------
 
     private ClientResponse toClientResponse(Client client) {
-        ClientReviewStatusResponse reviewStatus = getReviewStatuses(List.of(client.getId()), client.getTrainer().getId()).get(client.getId());
-        return new ClientResponse(client, reviewStatus);
+        Long clientId = client.getId();
+        Long trainerId = client.getTrainer().getId();
+
+        ClientReviewStatusResponse reviewStatus = getReviewStatuses(List.of(clientId), trainerId).get(clientId);
+
+        ActiveClientWorkoutResponse activeWorkout = getActiveWorkouts(List.of(clientId), trainerId).get(clientId);
+
+        return new ClientResponse(client, reviewStatus, activeWorkout);
     }
 
     private Map<Long, ClientReviewStatusResponse> getReviewStatuses(Collection<Long> clientIds, Long trainerId) {
@@ -175,6 +186,23 @@ public class ClientService {
                 };
 
         return new ClientReviewStatusResponse(intakeStatus, inProgressIntakeId, initialAssessmentStatus);
+    }
+
+    private Map<Long, ActiveClientWorkoutResponse> getActiveWorkouts(Collection<Long> clientIds, Long trainerId) {
+        if (clientIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<ClientWorkoutRepository.ActiveClientWorkoutView> activeWorkouts = clientWorkoutRepository
+                .findActiveWorkoutsByTrainerAndClients(trainerId, clientIds, ClientWorkoutStatus.IN_PROGRESS);
+
+        Map<Long, ActiveClientWorkoutResponse> activeWorkoutsByClientId = new HashMap<>();
+
+        for (ClientWorkoutRepository.ActiveClientWorkoutView workout : activeWorkouts) {
+            activeWorkoutsByClientId.put(workout.getClientId(), new ActiveClientWorkoutResponse(workout.getId(), workout.getName(), workout.getOrigin(), workout.getStartedAt()));
+        }
+
+        return activeWorkoutsByClientId;
     }
 
     //---------------------------------------------------------------------------------------------------------

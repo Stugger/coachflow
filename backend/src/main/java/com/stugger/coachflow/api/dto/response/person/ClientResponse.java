@@ -1,5 +1,6 @@
 package com.stugger.coachflow.api.dto.response.person;
 
+import com.stugger.coachflow.api.dto.response.workout.ActiveClientWorkoutResponse;
 import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.entity.person.ClientGender;
 
@@ -23,10 +24,11 @@ public record ClientResponse(
         ClientGender gender,
         Boolean archived,
         ClientReviewStatusResponse reviewStatus,
+        ActiveClientWorkoutResponse activeWorkout,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public ClientResponse(Client client, ClientReviewStatusResponse reviewStatus) {
+    public ClientResponse(Client client, ClientReviewStatusResponse reviewStatus, ActiveClientWorkoutResponse activeWorkout) {
         this(client.getId(),
             client.getUser() == null ? null : new UserResponse(client.getUser()),
             new TrainerSummaryResponse(client.getTrainer()),
@@ -39,6 +41,7 @@ public record ClientResponse(
             client.getGender(),
             client.getArchived(),
             reviewStatus,
+            activeWorkout,
             client.getCreatedAt(),
             client.getUpdatedAt()
         );
