@@ -2,6 +2,7 @@ package com.stugger.coachflow.repository.workout;
 
 import com.stugger.coachflow.entity.workout.ClientWorkout;
 import com.stugger.coachflow.entity.workout.ClientWorkoutOrigin;
+import com.stugger.coachflow.entity.workout.ClientWorkoutStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,6 +18,8 @@ import java.util.Set;
 public interface ClientWorkoutRepository extends JpaRepository<ClientWorkout, Long> {
 
     Optional<ClientWorkout> findByIdAndTrainer_Id(Long clientWorkoutId, Long trainerId);
+
+    Optional<ClientWorkout> findFirstByClientIdAndTrainerIdAndStatusAndArchivedAtNull(Long clientId, Long trainerId, ClientWorkoutStatus status);
 
     Optional<ClientWorkout> findFirstByClientIdAndTrainerIdAndOriginAndArchivedAtNullOrderByUpdatedAtDesc(Long clientId, Long trainerId, ClientWorkoutOrigin origin);
 

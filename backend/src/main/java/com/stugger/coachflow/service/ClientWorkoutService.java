@@ -16,6 +16,7 @@ import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import com.stugger.coachflow.validation.WorkoutStructureValidator;
 import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,6 +89,55 @@ public class ClientWorkoutService {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         return new ClientWorkoutResponse(getClientWorkoutOrThrow(clientWorkoutId, trainer));
+    }
+
+    @Transactional
+    public ClientWorkoutResponse startClientWorkout(Long clientWorkoutId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
+
+        if (clientWorkout.getArchivedAt() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Archived client workouts cannot be started.");
+        }
+
+        /*
+         * Starting the same workout more than once is idempotent.
+         * This handles double clicks and repeated start requests safely.
+         */
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.IN_PROGRESS) {
+            return new ClientWorkoutResponse(clientWorkout);
+        }
+
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Completed client workouts cannot be started.");
+        }
+
+        ClientWorkout activeWorkout = clientWorkoutRepository
+                .findFirstByClientIdAndTrainerIdAndStatusAndArchivedAtNull(clientWorkout.getClient().getId(), trainer.getId(), ClientWorkoutStatus.IN_PROGRESS)
+                .orElse(null);
+
+        if (activeWorkout != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This client already has a workout in progress: " + activeWorkout.getName() + ".");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        clientWorkout.setStatus(ClientWorkoutStatus.IN_PROGRESS);
+        clientWorkout.setStartedAt(now);
+        clientWorkout.setCompletedAt(null);
+        clientWorkout.setUpdatedAt(now);
+
+        try {
+            clientWorkoutRepository.saveAndFlush(clientWorkout);
+        } catch (DataIntegrityViolationException exception) {
+            /*
+             * The partial unique index protects against concurrent requests from
+             * multiple tabs or devices that both passed the application-level check.
+             */
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This client already has a workout in progress.", exception);
+        }
+
+        return new ClientWorkoutResponse(clientWorkout);
     }
 
     /*

@@ -90,3 +90,13 @@ ALTER TABLE client_workouts
 
 ALTER TABLE client_workouts
     ALTER COLUMN status DROP DEFAULT;
+
+
+-- -----------------------------------------------------------------------------------------------------------------
+-- Only one client workout may be in progress per client
+-- -----------------------------------------------------------------------------------------------------------------
+
+CREATE UNIQUE INDEX uq_client_workouts_one_in_progress_per_client
+    ON client_workouts (client_id)
+    WHERE status = 'IN_PROGRESS'
+      AND archived_at IS NULL;

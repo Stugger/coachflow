@@ -34,6 +34,11 @@ public class ClientWorkoutController {
         return clientWorkoutService.updateClientWorkout(clientWorkoutId, request);
     }
 
+    @PostMapping("/client-workouts/{clientWorkoutId}/start")
+    public ClientWorkoutResponse startClientWorkout(@PathVariable Long clientWorkoutId) {
+        return clientWorkoutService.startClientWorkout(clientWorkoutId);
+    }
+
     @DeleteMapping("/client-workouts/{clientWorkoutId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClientWorkout(@PathVariable Long clientWorkoutId) {
