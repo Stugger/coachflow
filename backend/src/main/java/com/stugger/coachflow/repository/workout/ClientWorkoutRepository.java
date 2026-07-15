@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * @author Jake
@@ -26,12 +26,23 @@ public interface ClientWorkoutRepository extends JpaRepository<ClientWorkout, Lo
     boolean existsByClientIdAndTrainerIdAndOriginAndArchivedAtNull(Long clientId, Long trainerId, ClientWorkoutOrigin origin);
 
     @Query("""
-        select distinct workout.client.id
+        select workout.client.id as clientId, workout.status as status
         from ClientWorkout workout
         where workout.trainer.id = :trainerId
           and workout.client.id in :clientIds
           and workout.origin = :origin
           and workout.archivedAt is null
         """)
-    Set<Long> findClientIdsByTrainerIdAndClientIdInAndOriginAndArchivedAtNull(@Param("trainerId") Long trainerId, @Param("clientIds") Collection<Long> clientIds, @Param("origin") ClientWorkoutOrigin origin);
+    List<ClientWorkoutStatusView> findStatusesByTrainerIdAndClientIdInAndOriginAndArchivedAtNull(@Param("trainerId") Long trainerId, @Param("clientIds") Collection<Long> clientIds, @Param("origin") ClientWorkoutOrigin origin);
+
+    /**
+     * Projection containing a client ID and the client's current workout status.
+     * This avoids loading the full workout structure.
+     */
+    interface ClientWorkoutStatusView {
+
+        Long getClientId();
+
+        ClientWorkoutStatus getStatus();
+    }
 }

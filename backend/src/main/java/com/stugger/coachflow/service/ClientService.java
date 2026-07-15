@@ -11,6 +11,7 @@ import com.stugger.coachflow.entity.intake.IntakeStatus;
 import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.entity.workout.ClientWorkoutOrigin;
+import com.stugger.coachflow.entity.workout.ClientWorkoutStatus;
 import com.stugger.coachflow.repository.intake.ClientIntakeRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
 import com.stugger.coachflow.repository.workout.ClientWorkoutRepository;
@@ -135,30 +136,45 @@ public class ClientService {
             intakesByClientId.put(intake.getClient().getId(), intake);
         }
 
-        Set<Long> initialAssessmentClientIds = clientWorkoutRepository.findClientIdsByTrainerIdAndClientIdInAndOriginAndArchivedAtNull(trainerId, clientIds, ClientWorkoutOrigin.INITIAL_ASSESSMENT);
+        List<ClientWorkoutRepository.ClientWorkoutStatusView> initialAssessmentWorkouts = clientWorkoutRepository
+                .findStatusesByTrainerIdAndClientIdInAndOriginAndArchivedAtNull(trainerId, clientIds, ClientWorkoutOrigin.INITIAL_ASSESSMENT);
+
+        Map<Long, ClientWorkoutStatus> initialAssessmentStatusesByClientId = new HashMap<>();
+
+        for (ClientWorkoutRepository.ClientWorkoutStatusView workout : initialAssessmentWorkouts) {
+            initialAssessmentStatusesByClientId.put(workout.getClientId(), workout.getStatus());
+        }
 
         Map<Long, ClientReviewStatusResponse> reviewStatuses = new HashMap<>();
 
         for (Long clientId : clientIds) {
             ClientIntake intake = intakesByClientId.get(clientId);
+            ClientWorkoutStatus clientWorkoutStatus = initialAssessmentStatusesByClientId.get(clientId);
 
-            IntakeReviewStatus intakeStatus = intake == null
-                    ? IntakeReviewStatus.MISSING
-                    : intake.getStatus() == IntakeStatus.COMPLETED
-                      ? IntakeReviewStatus.COMPLETED
-                      : IntakeReviewStatus.IN_PROGRESS;
-
-            Long inProgressIntakeId = intakeStatus == IntakeReviewStatus.IN_PROGRESS ? intake.getId() : null;
-
-            InitialAssessmentReviewStatus initialAssessmentStatus =
-                    initialAssessmentClientIds.contains(clientId)
-                            ? InitialAssessmentReviewStatus.READY
-                            : InitialAssessmentReviewStatus.MISSING;
-
-            reviewStatuses.put(clientId, new ClientReviewStatusResponse(intakeStatus, inProgressIntakeId, initialAssessmentStatus));
+            reviewStatuses.put(clientId, toClientReviewStatusResponse(intake, clientWorkoutStatus));
         }
 
         return reviewStatuses;
+    }
+
+    private ClientReviewStatusResponse toClientReviewStatusResponse(ClientIntake intake, ClientWorkoutStatus clientWorkoutStatus) {
+        IntakeReviewStatus intakeStatus = intake == null
+                ? IntakeReviewStatus.MISSING
+                : intake.getStatus() == IntakeStatus.COMPLETED
+                  ? IntakeReviewStatus.COMPLETED
+                  : IntakeReviewStatus.IN_PROGRESS;
+
+        Long inProgressIntakeId = intakeStatus == IntakeReviewStatus.IN_PROGRESS ? intake.getId() : null;
+
+        InitialAssessmentReviewStatus initialAssessmentStatus = clientWorkoutStatus == null
+                ? InitialAssessmentReviewStatus.MISSING
+                : switch (clientWorkoutStatus) {
+                    case READY -> InitialAssessmentReviewStatus.READY;
+                    case IN_PROGRESS -> InitialAssessmentReviewStatus.IN_PROGRESS;
+                    case COMPLETED -> InitialAssessmentReviewStatus.COMPLETED;
+                };
+
+        return new ClientReviewStatusResponse(intakeStatus, inProgressIntakeId, initialAssessmentStatus);
     }
 
     //---------------------------------------------------------------------------------------------------------

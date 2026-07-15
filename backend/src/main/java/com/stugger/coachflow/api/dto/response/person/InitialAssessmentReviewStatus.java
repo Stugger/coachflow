@@ -7,6 +7,6 @@ package com.stugger.coachflow.api.dto.response.person;
 public enum InitialAssessmentReviewStatus {
     MISSING,
     READY,
-    //TODO -> IN_PROGRESS
-    //TODO -> COMPLETED
+    IN_PROGRESS,
+    COMPLETED
 }
