@@ -114,8 +114,11 @@ public class ClientWorkoutService {
         clientWorkout.setClient(client);
         clientWorkout.setSourceTemplate(sourceTemplate);
         clientWorkout.setOrigin(ClientWorkoutOrigin.INITIAL_ASSESSMENT);
+        clientWorkout.setStatus(ClientWorkoutStatus.READY);
         clientWorkout.setName(TextUtils.trimToEmpty(request.name()));
         clientWorkout.setDescription(TextUtils.trimToNull(request.description()));
+        clientWorkout.setStartedAt(null);
+        clientWorkout.setCompletedAt(null);
         clientWorkout.setArchivedAt(null);
         clientWorkout.setCreatedAt(now);
         clientWorkout.setUpdatedAt(now);

@@ -44,6 +44,10 @@ public class ClientWorkout {
     @Column(nullable = false, length = 32)
     private ClientWorkoutOrigin origin;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
+    private ClientWorkoutStatus status;
+
     @Column(nullable = false)
     private String name;
 
@@ -53,6 +57,12 @@ public class ClientWorkout {
     @OneToMany(mappedBy = "clientWorkout", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("position ASC")
     private List<ClientWorkoutSection> sections = new ArrayList<>();
+
+    @Column(name = "started_at")
+    private LocalDateTime startedAt;
+
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

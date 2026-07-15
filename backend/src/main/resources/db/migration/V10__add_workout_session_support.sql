@@ -55,3 +55,38 @@ ALTER TABLE client_workout_item_exercises
         ADD CONSTRAINT uq_client_workout_item_exercises_position
             UNIQUE (client_workout_item_id, position)
             DEFERRABLE INITIALLY DEFERRED;
+
+
+-- -----------------------------------------------------------------------------------------------------------------
+-- Client workout lifecycle
+-- -----------------------------------------------------------------------------------------------------------------
+--
+-- A client workout begins as a ready-to-perform workout, becomes the active
+-- live workout when started, and becomes the completed workout record.
+-- -----------------------------------------------------------------------------------------------------------------
+
+ALTER TABLE client_workouts
+    ADD COLUMN status VARCHAR(32) NOT NULL DEFAULT 'READY',
+    ADD COLUMN started_at TIMESTAMP,
+    ADD COLUMN completed_at TIMESTAMP,
+
+    ADD CONSTRAINT chk_client_workout_status CHECK (
+        status IN ('READY', 'IN_PROGRESS', 'COMPLETED')
+    ),
+
+    ADD CONSTRAINT chk_client_workout_lifecycle CHECK (
+        (status = 'READY'
+            AND started_at IS NULL
+            AND completed_at IS NULL)
+        OR
+        (status = 'IN_PROGRESS'
+            AND started_at IS NOT NULL
+            AND completed_at IS NULL)
+        OR
+        (status = 'COMPLETED'
+            AND started_at IS NOT NULL
+            AND completed_at IS NOT NULL)
+    );
+
+ALTER TABLE client_workouts
+    ALTER COLUMN status DROP DEFAULT;

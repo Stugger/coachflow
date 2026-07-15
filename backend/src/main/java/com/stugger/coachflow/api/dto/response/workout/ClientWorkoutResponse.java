@@ -2,6 +2,7 @@ package com.stugger.coachflow.api.dto.response.workout;
 
 import com.stugger.coachflow.entity.workout.ClientWorkout;
 import com.stugger.coachflow.entity.workout.ClientWorkoutOrigin;
+import com.stugger.coachflow.entity.workout.ClientWorkoutStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,9 +16,12 @@ public record ClientWorkoutResponse(
         Long clientId,
         Long sourceWorkoutTemplateId,
         ClientWorkoutOrigin origin,
+        ClientWorkoutStatus status,
         String name,
         String description,
         List<WorkoutSectionResponse> sections,
+        LocalDateTime startedAt,
+        LocalDateTime completedAt,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         LocalDateTime archivedAt
@@ -31,11 +35,14 @@ public record ClientWorkoutResponse(
                 ? null
                 : clientWorkout.getSourceTemplate().getId(),
             clientWorkout.getOrigin(),
+            clientWorkout.getStatus(),
             clientWorkout.getName(),
             clientWorkout.getDescription(),
             clientWorkout.getSections().stream()
                 .map(WorkoutSectionResponse::new)
                 .toList(),
+            clientWorkout.getStartedAt(),
+            clientWorkout.getCompletedAt(),
             clientWorkout.getCreatedAt(),
             clientWorkout.getUpdatedAt(),
             clientWorkout.getArchivedAt()
