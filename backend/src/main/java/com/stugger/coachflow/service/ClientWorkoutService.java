@@ -64,6 +64,10 @@ public class ClientWorkoutService {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
 
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.COMPLETED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Completed client workout records cannot be edited.");
+        }
+
         LocalDateTime now = LocalDateTime.now();
 
         clientWorkout.setName(TextUtils.trimToEmpty(request.name()));
@@ -77,11 +81,19 @@ public class ClientWorkoutService {
     }
 
     @Transactional
-    public void deleteClientWorkout(Long clientWorkoutId) { // TODO archive once lifecycle or result records make hard deletion unsafe
+    public void deleteClientWorkout(Long clientWorkoutId) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
 
-        clientWorkoutRepository.delete(clientWorkout);
+        switch (clientWorkout.getStatus()) {
+            case READY -> clientWorkoutRepository.delete(clientWorkout);
+            case IN_PROGRESS -> throw new ResponseStatusException(HttpStatus.CONFLICT, "In-progress client workouts must be cancelled before they can be deleted.");
+            case COMPLETED -> {
+                LocalDateTime now = LocalDateTime.now();
+                clientWorkout.setArchivedAt(now);
+                clientWorkout.setUpdatedAt(now);
+            }
+        }
     }
 
     @Transactional(readOnly = true)
