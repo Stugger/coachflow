@@ -1,8 +1,10 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {useLocation, useNavigate, useParams} from 'react-router-dom';
+import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js"
 import {
     Box,
     Button,
+    Group,
     LoadingOverlay,
     Modal,
     Stack,
@@ -11,8 +13,10 @@ import {
 import {
     IconAlertTriangle,
     IconClipboardCheck,
+    IconExternalLink,
     IconEye,
     IconPlayerPlay,
+    IconTreadmill,
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
@@ -43,7 +47,12 @@ import {
 
 import * as ClientDetailsFormUtils from '../shared/client-form-utils.js';
 
+import {formatDisplayDate, formatDisplayTime} from '../../../utils/time-utils.js';
+import {getClientWorkoutOriginLabel} from "../client-workouts/client-workout-constants.js";
+
 function ClientProfilePage() {
+
+    const isSmallScreen = useIsSmallScreen();
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Route state
@@ -170,6 +179,30 @@ function ClientProfilePage() {
         });
     }
 
+    function resumeActiveWorkout() {
+        const activeWorkoutId = client.activeWorkout?.id;
+
+        if (!activeWorkoutId) {
+            return;
+        }
+
+        navigate(ROUTES.clientWorkoutSession(activeWorkoutId));
+    }
+
+    function viewActiveWorkoutSource() {
+        const activeWorkout = client.activeWorkout;
+
+        if (!activeWorkout) {
+            return;
+        }
+
+        if (activeWorkout.origin === 'INITIAL_ASSESSMENT') {
+            navigateToClientRecord('initial-assessment', {
+                scroll: true,
+            });
+        }
+    }
+
     function openIntakeAction() {
         const intakeId = client.reviewStatus?.inProgressIntakeId;
 
@@ -285,6 +318,7 @@ function ClientProfilePage() {
                 setClient(currentClient => ({
                     ...currentClient,
                     reviewStatus: updatedClient.reviewStatus,
+                    activeWorkout: updatedClient.activeWorkout,
                 }));
             })
             .catch(error => {
@@ -312,6 +346,7 @@ function ClientProfilePage() {
                 setClient(currentClient => ({
                     ...currentClient,
                     reviewStatus: updatedClient.reviewStatus,
+                    activeWorkout: updatedClient.activeWorkout,
                 }));
             })
             .catch(error => {
@@ -397,6 +432,19 @@ function ClientProfilePage() {
         }
 
         const reviewStatus = client.reviewStatus;
+        const activeWorkout = client.activeWorkout;
+
+        const activeWorkoutOriginLabel = activeWorkout ? getClientWorkoutOriginLabel(activeWorkout.origin) : null;
+
+        const activeWorkoutDisplayName =
+            activeWorkout
+            && activeWorkout.name?.trim().toLowerCase()
+            !== activeWorkoutOriginLabel.toLowerCase()
+                ? `${activeWorkout.name} · ${activeWorkoutOriginLabel}`
+                : activeWorkoutOriginLabel;
+
+        const activeWorkoutHasSource =
+            activeWorkout?.origin === 'INITIAL_ASSESSMENT';
 
         if (!reviewStatus) {
             return null;
@@ -408,6 +456,51 @@ function ClientProfilePage() {
 
         return (
             <>
+                {activeWorkout && (
+                    <ClientProfileReviewAction
+                        color="green"
+                        shadow
+                        icon={
+                            <Group gap={8} wrap="nowrap" pr={4}>
+                                <IconTreadmill size={18}/>
+                                <span className="client-session-live-dot"/>
+
+                            </Group>
+                        }
+                        title="Workout in Progress"
+                        description={
+                            <>
+                                <Text span>{activeWorkoutDisplayName}</Text>
+                                <br />
+                                <Text span size="xs">
+                                    {`Started ${formatDisplayDate(activeWorkout.startedAt)} at ${formatDisplayTime(activeWorkout.startedAt)}.`}
+                                </Text>
+                            </>
+                        }
+                        action={
+                            <Group gap="sm">
+                                <Button
+                                    color="green"
+                                    leftSection={<IconPlayerPlay size={16}/>}
+                                    onClick={resumeActiveWorkout}
+                                >
+                                    Resume{isSmallScreen ? '' : ''}
+                                </Button>
+
+                                {activeWorkoutHasSource && (
+                                    <Button
+                                        variant="light"
+                                        leftSection={<IconExternalLink size={16}/>}
+                                        onClick={viewActiveWorkoutSource}
+                                    >
+                                        Go to Source
+                                    </Button>
+                                )}
+                            </Group>
+                        }
+                    />
+                )}
+
                 {intakeNeedsAction && (
                     <ClientProfileReviewAction
                         color="red"

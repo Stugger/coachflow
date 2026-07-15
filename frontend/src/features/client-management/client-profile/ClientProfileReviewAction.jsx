@@ -6,12 +6,13 @@ import {
     Text,
 } from '@mantine/core';
 
-function ClientProfileReviewAction({color, icon, title, description, actionLabel, actionIcon, onAction, action, loading = false}) {
+function ClientProfileReviewAction({color, shadow = false, icon, title, description, actionLabel, actionIcon, onAction, action, loading = false}) {
     return (
         <Paper
             withBorder
             radius="md"
             p="lg"
+            shadow={shadow ? "xs" : undefined}
             style={{
                 borderLeft: `6px solid var(--mantine-color-${color}-6)`,
             }}

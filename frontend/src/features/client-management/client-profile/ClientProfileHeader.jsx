@@ -142,7 +142,9 @@ function ClientProfileHeader({client, onEditDetails, onArchiveClient}) {
                             {fullName}
                         </Title>
 
-                        <ClientReviewBadge client={client}/>
+                        {client.archived && (
+                            <ClientReviewBadge client={client}/>
+                        )}
                     </Group>
 
                     {client.preferredName && (

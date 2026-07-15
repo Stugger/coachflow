@@ -17,6 +17,33 @@
     box-shadow: var(--mantine-shadow-xs);
 }
 
+@keyframes client-session-live-pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(
+                in srgb,
+                var(--mantine-color-red-6) 55%,
+                transparent
+        );
+    }
+
+    70% {
+        box-shadow: 0 0 0 0.35rem transparent;
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+.client-session-live-dot {
+    display: block;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: var(--mantine-color-red-6);
+    animation: client-session-live-pulse 1.5s ease-out infinite;
+}
+
 @keyframes workout-structure-created {
     from {
         opacity: 0;
@@ -78,6 +105,7 @@
 @media (prefers-reduced-motion: reduce) {
     .workout-structure-created,
     .workout-stack-round-feedback,
+    .client-session-live-dot,
     .auth-password-guidance {
         animation: none;
     }

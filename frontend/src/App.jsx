@@ -15,6 +15,7 @@ import AuthPage from './pages/AuthPage';
 import ClientIntakePage from './features/client-management/intake/ClientIntakePage';
 import ClientsPage from './features/client-management/client-list/ClientsPage';
 import ClientProfilePage from './features/client-management/client-profile/ClientProfilePage';
+import ClientWorkoutSessionPage from './features/client-management/client-workouts/ClientWorkoutSessionPage.jsx';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ExerciseLibraryPage from './features/exercises/library/ExerciseLibraryPage';
 import WorkoutLibraryPage from './features/workout-library/WorkoutLibraryPage';
@@ -107,9 +108,11 @@ function App() {
                 <Route path={ROUTES.CLIENT_RECORDS} element={<ClientProfilePage/>}/>
                 <Route path={ROUTES.CLIENT_HABITS} element={<ClientProfilePage/>}/>
                 <Route path={ROUTES.CLIENT_MEASUREMENTS} element={<ClientProfilePage/>}/>
+                <Route path={ROUTES.CLIENT_WORKOUT_SESSION} element={<ClientWorkoutSessionPage/>}/>
 
                 <Route path={ROUTES.EXERCISES} element={<ExerciseLibraryPage/>}/>
                 <Route path={ROUTES.WORKOUT_TEMPLATES} element={<WorkoutLibraryPage trainerId={auth.trainer.id}/>}/>
+
                 <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage/>}/>
 
                 <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>

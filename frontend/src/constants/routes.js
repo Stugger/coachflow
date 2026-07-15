@@ -27,6 +27,12 @@ export const ROUTES = {
     clientHabits: (clientId) => `/clients/${clientId}/habits`,
     clientMeasurements: (clientId) => `/clients/${clientId}/measurements`,
 
+    /* Client Workout */
+
+    CLIENT_WORKOUT_SESSION: '/client-workouts/:clientWorkoutId/session',
+
+    clientWorkoutSession: (clientWorkoutId) => `/client-workouts/${clientWorkoutId}/session`,
+
     /* Exercise Library */
 
     EXERCISES: "/exercises",

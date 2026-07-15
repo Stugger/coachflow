@@ -10,6 +10,7 @@ function ClientReviewBadge({client, size}) {
             size={size}
             color={badge.color}
             variant="light"
+            leftSection={badge.live ? <span className="client-session-live-dot"/> : null}
         >
             {badge.label}
         </Badge>

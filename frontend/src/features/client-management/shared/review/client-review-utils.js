@@ -2,28 +2,38 @@ const CLIENT_REVIEW_BADGES = {
     ARCHIVED: {
         label: 'ARCHIVED',
         color: 'gray',
-        priority: 3,
+        priority: -1,
+    },
+    SESSION: {
+        label: 'ACTIVE',
+        color: 'green',
+        priority: 0,
+        live: true,
     },
     INTAKE: {
         label: 'INTAKE',
         color: 'red',
-        priority: 0,
+        priority: 1,
     },
     ASSESS: {
         label: 'ASSESS',
         color: 'yellow',
-        priority: 1,
+        priority: 2,
     },
     ACTIVE: {
         label: 'ACTIVE',
         color: 'green',
-        priority: 2,
+        priority: 3,
     },
 };
 
 export function getClientReviewBadge(client) {
     if (client.archived) {
         return CLIENT_REVIEW_BADGES.ARCHIVED;
+    }
+
+    if (client.activeWorkout) {
+        return CLIENT_REVIEW_BADGES.SESSION;
     }
 
     const reviewStatus = client.reviewStatus;
