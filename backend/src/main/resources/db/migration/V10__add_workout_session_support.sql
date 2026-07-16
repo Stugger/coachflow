@@ -100,3 +100,88 @@ CREATE UNIQUE INDEX uq_client_workouts_one_in_progress_per_client
     ON client_workouts (client_id)
     WHERE status = 'IN_PROGRESS'
       AND archived_at IS NULL;
+
+
+-- -----------------------------------------------------------------------------------------------------------------
+-- Client workout performed set results
+-- -----------------------------------------------------------------------------------------------------------------
+--
+-- Each row stores the actual values entered for one prescribed workout set.
+--
+-- A direct exercise result references client_workout_items.
+-- An exercise inside a superset, triset, or circuit references
+-- client_workout_item_exercises.
+--
+-- values_json is organized by result side:
+--
+--     {
+--         "default": {
+--             "reps": 8,
+--             "weight": 185
+--         }
+--     }
+--
+-- or, for each-side exercises:
+--
+--     {
+--         "left": {
+--             "reps": 8
+--         },
+--         "right": {
+--             "reps": 7
+--         }
+--     }
+--
+-- completed_at remains null while values are merely autosaved. Once populated,
+-- the set is considered completed and its structural workout configuration can
+-- no longer be changed.
+-- -----------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE client_workout_set_results (
+    id BIGSERIAL PRIMARY KEY,
+
+    client_workout_id BIGINT NOT NULL REFERENCES client_workouts(id) ON DELETE CASCADE,
+
+    client_workout_item_id BIGINT REFERENCES client_workout_items(id) ON DELETE CASCADE,
+
+    client_workout_item_exercise_id BIGINT REFERENCES client_workout_item_exercises(id) ON DELETE CASCADE,
+
+    set_key VARCHAR(64) NOT NULL,
+
+    values_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    notes TEXT,
+
+    completed_at TIMESTAMP,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_client_workout_set_results_exercise_source CHECK (
+        num_nonnulls(
+                client_workout_item_id,
+                client_workout_item_exercise_id
+        ) = 1
+    ),
+
+    CONSTRAINT chk_client_workout_set_results_values_object CHECK (
+        jsonb_typeof(values_json) = 'object'
+    )
+);
+
+CREATE INDEX idx_client_workout_set_results_workout_id ON client_workout_set_results(client_workout_id);
+
+CREATE UNIQUE INDEX uq_client_workout_set_results_direct_set ON client_workout_set_results(
+        client_workout_item_id,
+        set_key
+    )
+    WHERE client_workout_item_id IS NOT NULL;
+
+CREATE UNIQUE INDEX uq_client_workout_set_results_stack_set ON client_workout_set_results(
+        client_workout_item_exercise_id,
+        set_key
+    )
+    WHERE client_workout_item_exercise_id IS NOT NULL;
+
+CREATE INDEX idx_client_workout_set_results_completed_workout ON client_workout_set_results(client_workout_id)
+    WHERE completed_at IS NOT NULL;
