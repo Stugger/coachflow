@@ -1,8 +1,7 @@
 package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.workout.*;
-import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutResponse;
-import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutSessionResponse;
+import com.stugger.coachflow.api.dto.response.workout.*;
 import com.stugger.coachflow.entity.exercise.Exercise;
 import com.stugger.coachflow.entity.exercise.ExerciseVisibility;
 import com.stugger.coachflow.entity.person.Client;
@@ -23,6 +22,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,27 +37,32 @@ import java.util.*;
 public class ClientWorkoutService {
 
     private final ClientWorkoutRepository clientWorkoutRepository;
-    private final WorkoutTemplateRepository workoutTemplateRepository;
     private final ClientWorkoutItemRepository clientWorkoutItemRepository;
     private final ClientWorkoutSetResultRepository clientWorkoutSetResultRepository;
+
+    private final WorkoutTemplateRepository workoutTemplateRepository;
+    private final ExerciseRepository exerciseRepository;
+
     private final ClientRepository clientRepository;
     private final CurrentTrainerService currentTrainerService;
-    private final ExerciseRepository exerciseRepository;
 
     private final WorkoutStructureValidator workoutStructureValidator;
 
+    private final JsonMapper jsonMapper;
+
     public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository, ClientWorkoutSetResultRepository clientWorkoutSetResultRepository,
-                                WorkoutTemplateRepository workoutTemplateRepository,
-                                ClientRepository clientRepository, CurrentTrainerService currentTrainerService, ExerciseRepository exerciseRepository,
-                                WorkoutStructureValidator workoutStructureValidator) {
+                                WorkoutTemplateRepository workoutTemplateRepository, ExerciseRepository exerciseRepository,
+                                ClientRepository clientRepository, CurrentTrainerService currentTrainerService,
+                                WorkoutStructureValidator workoutStructureValidator, JsonMapper jsonMapper) {
         this.clientWorkoutRepository = clientWorkoutRepository;
         this.clientWorkoutItemRepository = clientWorkoutItemRepository;
         this.clientWorkoutSetResultRepository = clientWorkoutSetResultRepository;
         this.workoutTemplateRepository = workoutTemplateRepository;
+        this.exerciseRepository = exerciseRepository;
         this.clientRepository = clientRepository;
         this.currentTrainerService = currentTrainerService;
-        this.exerciseRepository = exerciseRepository;
         this.workoutStructureValidator = workoutStructureValidator;
+        this.jsonMapper = jsonMapper;
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -170,6 +177,68 @@ public class ClientWorkoutService {
         }
 
         return new ClientWorkoutResponse(clientWorkout);
+    }
+
+    @Transactional
+    public Optional<ClientWorkoutSetResultResponse> saveClientWorkoutSetResult(Long clientWorkoutId, @Valid SaveClientWorkoutSetResultRequest request) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+
+        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
+
+        if (clientWorkout.getArchivedAt() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Archived workout records cannot be updated.");
+        }
+
+        if (clientWorkout.getStatus() != ClientWorkoutStatus.IN_PROGRESS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Set results can only be updated while a workout is in progress.");
+        }
+
+        ClientWorkoutResultTarget target = resolveResultTarget(clientWorkout, request);
+
+        ParsedWorkoutConfig config = parseWorkoutConfig(target.configJson());
+
+        String setKey = request.setKey().trim();
+
+        if (!config.setKeys().contains(setKey)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Set with key " + setKey + " does not exist for the selected exercise.");
+        }
+
+        String normalizedValuesJson = validateAndNormalizeResultValues(request.valuesJson(), config);
+
+        String notes = TextUtils.trimToNull(request.notes());
+
+        Optional<ClientWorkoutSetResult> existingResult = findSetResult(clientWorkoutId, target, setKey);
+
+        boolean hasValues = !normalizedValuesJson.equals("{}");
+        boolean shouldRetainResult = hasValues || notes != null || request.completed();
+
+        if (!shouldRetainResult) {
+            existingResult.ifPresent(clientWorkoutSetResultRepository::delete);
+            return Optional.empty();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        ClientWorkoutSetResult result = existingResult.orElseGet(() -> {
+            ClientWorkoutSetResult newResult = new ClientWorkoutSetResult();
+
+            newResult.setClientWorkout(clientWorkout);
+            newResult.setClientWorkoutItem(target.item());
+            newResult.setClientWorkoutItemExercise(target.itemExercise());
+            newResult.setSetKey(setKey);
+            newResult.setCreatedAt(now);
+
+            return newResult;
+        });
+
+        result.setValuesJson(normalizedValuesJson);
+        result.setNotes(notes);
+        result.setCompletedAt(request.completed() ? now : null);
+        result.setUpdatedAt(now);
+
+        ClientWorkoutSetResult savedResult = clientWorkoutSetResultRepository.saveAndFlush(result);
+
+        return Optional.of(new ClientWorkoutSetResultResponse(savedResult));
     }
 
     /*
@@ -496,6 +565,47 @@ public class ClientWorkoutService {
         return getAvailableExerciseOrThrow(itemExerciseRequest.exerciseId(), trainerId);
     }
 
+    private ClientWorkoutResultTarget resolveResultTarget(ClientWorkout clientWorkout, SaveClientWorkoutSetResultRequest request) {
+        boolean hasDirectItem = request.clientWorkoutItemId() != null;
+        boolean hasStackExercise = request.clientWorkoutItemExerciseId() != null;
+
+        if (hasDirectItem == hasStackExercise) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exactly one workout item or workout item exercise is required.");
+        }
+
+        for (ClientWorkoutSection section : clientWorkout.getSections()) {
+            for (ClientWorkoutItem item : section.getItems()) {
+                if (hasDirectItem && Objects.equals(item.getId(), request.clientWorkoutItemId())) {
+                    if (item.getItemType() != WorkoutItemType.EXERCISE || item.getExercise() == null) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The selected workout item is not a direct exercise.");
+                    }
+                    return new ClientWorkoutResultTarget(item, null, item.getConfigJson());
+                }
+
+                if (hasStackExercise) {
+                    for (ClientWorkoutItemExercise itemExercise : item.getItemExercises()) {
+                        if (Objects.equals(itemExercise.getId(), request.clientWorkoutItemExerciseId())) {
+                            return new ClientWorkoutResultTarget(null, itemExercise, itemExercise.getConfigJson());
+                        }
+                    }
+                }
+            }
+        }
+
+        String targetLabel = hasDirectItem
+                ? "Workout item with id " + request.clientWorkoutItemId()
+                : "Workout item exercise with id " + request.clientWorkoutItemExerciseId();
+
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, targetLabel + " does not belong to client workout with id " + clientWorkout.getId() + ".");
+    }
+
+    private Optional<ClientWorkoutSetResult> findSetResult(Long clientWorkoutId, ClientWorkoutResultTarget target, String setKey) {
+        if (target.item() != null) {
+            return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItem_IdAndSetKey(clientWorkoutId, target.item().getId(), setKey);
+        }
+        return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItemExercise_IdAndSetKey(clientWorkoutId, target.itemExercise().getId(), setKey);
+    }
+
     //---------------------------------------------------------------------------------------------------------
     //
     //  Validation
@@ -544,4 +654,118 @@ public class ClientWorkoutService {
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Exercise not found.");
     }
 
+    private String validateAndNormalizeResultValues(String valuesJson, ParsedWorkoutConfig config) {
+        JsonNode valuesNode;
+
+        if (valuesJson == null || valuesJson.isBlank()) {
+            valuesNode = jsonMapper.createObjectNode();
+        } else {
+            try {
+                valuesNode = jsonMapper.readTree(valuesJson);
+            } catch (JacksonException exception) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Set result values must contain valid JSON.", exception);
+            }
+        }
+
+        if (valuesNode == null || !valuesNode.isObject()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Set result values must be a JSON object.");
+        }
+
+        Set<String> allowedSideKeys = config.eachSide()
+                ? Set.of("left", "right")
+                : Set.of("default");
+
+        for (Map.Entry<String, JsonNode> sideEntry : valuesNode.properties()) {
+            String sideKey = sideEntry.getKey();
+            JsonNode sideValues = sideEntry.getValue();
+
+            if (!allowedSideKeys.contains(sideKey)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, config.eachSide() ? "Each-side results may only contain left and right values." : "Standard results may only contain default values.");
+            }
+            if (!sideValues.isObject()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Values for " + sideKey + " must be a JSON object.");
+            }
+
+            for (Map.Entry<String, JsonNode> valueEntry : sideValues.properties()) {
+                String fieldKey = valueEntry.getKey();
+
+                if (!config.inputFieldKeys().contains(fieldKey)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tracking field " + fieldKey + " is not configured as an input for this exercise.");
+                }
+                if (valueEntry.getValue().isNull()) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tracking field values cannot be null.");
+                }
+            }
+        }
+
+        try {
+            return jsonMapper.writeValueAsString(valuesNode);
+        } catch (JacksonException exception) {
+            throw new IllegalStateException("Failed to serialize validated set result values.", exception);
+        }
+    }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Parsing - TODO likely extract and use during workout building for full enforcement of valid config
+    //
+    //---------------------------------------------------------------------------------------------------------
+
+    private ParsedWorkoutConfig parseWorkoutConfig(String configJson) {
+        JsonNode configNode;
+
+        try {
+            configNode = jsonMapper.readTree(configJson);
+        } catch (JacksonException exception) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Workout exercise configuration is invalid.", exception);
+        }
+
+        if (configNode == null || !configNode.isObject()) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Workout exercise configuration is invalid.");
+        }
+
+        boolean eachSide = configNode.path("eachSide").asBoolean(false);
+
+        Set<String> setKeys = new HashSet<>();
+
+        JsonNode setsNode = configNode.path("sets");
+        if (setsNode.isArray()) {
+            for (JsonNode setNode : setsNode) {
+                String setKey = TextUtils.trimToNull(setNode.path("setKey").asString(null));
+                if (setKey != null) {
+                    setKeys.add(setKey);
+                }
+            }
+        }
+
+        Set<String> inputFieldKeys = new HashSet<>();
+
+        JsonNode trackingFieldsNode = configNode.path("trackingFields");
+
+        if (trackingFieldsNode.isArray()) {
+            for (JsonNode trackingFieldNode : trackingFieldsNode) {
+                String fieldKey = TextUtils.trimToNull(trackingFieldNode.path("key").asString(null));
+                // notes is a prescribed informational field, it renders its target as read-only session guidance and is not an actual result input.
+                if (fieldKey != null && !fieldKey.equals("notes")) {
+                    inputFieldKeys.add(fieldKey);
+                }
+            }
+        }
+
+        return new ParsedWorkoutConfig(eachSide, Set.copyOf(setKeys), Set.copyOf(inputFieldKeys));
+    }
+
+    private record ParsedWorkoutConfig(
+            boolean eachSide,
+            Set<String> setKeys,
+            Set<String> inputFieldKeys
+    ) {
+    }
+
+    private record ClientWorkoutResultTarget(
+            ClientWorkoutItem item,
+            ClientWorkoutItemExercise itemExercise,
+            String configJson
+    ) {
+    }
 }
