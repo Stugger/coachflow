@@ -16,6 +16,10 @@ export function apiGetClientWorkout(clientWorkoutId) {
     return getJson(`/api/client-workouts/${clientWorkoutId}`);
 }
 
+export function apiGetClientWorkoutSession(clientWorkoutId) {
+    return getJson(`/api/client-workouts/${clientWorkoutId}/session`);
+}
+
 export function apiUpdateClientWorkout(clientWorkoutId, payload) {
     return sendJson(`/api/client-workouts/${clientWorkoutId}`, 'PUT', payload);
 }

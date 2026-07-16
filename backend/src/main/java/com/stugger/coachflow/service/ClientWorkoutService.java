@@ -2,6 +2,7 @@ package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.workout.*;
 import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutResponse;
+import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutSessionResponse;
 import com.stugger.coachflow.entity.exercise.Exercise;
 import com.stugger.coachflow.entity.exercise.ExerciseVisibility;
 import com.stugger.coachflow.entity.person.Client;
@@ -11,6 +12,7 @@ import com.stugger.coachflow.repository.exercise.ExerciseRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
 import com.stugger.coachflow.repository.workout.ClientWorkoutItemRepository;
 import com.stugger.coachflow.repository.workout.ClientWorkoutRepository;
+import com.stugger.coachflow.repository.workout.ClientWorkoutSetResultRepository;
 import com.stugger.coachflow.repository.workout.WorkoutTemplateRepository;
 import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
@@ -35,17 +37,20 @@ public class ClientWorkoutService {
     private final ClientWorkoutRepository clientWorkoutRepository;
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final ClientWorkoutItemRepository clientWorkoutItemRepository;
+    private final ClientWorkoutSetResultRepository clientWorkoutSetResultRepository;
     private final ClientRepository clientRepository;
     private final CurrentTrainerService currentTrainerService;
     private final ExerciseRepository exerciseRepository;
 
     private final WorkoutStructureValidator workoutStructureValidator;
 
-    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository, WorkoutTemplateRepository workoutTemplateRepository,
+    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository, ClientWorkoutSetResultRepository clientWorkoutSetResultRepository,
+                                WorkoutTemplateRepository workoutTemplateRepository,
                                 ClientRepository clientRepository, CurrentTrainerService currentTrainerService, ExerciseRepository exerciseRepository,
                                 WorkoutStructureValidator workoutStructureValidator) {
         this.clientWorkoutRepository = clientWorkoutRepository;
         this.clientWorkoutItemRepository = clientWorkoutItemRepository;
+        this.clientWorkoutSetResultRepository = clientWorkoutSetResultRepository;
         this.workoutTemplateRepository = workoutTemplateRepository;
         this.clientRepository = clientRepository;
         this.currentTrainerService = currentTrainerService;
@@ -101,6 +106,21 @@ public class ClientWorkoutService {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         return new ClientWorkoutResponse(getClientWorkoutOrThrow(clientWorkoutId, trainer));
+    }
+
+    @Transactional(readOnly = true)
+    public ClientWorkoutSessionResponse getClientWorkoutSession(Long clientWorkoutId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+
+        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
+
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.READY) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Client workout has not been started.");
+        }
+
+        List<ClientWorkoutSetResult> results = clientWorkoutSetResultRepository.findAllByClientWorkout_Id(clientWorkoutId);
+
+        return new ClientWorkoutSessionResponse(clientWorkout, results);
     }
 
     @Transactional

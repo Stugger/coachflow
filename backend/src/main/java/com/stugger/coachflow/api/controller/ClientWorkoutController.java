@@ -3,6 +3,7 @@ package com.stugger.coachflow.api.controller;
 import com.stugger.coachflow.api.dto.request.workout.CreateClientWorkoutRequest;
 import com.stugger.coachflow.api.dto.request.workout.UpdateClientWorkoutRequest;
 import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutResponse;
+import com.stugger.coachflow.api.dto.response.workout.ClientWorkoutSessionResponse;
 import com.stugger.coachflow.service.ClientWorkoutService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -27,6 +28,11 @@ public class ClientWorkoutController {
     @GetMapping("/client-workouts/{clientWorkoutId}")
     public ClientWorkoutResponse getClientWorkout(@PathVariable Long clientWorkoutId) {
         return clientWorkoutService.getClientWorkout(clientWorkoutId);
+    }
+
+    @GetMapping("/client-workouts/{clientWorkoutId}/session")
+    public ClientWorkoutSessionResponse getClientWorkoutSession(@PathVariable Long clientWorkoutId) {
+        return clientWorkoutService.getClientWorkoutSession(clientWorkoutId);
     }
 
     @PutMapping("/client-workouts/{clientWorkoutId}")

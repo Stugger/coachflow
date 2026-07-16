@@ -12,7 +12,7 @@ import java.util.Optional;
  */
 public interface ClientWorkoutSetResultRepository extends JpaRepository<ClientWorkoutSetResult, Long> {
 
-    List<ClientWorkoutSetResult> findAllByClientWorkout_IdOrderByIdAsc(Long clientWorkoutId);
+    List<ClientWorkoutSetResult> findAllByClientWorkout_Id(Long clientWorkoutId);
 
     Optional<ClientWorkoutSetResult> findByClientWorkout_IdAndClientWorkoutItem_IdAndSetKey(Long clientWorkoutId, Long clientWorkoutItemId, String setKey);
 

@@ -20,7 +20,7 @@ import {
 import {IconArrowLeft} from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
-import {apiGetClientWorkout} from './client-workout-api.js';
+import {apiGetClientWorkoutSession} from './client-workout-api.js';
 import {getClientWorkoutOriginLabel} from './client-workout-constants.js';
 import {getClientWorkoutSourceNavigation} from './client-workout-navigation.js';
 
@@ -30,18 +30,21 @@ function ClientWorkoutSessionPage() {
     const location = useLocation();
     const {clientWorkoutId} = useParams();
 
-    const [workout, setWorkout] = useState(null);
+    const [session, setSession] = useState(null);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState('');
+
+    const workout = session?.workout;
+    const results = session?.results ?? [];
 
     useEffect(() => {
         setLoaded(false);
         setError('');
 
-        apiGetClientWorkout(clientWorkoutId)
-            .then(setWorkout)
+        apiGetClientWorkoutSession(clientWorkoutId)
+            .then(setSession)
             .catch(error => {
-                console.error('Failed to load client workout:', error);
+                console.error('Failed to load client workout session:', error);
                 setError(
                     error.message || 'Failed to load the workout session.'
                 );
@@ -156,6 +159,9 @@ function ClientWorkoutSessionPage() {
                         Live result entry and session-aware workout editing
                         will be added in the next implementation slices.
                     </Alert>
+                    <Text size="sm" c="dimmed">
+                        Loaded {results.length} saved set result{results.length === 1 ? '' : 's'}.
+                    </Text>
                 </Stack>
             </Container>
         </Box>
