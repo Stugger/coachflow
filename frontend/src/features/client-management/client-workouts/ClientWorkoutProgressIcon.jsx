@@ -1,5 +1,9 @@
 import {ThemeIcon} from '@mantine/core';
-import {IconCheck, IconMinus} from '@tabler/icons-react';
+import {
+    IconCheck,
+    IconCircleDashedCheck,
+    IconMinus
+} from '@tabler/icons-react';
 
 import {CLIENT_WORKOUT_PROGRESS_STATUS} from './client-workout-session-utils.js';
 
@@ -8,17 +12,22 @@ function ClientWorkoutProgressIcon({status, size = 24}) {
     const inProgress = status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS;
 
     return (
-        <ThemeIcon
-            size={size}
-            radius="xl"
-            variant="light"
-            color={completed ? 'green' : inProgress ? 'yellow' : 'gray'}
-        >
-            {inProgress
-                ? <IconMinus size={15} stroke={3}/>
-                : <IconCheck size={15} stroke={3}/>
-            }
-        </ThemeIcon>
+        <>
+            {!inProgress && !completed ? (
+                <IconCircleDashedCheck size={size} stroke={2} color='gray'/>
+            ) : (
+                <ThemeIcon
+                    size={size}
+                    radius="xl"
+                    color={completed ? 'green' : 'yellow'}
+                >
+                    {completed
+                        ? <IconCheck size={Math.round(size * 0.7)} stroke={4}/>
+                        : <IconMinus size={Math.round(size * 0.7)} stroke={4}/>
+                    }
+                </ThemeIcon>
+            )}
+        </>
     );
 }
 

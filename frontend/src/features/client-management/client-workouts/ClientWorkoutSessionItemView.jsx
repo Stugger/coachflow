@@ -19,7 +19,7 @@ import {
     IconArrowLeft,
     IconDotsVertical,
     IconDumbbell,
-    IconLogout,
+    IconLogout2,
     IconPhoto,
     IconTarget
 } from '@tabler/icons-react';
@@ -28,11 +28,7 @@ import {ROUTES} from '../../../constants/routes.js';
 import ExerciseVideoPreview from '../../exercises/components/ExerciseVideoPreview.jsx';
 import * as ExerciseMetadataUtils from '../../exercises/exercise-metadata-utils.js';
 import {EQUIPMENT_OPTIONS, MUSCLE_OPTIONS} from '../../exercises/exercise-metadata-options.js';
-import {TRACKING_FIELD_DEFINITIONS, TRACKING_FIELD_KEY} from '../../exercises/exercise-tracking-fields.js';
-import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
 import {resolveMediaUrl} from '../../../utils/media-url-utils.js';
-import {formatDurationSeconds} from '../../../utils/time-utils.js';
-import {getExercisePreviewSummary} from '../../workout-builder/preview/workout-preview-utils.js';
 import {WORKOUT_ITEM_TYPE, WORKOUT_SET_TYPE_OPTIONS} from '../../workout-builder/workout-builder-constants.js';
 
 import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
@@ -79,11 +75,13 @@ function ClientWorkoutSessionItemView({workout, results, itemId, onExitWorkout, 
     const {section, item} = itemContext;
 
     return (
-        <Stack gap="md">
+        <Stack gap="sm">
             <Group justify="space-between" wrap="nowrap">
                 <Button
                     variant="subtle"
                     leftSection={<IconArrowLeft size={16}/>}
+                    pl={{base: 'xs', sm: 0}}
+                    pr='xs'
                     onClick={returnToOverview}
                 >
                     Overview
@@ -97,13 +95,13 @@ function ClientWorkoutSessionItemView({workout, results, itemId, onExitWorkout, 
                     </Menu.Target>
 
                     <Menu.Dropdown>
-                        <Menu.Item color="red" leftSection={<IconLogout size={16}/>} onClick={onExitWorkout}>
+                        <Menu.Item color="red" leftSection={<IconLogout2 size={16}/>} onClick={onExitWorkout}>
                             Exit workout
                         </Menu.Item>
                     </Menu.Dropdown>
                 </Menu>
             </Group>
-            <Paper withBorder radius="md" p="md">
+            <Paper radius={0} pb="xs" style={{borderBottom: "1px solid var(--color-border)"}}>
                 <Stack gap={2} px={{base: 'xs', sm: 0}}>
                     <Text size="sm" c="dimmed">
                         {section.name?.trim() || `Section ${section.position}`}
@@ -120,13 +118,23 @@ function ClientWorkoutSessionItemView({workout, results, itemId, onExitWorkout, 
                 </Stack>
             </Paper>
             {item.itemType === WORKOUT_ITEM_TYPE.EXERCISE
-                ? <DirectExerciseSessionView
-                    workoutId={workout.id}
-                    item={item}
-                    resultIndex={resultIndex}
-                    onResultSaved={onResultSaved}
-                />
-                : <StackSessionView item={item} resultIndex={resultIndex}/>}
+                ? (
+                    <DirectExerciseSessionView
+                        key={item.id}
+                        workoutId={workout.id}
+                        item={item}
+                        resultIndex={resultIndex}
+                        onResultSaved={onResultSaved}
+                    />
+                ) : (
+                    <StackSessionView
+                        key={item.id}
+                        workoutId={workout.id}
+                        item={item}
+                        resultIndex={resultIndex}
+                        onResultSaved={onResultSaved}
+                    />
+                )}
         </Stack>
     );
 }
@@ -154,7 +162,12 @@ function DirectExerciseSessionView({workoutId, item, resultIndex, onResultSaved}
         <Stack gap="md">
             <SessionExerciseInformation exercise={item.exercise}/>
 
-            <Accordion value={expandedSetKey} onChange={setExpandedSetKey} variant="separated" radius="md">
+            <Accordion
+                value={expandedSetKey}
+                onChange={setExpandedSetKey}
+                variant="separated"
+                radius="md"
+            >
                 {sets.map((set, index) => (
                     <Accordion.Item key={set.setKey} value={set.setKey}>
                         <Accordion.Control icon={<ClientWorkoutProgressIcon status={set.status}/>}>
@@ -189,19 +202,72 @@ function DirectExerciseSessionView({workoutId, item, resultIndex, onResultSaved}
     );
 }
 
-function StackSessionView({item, resultIndex}) {
+function StackSessionView({workoutId, item, resultIndex, onResultSaved}) {
     const {rounds} = getStackSessionRounds(item, resultIndex);
 
-    const firstIncompleteRound = rounds.find(
-        round => round.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
-    ) ?? rounds[0] ?? null;
-
-    const [expandedRound, setExpandedRound] = useState(
-        firstIncompleteRound ? String(firstIncompleteRound.number) : null,
+    const steps = rounds.flatMap(round =>
+        round.exercises
+            .filter(exercise => exercise.set)
+            .map(exercise => ({
+                key: getStackStepKey(round.number, exercise.itemExercise.id),
+                roundNumber: round.number,
+                exercise,
+            })),
     );
 
+    const firstIncompleteStep = steps.find(
+        step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
+    ) ?? steps[0] ?? null;
+
+    const [expandedRound, setExpandedRound] = useState(
+        firstIncompleteStep ? String(firstIncompleteStep.roundNumber) : null,
+    );
+
+    const [expandedExercise, setExpandedExercise] = useState(firstIncompleteStep?.key ?? null);
+
+    function handleRoundChange(nextRound) {
+        setExpandedRound(nextRound);
+
+        if (!nextRound) {
+            return;
+        }
+
+        const roundSteps = steps.filter(step => String(step.roundNumber) === nextRound);
+
+        const nextStep = roundSteps.find(
+            step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
+        ) ?? roundSteps[0] ?? null;
+
+        setExpandedExercise(nextStep?.key ?? null);
+    }
+
+    function handleExerciseCompleted(completedStepKey) {
+        const completedStepIndex = steps.findIndex(step => step.key === completedStepKey);
+
+        const nextStep = steps
+                .slice(completedStepIndex + 1)
+                .find(step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED)
+            ?? steps.find(
+                step =>
+                    step.key !== completedStepKey
+                    && step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
+            );
+
+        if (!nextStep) {
+            return;
+        }
+
+        setExpandedRound(String(nextStep.roundNumber));
+        setExpandedExercise(nextStep.key);
+    }
+
     return (
-        <Accordion value={expandedRound} onChange={setExpandedRound} variant="separated" radius="md">
+        <Accordion
+            value={expandedRound}
+            onChange={handleRoundChange}
+            variant="separated"
+            radius="md"
+        >
             {rounds.map(round => {
                 const completedExercises = round.exercises.filter(
                     exercise => exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
@@ -226,36 +292,76 @@ function StackSessionView({item, resultIndex}) {
                         </Accordion.Control>
 
                         <Accordion.Panel>
-                            <Stack gap="sm">
-                                {round.exercises.map(exercise => (
-                                    <Paper key={exercise.itemExercise.id} withBorder radius="md" p="md">
-                                        <Stack gap="sm">
-                                            <Group gap="sm" wrap="nowrap">
-                                                <ClientWorkoutProgressIcon status={exercise.status}/>
+                            <Accordion
+                                value={expandedExercise}
+                                onChange={setExpandedExercise}
+                                variant="contained"
+                                radius="md"
+                            >
+                                {round.exercises.map(exercise => {
+                                    if (!exercise.set) {
+                                        return (
+                                            <Alert key={exercise.itemExercise.id} color="yellow" mb="sm">
+                                                {exercise.itemExercise.displayName} does not contain a set for Round {round.number}.
+                                            </Alert>
+                                        );
+                                    }
 
-                                                <Stack gap={1} style={{minWidth: 0}}>
-                                                    <Text fw={700} truncate>{exercise.itemExercise.displayName}</Text>
-                                                    <Text size="xs" c="dimmed">Exercise {exercise.itemExercise.position}</Text>
-                                                </Stack>
-                                            </Group>
+                                    const stepKey = getStackStepKey(round.number, exercise.itemExercise.id);
+                                    const stepIndex = steps.findIndex(step => step.key === stepKey);
+                                    const nextStep = steps[stepIndex + 1];
 
-                                            {exercise.set
-                                                ? (
-                                                    <SessionSetDetails
-                                                        config={exercise.config}
-                                                        set={exercise.set}
-                                                        result={exercise.result}
-                                                    />
-                                                )
-                                                : (
-                                                    <Alert color="yellow">
-                                                        This exercise does not contain a set for Round {round.number}.
-                                                    </Alert>
-                                                )}
-                                        </Stack>
-                                    </Paper>
-                                ))}
-                            </Stack>
+                                    const completeLabel = !nextStep
+                                        ? 'Complete Stack'
+                                        : nextStep.roundNumber !== round.number
+                                            ? 'Complete Round'
+                                            : 'Complete & Next Exercise';
+
+                                    return (
+                                        <Accordion.Item key={exercise.itemExercise.id} value={stepKey}>
+                                            <Accordion.Control
+                                                icon={
+                                                    <Avatar
+                                                        src={resolveMediaUrl(exercise.itemExercise.exercise?.thumbnailUrl)}
+                                                        alt={exercise.itemExercise.displayName}
+                                                        size={40}
+                                                        radius="sm"
+                                                    >
+                                                        <IconPhoto size={20}/>
+                                                    </Avatar>
+                                                }
+                                            >
+                                                <Group justify="space-between" pr="sm" wrap="nowrap">
+                                                    <Stack gap={1} style={{minWidth: 0}}>
+                                                        <Text fw={700} truncate>
+                                                            {exercise.itemExercise.displayName}
+                                                        </Text>
+
+                                                        <Text size="xs" c="dimmed">
+                                                            Exercise {exercise.itemExercise.position}
+                                                        </Text>
+                                                    </Stack>
+
+                                                    <ClientWorkoutProgressIcon status={exercise.status}/>
+                                                </Group>
+                                            </Accordion.Control>
+
+                                            <Accordion.Panel>
+                                                <ClientWorkoutSessionSetEditor
+                                                    workoutId={workoutId}
+                                                    clientWorkoutItemExerciseId={exercise.itemExercise.id}
+                                                    config={exercise.config}
+                                                    set={exercise.set}
+                                                    result={exercise.result}
+                                                    completeLabel={completeLabel}
+                                                    onResultSaved={onResultSaved}
+                                                    onCompleted={() => handleExerciseCompleted(stepKey)}
+                                                />
+                                            </Accordion.Panel>
+                                        </Accordion.Item>
+                                    );
+                                })}
+                            </Accordion>
                         </Accordion.Panel>
                     </Accordion.Item>
                 );
@@ -264,57 +370,8 @@ function StackSessionView({item, resultIndex}) {
     );
 }
 
-function SessionSetDetails({config, set, result}) {
-    const summary = getSetSummary(config, set);
-    const resultGroups = getResultGroups(config, result);
-
-    return (
-        <Stack gap="md">
-            <SimpleGrid cols={{base: 1, sm: 2}}>
-                <Paper withBorder radius="md" p="md">
-                    <Stack gap={4}>
-                        <Text size="xs" fw={700} tt="uppercase" c="dimmed">Target</Text>
-                        <Text size="sm">{summary.targetText}</Text>
-                    </Stack>
-                </Paper>
-
-                <Paper withBorder radius="md" p="md">
-                    <Stack gap={4}>
-                        <Text size="xs" fw={700} tt="uppercase" c="dimmed">Saved result</Text>
-
-                        {resultGroups.length
-                            ? resultGroups.map(group => (
-                                <Text key={group.label || 'default'} size="sm">
-                                    {group.label && <Text component="span" fw={700}>{group.label}: </Text>}
-                                    {group.text}
-                                </Text>
-                            ))
-                            : <Text size="sm" c="dimmed">No result entered.</Text>}
-                    </Stack>
-                </Paper>
-            </SimpleGrid>
-
-            {summary.instructions.length > 0 && (
-                <Paper withBorder radius="md" p="md">
-                    <Stack gap={4}>
-                        <Text size="xs" fw={700} tt="uppercase" c="dimmed">Instructions</Text>
-                        {summary.instructions.map(instruction => (
-                            <Text key={instruction} size="sm">{instruction}</Text>
-                        ))}
-                    </Stack>
-                </Paper>
-            )}
-
-            {result?.notes?.trim() && (
-                <Paper withBorder radius="md" p="md">
-                    <Stack gap={4}>
-                        <Text size="xs" fw={700} tt="uppercase" c="dimmed">Trainer note</Text>
-                        <Text size="sm" style={{whiteSpace: 'pre-wrap'}}>{result.notes}</Text>
-                    </Stack>
-                </Paper>
-            )}
-        </Stack>
-    );
+function getStackStepKey(roundNumber, itemExerciseId) {
+    return `round:${roundNumber}:exercise:${itemExerciseId}`;
 }
 
 function SessionExerciseInformation({exercise}) {
@@ -325,7 +382,17 @@ function SessionExerciseInformation({exercise}) {
     }
 
     return (
-        <Accordion variant="contained" radius="md">
+        <Accordion
+            variant="contained"
+            radius="md"
+            mt='calc(var(--mantine-spacing-xs) * -1.3)'
+            styles={{
+                item: {
+                    borderTopLeftRadius: 0,
+                    borderTopRightRadius: 0,
+                },
+            }}
+        >
             <Accordion.Item value="exercise-information">
                 <Accordion.Control icon={exercise.thumbnailUrl && (
                     <Avatar
@@ -339,7 +406,7 @@ function SessionExerciseInformation({exercise}) {
                         <IconPhoto size={20}/>
                     </Avatar>)}
                 >
-                    <Text fw={600}>Exercise information</Text>
+                    <Text fw={600} mt="xs" mb="xs">Exercise information</Text>
                 </Accordion.Control>
 
                 <Accordion.Panel>
@@ -410,66 +477,6 @@ function SetTypeBadge({setType}) {
             {option?.label ?? setType}
         </Badge>
     );
-}
-
-function getSetSummary(config, set) {
-    const summary = getExercisePreviewSummary({...config, sets: [set]});
-    const setGroup = summary.setGroups[0];
-    const targetParts = setGroup?.targetParts?.map(part => part.text) ?? [];
-    const noTargetParts = summary.noTargetTrackingFields.map(field => field.label);
-
-    return {
-        targetText: targetParts.length
-            ? targetParts.join(' • ')
-            : noTargetParts.length
-                ? `Track ${noTargetParts.join(', ')}`
-                : 'No tracked values',
-        instructions: setGroup?.noteParts ?? [],
-    };
-}
-
-function getResultGroups(config, result) {
-    if (!result) {
-        return [];
-    }
-
-    const buckets = config.eachSide
-        ? [['Left', result.values.left], ['Right', result.values.right]]
-        : [['', result.values.default]];
-
-    return buckets
-        .map(([label, values]) => ({
-            label,
-            text: formatResultValues(config.trackingFields, values),
-        }))
-        .filter(group => group.text);
-}
-
-function formatResultValues(trackingFields, values) {
-    if (!values || typeof values !== 'object') {
-        return '';
-    }
-
-    return trackingFields
-        .filter(field =>
-            field.key !== TRACKING_FIELD_KEY.NOTES
-            && values[field.key] !== undefined
-            && values[field.key] !== null
-            && values[field.key] !== ''
-        )
-        .map(field => {
-            const definition = TRACKING_FIELD_DEFINITIONS[field.key];
-            const label = definition?.label ?? field.key;
-
-            const value = field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST
-                ? formatDurationSeconds(values[field.key]) ?? values[field.key]
-                : values[field.key];
-
-            const unit = getExerciseUnitLabel(field.unit ?? definition?.unit);
-
-            return `${label}: ${value}${unit ? ` ${unit}` : ''}`;
-        })
-        .join(' • ');
 }
 
 function getStatusLabel(status) {

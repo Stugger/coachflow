@@ -1,4 +1,6 @@
 import {useEffect, useState} from 'react';
+import {useScreenWakeLock} from '../../../hooks/useScreenWakeLock.js';
+import {useIsSmallScreen} from '../../../hooks/useIsSmallScreen.js';
 import {
     useLocation,
     useNavigate,
@@ -17,13 +19,12 @@ import {
     Text,
     Title,
 } from '@mantine/core';
-import {IconArrowLeft} from '@tabler/icons-react';
+import {IconLogout2} from '@tabler/icons-react';
 
 import {ROUTES} from '../../../constants/routes.js';
 import {apiGetClientWorkoutSession} from './client-workout-api.js';
 import {getClientWorkoutOriginLabel} from './client-workout-constants.js';
 import {getClientWorkoutSourceNavigation} from './client-workout-navigation.js';
-import {useScreenWakeLock} from '../../../hooks/useScreenWakeLock.js';
 
 import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
 import ClientWorkoutSessionItemView from './ClientWorkoutSessionItemView.jsx';
@@ -40,6 +41,7 @@ function ClientWorkoutSessionPage() {
     const navigate = useNavigate();
     const location = useLocation();
     const {clientWorkoutId, itemId} = useParams();
+    const isSmallScreen = useIsSmallScreen();
 
     const [session, setSession] = useState(null);
     const [loaded, setLoaded] = useState(false);
@@ -136,83 +138,92 @@ function ClientWorkoutSessionPage() {
     const originLabel = getClientWorkoutOriginLabel(workout.origin);
 
     return (
-        <Box
-            mih="100dvh"
-            bg="var(--mantine-color-body)"
-            py={{base: 'sm', sm: 'lg'}}
-        >
+        <Box mih="100dvh" bg={isSmallScreen ? "var(--mantine-color-body)" : "var(--color-background)"}>
             <Container
-                fluid
-                px={{base: 'sm', sm: 'lg'}}
+                size="sm"
+                mih="100dvh"
+                px={{base: 'xs', sm: 'md'}}
+                py={{base: 'xs', sm: 'sm'}}
             >
-                <Stack gap="md">
-                    {!itemId && (
-                        <>
-                            <Button
-                                variant="subtle"
-                                w="fit-content"
-                                leftSection={<IconArrowLeft size={16}/>}
-                                onClick={returnToSource}
-                            >
-                                Exit Workout
-                            </Button>
+                <Paper
+                    withBorder={!isSmallScreen}
+                    p={isSmallScreen ? undefined : "1rem 2rem 2rem 2rem"}
+                >
+                    <Stack gap="md">
+                        {!itemId && (
+                            <>
+                                <Button
+                                    variant="subtle"
+                                    w="fit-content"
+                                    pl={{base: 'xs', sm: 0}}
+                                    pr='xs'
+                                    leftSection={<IconLogout2 size={16}/>}
+                                    onClick={returnToSource}
+                                >
+                                    Exit Workout
+                                </Button>
 
-                            <Paper withBorder radius="md" p="lg">
-                                <Stack gap="xs">
-                                    <Group gap="sm">
-                                        <Badge
-                                            color={
-                                                workout.status === 'IN_PROGRESS'
-                                                    ? 'green'
-                                                    : 'gray'
-                                            }
-                                            variant="light"
-                                            leftSection={
-                                                workout.status === 'IN_PROGRESS'
-                                                    ? <span className={'client-session-live-dot'}/>
-                                                    : null
-                                            }
-                                        >
-                                            {workout.status === 'IN_PROGRESS'
-                                                ? 'In progress'
-                                                : workout.status}
-                                        </Badge>
+                                <Paper
+                                    radius={0}
+                                    style={{ borderBottom: '1px solid var(--color-border)'}}
+                                    pb="xs"
+                                >
+                                    <Stack gap="xs" px={{base: 'xs', sm: 0}}>
+                                        <Group gap="sm">
+                                            <Badge
+                                                color={
+                                                    workout.status === 'IN_PROGRESS'
+                                                        ? 'green'
+                                                        : 'gray'
+                                                }
+                                                variant="light"
+                                                leftSection={
+                                                    workout.status === 'IN_PROGRESS'
+                                                        ? <span className={'client-session-live-dot'}/>
+                                                        : null
+                                                }
+                                            >
+                                                {workout.status === 'IN_PROGRESS'
+                                                    ? 'In progress'
+                                                    : workout.status}
+                                            </Badge>
 
-                                        <Text size="sm" c="dimmed">
-                                            {originLabel}
-                                        </Text>
-                                    </Group>
+                                            <Text size="sm" c="dimmed">
+                                                {originLabel}
+                                            </Text>
+                                        </Group>
 
-                                    <Title order={2}>
-                                        {workout.name}
-                                    </Title>
+                                        <Title order={2}>
+                                            {workout.name}
+                                        </Title>
 
-                                    {workout.description?.trim() && (
-                                        <Text c="dimmed">
-                                            {workout.description}
-                                        </Text>
-                                    )}
-                                </Stack>
-                            </Paper>
-                        </>
-                    )}
+                                        {workout.description?.trim() && (
+                                            <Text c="dimmed">
+                                                {workout.description}
+                                            </Text>
+                                        )}
+                                    </Stack>
+                                </Paper>
+                            </>
+                        )}
 
-                    {itemId ? (
-                        <ClientWorkoutSessionItemView
-                            workout={workout}
-                            results={results}
-                            itemId={itemId}
-                            onExitWorkout={returnToSource}
-                            onResultSaved={handleResultSaved}
-                        />
-                    ) : (
-                        <ClientWorkoutSessionOverview
-                            workout={workout}
-                            results={results}
-                            onOpenItem={openItem}
-                        />
-                    )}
-                </Stack>
+                        {itemId ? (
+                            <ClientWorkoutSessionItemView
+                                workout={workout}
+                                results={results}
+                                itemId={itemId}
+                                onExitWorkout={returnToSource}
+                                onResultSaved={handleResultSaved}
+                            />
+                        ) : (
+                            <ClientWorkoutSessionOverview
+                                workout={workout}
+                                results={results}
+                                onOpenItem={openItem}
+                            />
+                        )}
+                    </Stack>
+                </Paper>
             </Container>
         </Box>
     );
