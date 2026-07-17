@@ -23,6 +23,9 @@ import {ROUTES} from '../../../constants/routes.js';
 import {apiGetClientWorkoutSession} from './client-workout-api.js';
 import {getClientWorkoutOriginLabel} from './client-workout-constants.js';
 import {getClientWorkoutSourceNavigation} from './client-workout-navigation.js';
+import {useScreenWakeLock} from '../../../hooks/useScreenWakeLock.js';
+
+import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
 
 function ClientWorkoutSessionPage() {
 
@@ -36,6 +39,8 @@ function ClientWorkoutSessionPage() {
 
     const workout = session?.workout;
     const results = session?.results ?? [];
+
+    useScreenWakeLock(workout?.status === 'IN_PROGRESS');
 
     useEffect(() => {
         setLoaded(false);
@@ -155,13 +160,10 @@ function ClientWorkoutSessionPage() {
                         </Stack>
                     </Paper>
 
-                    <Alert color="blue">
-                        Live result entry and session-aware workout editing
-                        will be added in the next implementation slices.
-                    </Alert>
-                    <Text size="sm" c="dimmed">
-                        Loaded {results.length} saved set result{results.length === 1 ? '' : 's'}.
-                    </Text>
+                    <ClientWorkoutSessionOverview
+                        workout={workout}
+                        results={results}
+                    />
                 </Stack>
             </Container>
         </Box>
