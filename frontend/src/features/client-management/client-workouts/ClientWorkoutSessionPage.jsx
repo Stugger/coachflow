@@ -26,12 +26,13 @@ import {getClientWorkoutSourceNavigation} from './client-workout-navigation.js';
 import {useScreenWakeLock} from '../../../hooks/useScreenWakeLock.js';
 
 import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
+import ClientWorkoutSessionItemView from './ClientWorkoutSessionItemView.jsx';
 
 function ClientWorkoutSessionPage() {
 
     const navigate = useNavigate();
     const location = useLocation();
-    const {clientWorkoutId} = useParams();
+    const {clientWorkoutId, itemId} = useParams();
 
     const [session, setSession] = useState(null);
     const [loaded, setLoaded] = useState(false);
@@ -100,6 +101,12 @@ function ClientWorkoutSessionPage() {
         );
     }
 
+    function openItem(nextItemId) {
+        navigate(`${ROUTES.clientWorkoutSessionItem(workout.id, nextItemId)}${location.search}`, {
+            state: location.state,
+        });
+    }
+
     const originLabel = getClientWorkoutOriginLabel(workout.origin);
 
     return (
@@ -160,10 +167,19 @@ function ClientWorkoutSessionPage() {
                         </Stack>
                     </Paper>
 
-                    <ClientWorkoutSessionOverview
-                        workout={workout}
-                        results={results}
-                    />
+                    {itemId ? (
+                        <ClientWorkoutSessionItemView
+                            workout={workout}
+                            results={results}
+                            itemId={itemId}
+                        />
+                    ): (
+                        <ClientWorkoutSessionOverview
+                            workout={workout}
+                            results={results}
+                            onOpenItem={openItem}
+                        />
+                    )}
                 </Stack>
             </Container>
         </Box>

@@ -89,6 +89,80 @@ export function getClientWorkoutResultKey({clientWorkoutItemId, clientWorkoutIte
     return null;
 }
 
+export function findClientWorkoutSessionItem(workout, itemId, resultIndex) {
+    const sessionProgress = buildClientWorkoutSessionProgress(workout, resultIndex);
+
+    for (const section of sessionProgress.sections) {
+        const item = section.items.find(item => String(item.id) === String(itemId));
+
+        if (item) {
+            return {section, item};
+        }
+    }
+
+    return null;
+}
+
+export function getDirectExerciseSessionSets(item, resultIndex) {
+    const config = parseWorkoutConfig(item.configJson);
+
+    return {
+        config,
+        sets: sortWorkoutPreviewItems(config.sets ?? []).map((set, index) => {
+            const result = resultIndex.get(getDirectExerciseResultKey(item.id, set.setKey)) ?? null;
+
+            return {
+                ...set,
+                number: index + 1,
+                result,
+                status: getResultStatus(result),
+            };
+        }),
+    };
+}
+
+export function getStackSessionRounds(item, resultIndex) {
+    const itemExercises = sortWorkoutPreviewItems(item.itemExercises ?? []).map(itemExercise => ({
+        ...itemExercise,
+        displayName: getExerciseDisplayName(itemExercise),
+        config: parseWorkoutConfig(itemExercise.configJson),
+    }));
+
+    const configuredRoundCount = Number(item.rounds);
+
+    const roundCount = Number.isFinite(configuredRoundCount) && configuredRoundCount > 0
+        ? configuredRoundCount
+        : Math.max(0, ...itemExercises.map(itemExercise => itemExercise.config.sets.length));
+
+    const rounds = Array.from({length: roundCount}, (_, roundIndex) => {
+        const exercises = itemExercises.map(itemExercise => {
+            const set = sortWorkoutPreviewItems(itemExercise.config.sets ?? [])[roundIndex] ?? null;
+
+            const result = set
+                ? resultIndex.get(getStackExerciseResultKey(itemExercise.id, set.setKey)) ?? null
+                : null;
+
+            return {
+                itemExercise,
+                config: itemExercise.config,
+                set,
+                result,
+                status: set
+                    ? getResultStatus(result)
+                    : CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED,
+            };
+        });
+
+        return {
+            number: roundIndex + 1,
+            exercises,
+            status: getAggregateStatus(exercises.map(exercise => exercise.status)),
+        };
+    });
+
+    return {itemExercises, rounds};
+}
+
 export function getDirectExerciseResultKey(itemId, setKey) {
     return `item:${itemId}:set:${setKey}`;
 }
@@ -99,102 +173,27 @@ export function getStackExerciseResultKey(itemExerciseId, setKey) {
 
 function getClientWorkoutItemProgress(item, resultIndex) {
     if (item.itemType === WORKOUT_ITEM_TYPE.EXERCISE) {
-        return getDirectExerciseProgress(item, resultIndex);
-    }
+        const {sets} = getDirectExerciseSessionSets(item, resultIndex);
 
-    return getStackProgress(item, resultIndex);
-}
-
-function getDirectExerciseProgress(item, resultIndex) {
-    const config = parseWorkoutConfig(item.configJson);
-    const sets = sortWorkoutPreviewItems(config.sets ?? []);
-
-    const setStatuses = sets.map(set =>
-        getResultStatus(
-            resultIndex.get(
-                getDirectExerciseResultKey(
-                    item.id,
-                    set.setKey,
-                ),
-            ),
-        )
-    );
-
-    return createUnitProgress(setStatuses, 'set');
-}
-
-function getStackProgress(item, resultIndex) {
-    const itemExercises = sortWorkoutPreviewItems(
-        item.itemExercises ?? [],
-    );
-
-    const exerciseSets = itemExercises.map(itemExercise => ({
-        itemExercise,
-        sets: sortWorkoutPreviewItems(
-            parseWorkoutConfig(
-                itemExercise.configJson,
-            ).sets ?? [],
-        ),
-    }));
-
-    const configuredRoundCount = Number(item.rounds);
-
-    const roundCount =
-        Number.isFinite(configuredRoundCount)
-        && configuredRoundCount > 0
-            ? configuredRoundCount
-            : Math.max(0, ...exerciseSets.map(exercise => exercise.sets.length));
-
-    const roundStatuses = [];
-
-    let completedSetCount = 0;
-    let startedSetCount = 0;
-    let totalSetCount = 0;
-
-    for (let roundIndex = 0; roundIndex < roundCount; roundIndex += 1) {
-        const childStatuses = exerciseSets.map(
-            ({itemExercise, sets}) => {
-                const set = sets[roundIndex];
-
-                if (!set) {
-                    return CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED;
-                }
-
-                const status = getResultStatus(resultIndex.get(
-                    getStackExerciseResultKey(
-                        itemExercise.id, set.setKey)
-                    )
-                );
-
-                totalSetCount += 1;
-
-                if (status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED) {
-                    startedSetCount += 1;
-                }
-
-                if (status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED) {
-                    completedSetCount += 1;
-                }
-
-                return status;
-            },
-        );
-
-        roundStatuses.push(
-            getAggregateStatus(childStatuses),
+        return createUnitProgress(
+            sets.map(set => set.status),
+            'set',
         );
     }
 
-    const progress = createUnitProgress(
-        roundStatuses,
-        'round',
-    );
+    const {rounds} = getStackSessionRounds(item, resultIndex);
+    const progress = createUnitProgress(rounds.map(round => round.status), 'round');
+    const exercises = rounds.flatMap(round => round.exercises).filter(exercise => exercise.set);
 
     return {
         ...progress,
-        completedSetCount,
-        startedSetCount,
-        totalSetCount,
+        completedSetCount: exercises.filter(
+            exercise => exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
+        ).length,
+        startedSetCount: exercises.filter(
+            exercise => exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED,
+        ).length,
+        totalSetCount: exercises.length,
     };
 }
 

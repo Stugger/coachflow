@@ -97,25 +97,19 @@ function App() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     const clientWorkoutSessionRoute = matchPath(
-        {
-            path: ROUTES.CLIENT_WORKOUT_SESSION,
-            end: true,
-        },
+        {path: ROUTES.CLIENT_WORKOUT_SESSION, end: true},
+        location.pathname,
+    ) ?? matchPath(
+        {path: ROUTES.CLIENT_WORKOUT_SESSION_ITEM, end: true},
         location.pathname,
     );
 
     if (clientWorkoutSessionRoute) {
         return (
             <Routes>
-                <Route
-                    path={ROUTES.CLIENT_WORKOUT_SESSION}
-                    element={<ClientWorkoutSessionPage/>}
-                />
-
-                <Route
-                    path="*"
-                    element={<Navigate to={ROUTES.HOME} replace/>}
-                />
+                <Route path={ROUTES.CLIENT_WORKOUT_SESSION} element={<ClientWorkoutSessionPage/>}/>
+                <Route path={ROUTES.CLIENT_WORKOUT_SESSION_ITEM} element={<ClientWorkoutSessionPage/>}/>
+                <Route path="*" element={<Navigate to={ROUTES.HOME} replace/>}/>
             </Routes>
         );
     }

@@ -30,8 +30,11 @@ export const ROUTES = {
     /* Client Workout */
 
     CLIENT_WORKOUT_SESSION: '/client-workouts/:clientWorkoutId/session',
+    CLIENT_WORKOUT_SESSION_ITEM: '/client-workouts/:clientWorkoutId/session/items/:itemId',
 
-    clientWorkoutSession: (clientWorkoutId) => `/client-workouts/${clientWorkoutId}/session`,
+    clientWorkoutSession: clientWorkoutId => `/client-workouts/${clientWorkoutId}/session`,
+    clientWorkoutSessionItem: (clientWorkoutId, itemId) => `/client-workouts/${clientWorkoutId}/session/items/${itemId}`,
+
 
     /* Exercise Library */
 

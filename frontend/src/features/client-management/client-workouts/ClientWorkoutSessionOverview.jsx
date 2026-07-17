@@ -8,11 +8,9 @@ import {
     Progress,
     Stack,
     Text,
-    ThemeIcon,
 } from '@mantine/core';
 import {
-    IconCheck,
-    IconMinus,
+    IconChevronRight,
 } from '@tabler/icons-react';
 
 import {
@@ -24,9 +22,11 @@ import {
     WORKOUT_ITEM_TYPE,
 } from '../../workout-builder/workout-builder-constants.js';
 
+import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
+
 const OPEN_SECTIONS_PARAM = 'openSections';
 
-function ClientWorkoutSessionOverview({workout, results}) {
+function ClientWorkoutSessionOverview({workout, results, onOpenItem}) {
 
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -131,8 +131,10 @@ function ClientWorkoutSessionOverview({workout, results}) {
                             key={section.id}
                             value={String(section.id)}
                         >
-                            <Accordion.Control
-                                icon={<SessionProgressIcon status={section.progress.status}/>}
+                            <Accordion.Control icon={
+                                <ClientWorkoutProgressIcon
+                                    status={section.progress.status}
+                                />}
                             >
                                 <Group
                                     justify="space-between"
@@ -171,6 +173,7 @@ function ClientWorkoutSessionOverview({workout, results}) {
                                                 <WorkoutSessionItemRow
                                                     key={item.id}
                                                     item={item}
+                                                    onOpen={() => onOpenItem(item.id)}
                                                 />
                                             ),
                                         )
@@ -199,87 +202,53 @@ function ClientWorkoutSessionOverview({workout, results}) {
     );
 }
 
-function WorkoutSessionItemRow({item}) {
+function WorkoutSessionItemRow({item, onOpen}) {
     const progress = item.progress;
-
     const isStack = item.itemType !== WORKOUT_ITEM_TYPE.EXERCISE;
-
-    const unitLabel = progress.totalUnitCount === 1
-            ? progress.unitLabel
-            : `${progress.unitLabel}s`;
+    const unitLabel = progress.totalUnitCount === 1 ? progress.unitLabel : `${progress.unitLabel}s`;
 
     return (
-        <Paper withBorder radius="md" p="sm">
-            <Group
-                justify="space-between"
-                wrap="nowrap"
-            >
-                <Group
-                    gap="sm"
-                    wrap="nowrap"
-                    style={{minWidth: 0}}
-                >
-                    <SessionProgressIcon
+        <Paper
+            component="button"
+            type="button"
+            withBorder
+            radius="md"
+            p="sm"
+            onClick={onOpen}
+            style={{width: '100%', textAlign: 'left', cursor: 'pointer'}}
+        >
+            <Group justify="space-between" wrap="nowrap">
+                <Group gap="sm" wrap="nowrap" style={{minWidth: 0}}>
+                    <ClientWorkoutProgressIcon
                         status={progress.status}
                     />
 
-                    <Stack
-                        gap={2}
-                        style={{minWidth: 0}}
-                    >
-                        <Group
-                            gap="xs"
-                            wrap="nowrap"
-                        >
-                            <Text fw={600} truncate>
-                                {item.displayName}
-                            </Text>
+                    <Stack gap={2} style={{minWidth: 0}}>
+                        <Group gap="xs" wrap="nowrap">
+                            <Text fw={600} truncate>{item.displayName}</Text>
 
                             {isStack && (
-                                <Badge
-                                    size="xs"
-                                    variant="light"
-                                >
+                                <Badge size="xs" variant="light">
                                     {item.typeLabel}
                                 </Badge>
                             )}
                         </Group>
 
                         <Text size="xs" c="dimmed">
-                            {progress.completedUnitCount}{' of '}{progress.totalUnitCount}{' '}{unitLabel}{' complete'}
+                            {progress.completedUnitCount} of {progress.totalUnitCount} {unitLabel} complete
                         </Text>
                     </Stack>
                 </Group>
 
-                <Text
-                    size="sm"
-                    fw={600}
-                    c="dimmed"
-                    style={{flexShrink: 0}}
-                >
-                    {progress.completedUnitCount}{' / '}{progress.totalUnitCount}
-                </Text>
+                <Group gap="xs" wrap="nowrap" style={{flexShrink: 0}}>
+                    <Text size="sm" fw={600} c="dimmed">
+                        {progress.completedUnitCount} / {progress.totalUnitCount}
+                    </Text>
+
+                    <IconChevronRight size={16} color="var(--mantine-color-dimmed)"/>
+                </Group>
             </Group>
         </Paper>
-    );
-}
-
-function SessionProgressIcon({status}) {
-    const completed = status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED;
-
-    const inProgress = status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS;
-
-    return (
-        <ThemeIcon
-            size={24}
-            radius="xl"
-            variant="light"
-            color={completed ? 'green' : inProgress ? 'yellow' : 'gray'}
-        >
-            {inProgress
-                ? <IconMinus size={15} stroke={3}/>
-                : <IconCheck size={15} stroke={3}/>}
-        </ThemeIcon>
     );
 }
 
