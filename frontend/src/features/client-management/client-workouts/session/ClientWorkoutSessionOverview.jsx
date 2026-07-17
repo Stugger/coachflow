@@ -22,10 +22,10 @@ import {
 } from './client-workout-session-utils.js';
 import {
     WORKOUT_ITEM_TYPE,
-} from '../../workout-builder/workout-builder-constants.js';
+} from '../../../workout-builder/workout-builder-constants.js';
 
 import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
-import {getSectionTypeLabel} from "../../workout-builder/workout-builder-utils.js";
+import {getSectionTypeLabel} from "../../../workout-builder/workout-builder-utils.js";
 
 const OPEN_SECTIONS_PARAM = 'openSections';
 

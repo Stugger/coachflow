@@ -8,6 +8,7 @@ import {
 import {CLIENT_WORKOUT_PROGRESS_STATUS} from './client-workout-session-utils.js';
 
 function ClientWorkoutProgressIcon({status, size = 24}) {
+
     const completed = status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED;
     const inProgress = status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS;
 

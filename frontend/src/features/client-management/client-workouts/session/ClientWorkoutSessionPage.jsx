@@ -1,6 +1,6 @@
 import {useEffect, useState} from 'react';
-import {useScreenWakeLock} from '../../../hooks/useScreenWakeLock.js';
-import {useIsSmallScreen} from '../../../hooks/useIsSmallScreen.js';
+import {useScreenWakeLock} from '../../../../hooks/useScreenWakeLock.js';
+import {useIsSmallScreen} from '../../../../hooks/useIsSmallScreen.js';
 import {
     useLocation,
     useNavigate,
@@ -21,14 +21,13 @@ import {
 } from '@mantine/core';
 import {IconLogout2} from '@tabler/icons-react';
 
-import {ROUTES} from '../../../constants/routes.js';
-import {apiGetClientWorkoutSession} from './client-workout-api.js';
-import {getClientWorkoutOriginLabel} from './client-workout-constants.js';
-import {getClientWorkoutSourceNavigation} from './client-workout-navigation.js';
+import {ROUTES} from '../../../../constants/routes.js';
+import {apiGetClientWorkoutSession} from '../client-workout-api.js';
+import {getClientWorkoutOriginLabel} from '../client-workout-constants.js';
+import {getClientWorkoutSourceNavigation} from '../client-workout-navigation.js';
 
 import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
 import ClientWorkoutSessionItemView from './ClientWorkoutSessionItemView.jsx';
-
 
 function isSameSetResult(result, identity) {
     return result.setKey === identity.setKey

@@ -12,16 +12,16 @@ import {
 } from '@mantine/core';
 import {IconCheck, IconEdit} from '@tabler/icons-react';
 
-import DurationInput from '../../../components/input/DurationInput.jsx';
+import DurationInput from '../../../../components/input/DurationInput.jsx';
 import {
     TRACKING_FIELD_DEFINITIONS,
     TRACKING_FIELD_KEY,
     TRACKING_FIELD_TYPE,
-} from '../../exercises/exercise-tracking-fields.js';
-import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
-import {formatDurationSeconds} from '../../../utils/time-utils.js';
+} from '../../../exercises/exercise-tracking-fields.js';
+import {getExerciseUnitLabel} from '../../../exercises/exercise-units.js';
+import {formatDurationSeconds} from '../../../../utils/time-utils.js';
 
-import {apiSaveClientWorkoutSetResult} from './client-workout-api.js';
+import {apiSaveClientWorkoutSetResult} from '../client-workout-api.js';
 
 const AUTOSAVE_DELAY = 700;
 

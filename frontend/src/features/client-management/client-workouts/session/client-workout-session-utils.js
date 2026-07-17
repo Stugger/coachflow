@@ -1,14 +1,14 @@
 import {
     parseWorkoutConfig,
-} from '../../workout-builder/draft/workout-draft-factory.js';
+} from '../../../workout-builder/draft/workout-draft-factory.js';
 import {
     WORKOUT_ITEM_TYPE,
     WORKOUT_STACK_OPTIONS,
-} from '../../workout-builder/workout-builder-constants.js';
+} from '../../../workout-builder/workout-builder-constants.js';
 import {
     getExerciseDisplayName,
     sortWorkoutPreviewItems,
-} from '../../workout-builder/preview/workout-preview-utils.js';
+} from '../../../workout-builder/preview/workout-preview-utils.js';
 
 export const CLIENT_WORKOUT_PROGRESS_STATUS = {
     NOT_STARTED: 'NOT_STARTED',

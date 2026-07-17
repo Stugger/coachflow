@@ -15,7 +15,7 @@ import AuthPage from './pages/AuthPage';
 import ClientIntakePage from './features/client-management/intake/ClientIntakePage';
 import ClientsPage from './features/client-management/client-list/ClientsPage';
 import ClientProfilePage from './features/client-management/client-profile/ClientProfilePage';
-import ClientWorkoutSessionPage from './features/client-management/client-workouts/ClientWorkoutSessionPage.jsx';
+import ClientWorkoutSessionPage from './features/client-management/client-workouts/session/ClientWorkoutSessionPage.jsx';
 import AppointmentsPage from './pages/AppointmentsPage';
 import ExerciseLibraryPage from './features/exercises/library/ExerciseLibraryPage';
 import WorkoutLibraryPage from './features/workout-library/WorkoutLibraryPage';
