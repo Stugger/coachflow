@@ -28,6 +28,13 @@ import {useScreenWakeLock} from '../../../hooks/useScreenWakeLock.js';
 import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
 import ClientWorkoutSessionItemView from './ClientWorkoutSessionItemView.jsx';
 
+
+function isSameSetResult(result, identity) {
+    return result.setKey === identity.setKey
+        && result.clientWorkoutItemId === identity.clientWorkoutItemId
+        && result.clientWorkoutItemExerciseId === identity.clientWorkoutItemExerciseId;
+}
+
 function ClientWorkoutSessionPage() {
 
     const navigate = useNavigate();
@@ -107,6 +114,25 @@ function ClientWorkoutSessionPage() {
         });
     }
 
+    function handleResultSaved(savedResult, identity) {
+        setSession(currentSession => {
+            if (!currentSession) {
+                return currentSession;
+            }
+
+            const nextResults = (currentSession.results ?? []).filter(result => !isSameSetResult(result, identity));
+
+            if (savedResult) {
+                nextResults.push(savedResult);
+            }
+
+            return {
+                ...currentSession,
+                results: nextResults,
+            };
+        });
+    }
+
     const originLabel = getClientWorkoutOriginLabel(workout.origin);
 
     return (
@@ -120,60 +146,66 @@ function ClientWorkoutSessionPage() {
                 px={{base: 'sm', sm: 'lg'}}
             >
                 <Stack gap="md">
-                    <Button
-                        variant="subtle"
-                        w="fit-content"
-                        leftSection={<IconArrowLeft size={16}/>}
-                        onClick={returnToSource}
-                    >
-                        Exit Workout
-                    </Button>
+                    {!itemId && (
+                        <>
+                            <Button
+                                variant="subtle"
+                                w="fit-content"
+                                leftSection={<IconArrowLeft size={16}/>}
+                                onClick={returnToSource}
+                            >
+                                Exit Workout
+                            </Button>
 
-                    <Paper withBorder radius="md" p="lg">
-                        <Stack gap="xs">
-                            <Group gap="sm">
-                                <Badge
-                                    color={
-                                        workout.status === 'IN_PROGRESS'
-                                            ? 'green'
-                                            : 'gray'
-                                    }
-                                    variant="light"
-                                    leftSection={
-                                        workout.status === 'IN_PROGRESS'
-                                            ? <span className={'client-session-live-dot'}/>
-                                            : null
-                                    }
-                                >
-                                    {workout.status === 'IN_PROGRESS'
-                                        ? 'In progress'
-                                        : workout.status}
-                                </Badge>
+                            <Paper withBorder radius="md" p="lg">
+                                <Stack gap="xs">
+                                    <Group gap="sm">
+                                        <Badge
+                                            color={
+                                                workout.status === 'IN_PROGRESS'
+                                                    ? 'green'
+                                                    : 'gray'
+                                            }
+                                            variant="light"
+                                            leftSection={
+                                                workout.status === 'IN_PROGRESS'
+                                                    ? <span className={'client-session-live-dot'}/>
+                                                    : null
+                                            }
+                                        >
+                                            {workout.status === 'IN_PROGRESS'
+                                                ? 'In progress'
+                                                : workout.status}
+                                        </Badge>
 
-                                <Text size="sm" c="dimmed">
-                                    {originLabel}
-                                </Text>
-                            </Group>
+                                        <Text size="sm" c="dimmed">
+                                            {originLabel}
+                                        </Text>
+                                    </Group>
 
-                            <Title order={2}>
-                                {workout.name}
-                            </Title>
+                                    <Title order={2}>
+                                        {workout.name}
+                                    </Title>
 
-                            {workout.description?.trim() && (
-                                <Text c="dimmed">
-                                    {workout.description}
-                                </Text>
-                            )}
-                        </Stack>
-                    </Paper>
+                                    {workout.description?.trim() && (
+                                        <Text c="dimmed">
+                                            {workout.description}
+                                        </Text>
+                                    )}
+                                </Stack>
+                            </Paper>
+                        </>
+                    )}
 
                     {itemId ? (
                         <ClientWorkoutSessionItemView
                             workout={workout}
                             results={results}
                             itemId={itemId}
+                            onExitWorkout={returnToSource}
+                            onResultSaved={handleResultSaved}
                         />
-                    ): (
+                    ) : (
                         <ClientWorkoutSessionOverview
                             workout={workout}
                             results={results}

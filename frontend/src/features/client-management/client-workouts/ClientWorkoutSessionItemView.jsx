@@ -2,11 +2,13 @@ import {useMemo, useState} from 'react';
 import {useLocation, useNavigate} from 'react-router-dom';
 import {
     Accordion,
+    ActionIcon,
     Avatar,
     Alert,
     Badge,
     Button,
     Group,
+    Menu,
     Paper,
     SimpleGrid,
     Stack,
@@ -15,7 +17,9 @@ import {
 } from '@mantine/core';
 import {
     IconArrowLeft,
+    IconDotsVertical,
     IconDumbbell,
+    IconLogout,
     IconPhoto,
     IconTarget
 } from '@tabler/icons-react';
@@ -32,6 +36,8 @@ import {getExercisePreviewSummary} from '../../workout-builder/preview/workout-p
 import {WORKOUT_ITEM_TYPE, WORKOUT_SET_TYPE_OPTIONS} from '../../workout-builder/workout-builder-constants.js';
 
 import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
+import ClientWorkoutSessionSetEditor from './ClientWorkoutSessionSetEditor.jsx';
+
 import {
     CLIENT_WORKOUT_PROGRESS_STATUS,
     createClientWorkoutResultIndex,
@@ -40,7 +46,8 @@ import {
     getStackSessionRounds,
 } from './client-workout-session-utils.js';
 
-function ClientWorkoutSessionItemView({workout, results, itemId}) {
+function ClientWorkoutSessionItemView({workout, results, itemId, onExitWorkout, onResultSaved}) {
+
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -73,36 +80,58 @@ function ClientWorkoutSessionItemView({workout, results, itemId}) {
 
     return (
         <Stack gap="md">
-            <Button variant="subtle" w="fit-content" leftSection={<IconArrowLeft size={16}/>} onClick={returnToOverview}>
-                Back to Overview
-            </Button>
+            <Group justify="space-between" wrap="nowrap">
+                <Button
+                    variant="subtle"
+                    leftSection={<IconArrowLeft size={16}/>}
+                    onClick={returnToOverview}
+                >
+                    Overview
+                </Button>
 
-            <Paper withBorder radius="md" p={{base: 'md', sm: 'lg'}}>
-                <Group justify="space-between" align="flex-start" wrap="nowrap">
-                    <Stack gap={3} style={{minWidth: 0}}>
-                        <Text size="sm" c="dimmed">
-                            {section.name?.trim() || `Section ${section.position}`}
-                        </Text>
+                <Menu position="bottom-end" withinPortal>
+                    <Menu.Target>
+                        <ActionIcon variant="subtle" color="gray" aria-label="Workout options">
+                            <IconDotsVertical size={18}/>
+                        </ActionIcon>
+                    </Menu.Target>
 
-                        <Title order={3}>{item.displayName}</Title>
+                    <Menu.Dropdown>
+                        <Menu.Item color="red" leftSection={<IconLogout size={16}/>} onClick={onExitWorkout}>
+                            Exit workout
+                        </Menu.Item>
+                    </Menu.Dropdown>
+                </Menu>
+            </Group>
+            <Paper withBorder radius="md" p="md">
+                <Stack gap={2} px={{base: 'xs', sm: 0}}>
+                    <Text size="sm" c="dimmed">
+                        {section.name?.trim() || `Section ${section.position}`}
+                    </Text>
 
-                        <Text size="sm" c="dimmed">
-                            {item.progress.completedUnitCount} of {item.progress.totalUnitCount} {getUnitLabel(item.progress)} complete
-                        </Text>
-                    </Stack>
+                    <Group justify="space-between" align="center" wrap="nowrap">
+                        <Title order={2}>{item.displayName}</Title>
+                        <ClientWorkoutProgressIcon status={item.progress.status} size={30}/>
+                    </Group>
 
-                    <ClientWorkoutProgressIcon status={item.progress.status} size={30}/>
-                </Group>
+                    <Text size="sm" c="dimmed">
+                        {item.progress.completedUnitCount} of {item.progress.totalUnitCount} {getUnitLabel(item.progress)} complete
+                    </Text>
+                </Stack>
             </Paper>
-
             {item.itemType === WORKOUT_ITEM_TYPE.EXERCISE
-                ? <DirectExerciseSessionView item={item} resultIndex={resultIndex}/>
+                ? <DirectExerciseSessionView
+                    workoutId={workout.id}
+                    item={item}
+                    resultIndex={resultIndex}
+                    onResultSaved={onResultSaved}
+                />
                 : <StackSessionView item={item} resultIndex={resultIndex}/>}
         </Stack>
     );
 }
 
-function DirectExerciseSessionView({item, resultIndex}) {
+function DirectExerciseSessionView({workoutId, item, resultIndex, onResultSaved}) {
     const {config, sets} = getDirectExerciseSessionSets(item, resultIndex);
 
     const firstIncompleteSet = sets.find(
@@ -111,24 +140,47 @@ function DirectExerciseSessionView({item, resultIndex}) {
 
     const [expandedSetKey, setExpandedSetKey] = useState(firstIncompleteSet?.setKey ?? null);
 
+    function handleSetCompleted(setIndex) {
+        const nextSet = sets
+            .slice(setIndex + 1)
+            .find(set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED);
+
+        if (nextSet) {
+            setExpandedSetKey(nextSet.setKey);
+        }
+    }
+
     return (
         <Stack gap="md">
             <SessionExerciseInformation exercise={item.exercise}/>
 
             <Accordion value={expandedSetKey} onChange={setExpandedSetKey} variant="separated" radius="md">
-                {sets.map(set => (
+                {sets.map((set, index) => (
                     <Accordion.Item key={set.setKey} value={set.setKey}>
                         <Accordion.Control icon={<ClientWorkoutProgressIcon status={set.status}/>}>
-                            <SessionUnitHeading
-                                title={`Set ${set.number}`}
-                                set={set}
-                                config={config}
-                                status={set.status}
-                            />
+                            <Group justify="space-between" pr="sm" wrap="nowrap">
+                                <Group gap="xs">
+                                    <Text fw={700}>Set {set.number}</Text>
+                                    <SetTypeBadge setType={set.setType}/>
+                                </Group>
+
+                                <Text size="sm" fw={600} c="dimmed">
+                                    {getStatusLabel(set.status)}
+                                </Text>
+                            </Group>
                         </Accordion.Control>
 
                         <Accordion.Panel>
-                            <SessionSetDetails config={config} set={set} result={set.result}/>
+                            <ClientWorkoutSessionSetEditor
+                                workoutId={workoutId}
+                                clientWorkoutItemId={item.id}
+                                config={config}
+                                set={set}
+                                result={set.result}
+                                completeLabel={index === sets.length - 1 ? 'Complete Exercise' : 'Complete & Next Set'}
+                                onResultSaved={onResultSaved}
+                                onCompleted={() => handleSetCompleted(index)}
+                            />
                         </Accordion.Panel>
                     </Accordion.Item>
                 ))}
@@ -209,27 +261,6 @@ function StackSessionView({item, resultIndex}) {
                 );
             })}
         </Accordion>
-    );
-}
-
-function SessionUnitHeading({title, set, config, status}) {
-    const summary = getSetSummary(config, set);
-
-    return (
-        <Group justify="space-between" pr="sm" wrap="nowrap">
-            <Stack gap={1} style={{minWidth: 0}}>
-                <Group gap="xs">
-                    <Text fw={700}>{title}</Text>
-                    <SetTypeBadge setType={set.setType}/>
-                </Group>
-
-                <Text size="xs" c="dimmed" truncate>{summary.targetText}</Text>
-            </Stack>
-
-            <Text size="sm" fw={600} c="dimmed" style={{flexShrink: 0}}>
-                {getStatusLabel(status)}
-            </Text>
-        </Group>
     );
 }
 
