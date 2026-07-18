@@ -71,7 +71,7 @@ function getTotalSeconds(parts) {
 
 //TODO typing from left input should move caret into right input when maxed, backspacing from second input should bring caret to end of first input when empty, left/right arrows should move between inputs when no more characters left to move between
 
-function DurationInput({value, locked, variant = 'default', width, label, description, required = false, error, onChange}) {
+function DurationInput({value, locked, variant = 'default', width, marginInline = 'auto', radius = 'md', label, description, required = false, error, onChange}) {
 
     const generatedId = useId();
 
@@ -184,8 +184,9 @@ function DurationInput({value, locked, variant = 'default', width, label, descri
                 aria-describedby={describedBy}
                 style={{
                     width,
-                    marginInline: 'auto',
+                    marginInline,
                     paddingInline: 0,
+                    borderRadius: radius,
                 }}
             >
                 <Group

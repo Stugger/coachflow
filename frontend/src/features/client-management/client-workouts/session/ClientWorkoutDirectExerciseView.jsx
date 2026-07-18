@@ -23,7 +23,7 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResult
 
     const firstIncompleteSet = sets.find(
         set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
-    ) ?? sets[0] ?? null;
+    ) ?? null;
 
     const [expandedSetKey, setExpandedSetKey] = useState(firstIncompleteSet?.setKey ?? null);
 

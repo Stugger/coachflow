@@ -120,15 +120,21 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
                 config={config}
                 set={set}
                 values={values}
+                stackItem={clientWorkoutItemExerciseId !== null}
                 onChange={updateValue}
             />
 
             <Textarea
-                label="Trainer note"
+                classNames={{input: "subtle-input"}}
+                variant="unstyled"
                 placeholder="Optional note..."
                 value={notes}
-                minRows={2}
                 autosize
+                label={
+                    <Text size="sm" fw={600} pl="0.7rem">
+                        Trainer note
+                    </Text>
+                }
                 onChange={event =>
                     updateNotes(event.currentTarget.value)
                 }

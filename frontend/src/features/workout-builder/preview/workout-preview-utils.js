@@ -271,7 +271,7 @@ function formatTrackingTarget(field, value, {exerciseId = null, benchmarks = nul
         return createTrackingTargetPart(reps ? `${reps} ${reps == 1 ? 'rep' : 'reps'}` : null);
     }
 
-    if (field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST) {
+    if (type === TRACKING_FIELD_TYPE.TIME) {
         const duration = formatDurationSeconds(value);
 
         if (!duration) {

@@ -38,7 +38,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
 
     const firstIncompleteStep = steps.find(
         step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
-    ) ?? steps[0] ?? null;
+    ) ?? null;
 
     const [expandedRound, setExpandedRound] = useState(
         firstIncompleteStep ? String(firstIncompleteStep.roundNumber) : null,
@@ -57,7 +57,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
 
         const nextStep = roundSteps.find(
             step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
-        ) ?? roundSteps[0] ?? null;
+        ) ?? null;
 
         setExpandedExercise(nextStep?.key ?? null);
     }

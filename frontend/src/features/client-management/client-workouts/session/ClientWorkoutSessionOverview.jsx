@@ -319,9 +319,9 @@ function parseExpandedSections(searchParams, validSectionIds) {
 }
 
 function getDefaultExpandedSections(sections) {
-    const nextSection = sections.find(section => section.progress.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED);
-
-    return nextSection ? [String(nextSection.id)] : [];
+    return sections
+        .filter(section => section.progress.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED)
+        .map(section => String(section.id));
 }
 
 export default ClientWorkoutSessionOverview;

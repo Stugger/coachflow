@@ -21,9 +21,12 @@ export function getSetResultInputDetails(field, target) {
     const activeMode = definition?.modes?.find(mode => mode.value === field.mode) ?? definition?.modes?.[0];
     const type = activeMode?.type ?? definition?.type;
     const unit = getExerciseUnitLabel(field.unit ?? activeMode?.unit ?? definition?.unit);
+    const width = type !== TRACKING_FIELD_TYPE.RANGE ? activeMode?.inputWidth ?? definition.inputWidth ?? '5rem' : '5rem';
 
     return {
+        width,
         label: definition?.label ?? field.key,
+        modeLabel: getModeLabel(field, definition, activeMode),
         type,
         unit,
         targetLabel: formatTarget(field, target, type, unit),
@@ -46,8 +49,9 @@ export function formatSetResultValues(trackingFields, values) {
         .map(field => {
             const definition = TRACKING_FIELD_DEFINITIONS[field.key];
             const activeMode = definition?.modes?.find(mode => mode.value === field.mode) ?? definition?.modes?.[0];
+            const type = activeMode?.type ?? definition?.type;
 
-            const value = field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST
+            const value = type === TRACKING_FIELD_TYPE.TIME
                 ? formatDurationSeconds(values[field.key]) ?? values[field.key]
                 : values[field.key];
 
@@ -56,6 +60,22 @@ export function formatSetResultValues(trackingFields, values) {
             return `${definition?.label ?? field.key}: ${value}${unit ? ` ${unit}` : ''}`;
         })
         .join(' · ');
+}
+
+function getModeLabel(field, definition, activeMode) {
+    if (!activeMode) {
+        return '';
+    }
+
+    if (field.key === TRACKING_FIELD_KEY.TIME) {
+        return activeMode.label;
+    }
+
+    const defaultMode = definition?.modes?.[0];
+
+    return activeMode.value !== defaultMode?.value
+        ? activeMode.label
+        : '';
 }
 
 function formatTarget(field, value, type, unit) {
@@ -67,7 +87,7 @@ function formatTarget(field, value, type, unit) {
         return `${value.min ?? '—'}–${value.max ?? '—'}`;
     }
 
-    if (field.key === TRACKING_FIELD_KEY.TIME || field.key === TRACKING_FIELD_KEY.REST) {
+    if (type === TRACKING_FIELD_TYPE.TIME) {
         return formatDurationSeconds(value) ?? '—';
     }
 

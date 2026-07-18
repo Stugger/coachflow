@@ -85,7 +85,7 @@ export const TRACKING_FIELD_DEFINITIONS = {
             },
         ],
         minColumnWidth: '8rem',
-        inputWidth: '6rem',
+        inputWidth: '5.2rem',
     },
     [TRACKING_FIELD_KEY.DISTANCE]: {
         key: TRACKING_FIELD_KEY.DISTANCE,
@@ -166,7 +166,7 @@ export const TRACKING_FIELD_DEFINITIONS = {
         label: 'Rest',
         type: TRACKING_FIELD_TYPE.TIME,
         minColumnWidth: '8rem',
-        inputWidth: '6rem',
+        inputWidth: '5.2rem',
     },
     [TRACKING_FIELD_KEY.NOTES]: {
         key: TRACKING_FIELD_KEY.NOTES,
