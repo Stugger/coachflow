@@ -30,7 +30,7 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
         return () => clearTimeout(saveTimerRef.current);
     }, []);
 
-    function updateValue(side, fieldKey, nextValue) {
+    function updateValue(side, fieldKey, nextValue, {autosave = true} = {}) {
         const nextSideValues = {...valuesRef.current[side]};
 
         if (nextValue === '' || nextValue === null || nextValue === undefined) {
@@ -46,7 +46,10 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
 
         valuesRef.current = nextValues;
         setValues(nextValues);
-        scheduleAutosave();
+
+        if (autosave) {
+            scheduleAutosave();
+        }
     }
 
     function updateNotes(nextNotes) {

@@ -1,8 +1,6 @@
 import useIsSmallScreen from '../../../../hooks/useIsSmallScreen.js';
 import {
-    ActionIcon,
     Box,
-    Group,
     NumberInput,
     Paper,
     Stack,
@@ -10,12 +8,10 @@ import {
     TextInput,
     useComputedColorScheme,
 } from '@mantine/core';
-import {
-    IconCancel,
-    IconPlayerPlay,
-} from '@tabler/icons-react';
 
+import ClientWorkoutSessionStopwatch from './ClientWorkoutSessionStopwatch.jsx';
 import DurationInput from '../../../../components/input/DurationInput.jsx';
+
 import {
     TRACKING_FIELD_KEY,
     TRACKING_FIELD_TYPE,
@@ -76,6 +72,8 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, onCha
 
 function ResultInputGroup({label, side, fields, set, values = {}, stackItem, isSmallScreen, colorScheme, onChange}) {
 
+    const hasDurationInFields = fields.find(field => field.key === TRACKING_FIELD_KEY.TIME);
+
     return (
         <Stack gap="xs">
             {label && (
@@ -106,8 +104,11 @@ function ResultInputGroup({label, side, fields, set, values = {}, stackItem, isS
                             stackItem={stackItem}
                             withTopBorder={index > 0}
                             isSmallScreen={isSmallScreen}
+                            hasDurationInFields={hasDurationInFields}
                             colorScheme={colorScheme}
-                            onChange={nextValue => onChange(side, field.key, nextValue)}
+                            onChange={(nextValue, options) =>
+                                onChange(side, field.key, nextValue, options)
+                            }
                         />
                     ))}
                 </Paper>
@@ -120,7 +121,7 @@ function ResultInputGroup({label, side, fields, set, values = {}, stackItem, isS
     );
 }
 
-function SessionResultInput({field, target, value, index, stackItem, withTopBorder, isSmallScreen, colorScheme, onChange}) {
+function SessionResultInput({field, target, value, index, stackItem, withTopBorder, isSmallScreen, hasDurationInFields, colorScheme, onChange}) {
     const {
         width,
         label,
@@ -140,50 +141,25 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
             alternate={index % 2 === 0}
             withTopBorder={withTopBorder}
             isSmallScreen={isSmallScreen}
+            hasDurationInFields={hasDurationInFields}
             colorScheme={colorScheme}
         >
-            {type === TRACKING_FIELD_TYPE.TIME ? (
-                <Group gap={0} wrap="nowrap" w="100%" style={{minWidth: 0}}>
-                    <ActionIcon
-                        type="button"
-                        variant="default"
-                        aria-label="Start timer"
-                        size="2.25rem"
-                        disabled
-                        style={{
-                            flexShrink: 0,
-                            borderRight: 'none',
-                            borderTopRightRadius: 0,
-                            borderBottomRightRadius: 0,
-                        }}
-                    >
-                        <IconPlayerPlay size={20}/>
-                    </ActionIcon>
-
-                    <DurationInput
-                        value={value}
-                        width={width}
-                        radius={0}
-                        marginInline={0}
-                        onChange={onChange}
-                    />
-
-                    <ActionIcon
-                        type="button"
-                        variant="default"
-                        aria-label="Clear time"
-                        size="2.25rem"
-                        disabled
-                        style={{
-                            flexShrink: 0,
-                            borderLeft: 'none',
-                            borderTopLeftRadius: 0,
-                            borderBottomLeftRadius: 0,
-                        }}
-                    >
-                        <IconCancel size={20}/>
-                    </ActionIcon>
-                </Group>
+            {field.key === TRACKING_FIELD_KEY.TIME ? (
+                <ClientWorkoutSessionStopwatch
+                    value={value}
+                    width={width}
+                    height={"3rem"}
+                    buttonWidth={!isSmallScreen ? "3rem" : stackItem ? "2rem" : "2.7rem"}
+                    onChange={onChange}
+                />
+            ) : field.key === TRACKING_FIELD_KEY.REST ? (
+                <DurationInput
+                    value={value}
+                    width={width}
+                    height={"3rem"}
+                    marginInline={0}
+                    onChange={onChange}
+                />
             ) : type === TRACKING_FIELD_TYPE.TEXT ? (
                 <TextInput
                     value={value}
@@ -196,6 +172,7 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
                         },
                         input: {
                             width: '100%',
+                            height: "3rem",
                             minWidth: 0,
                             paddingInline: '0.5rem',
                             fontWeight: 600,
@@ -222,6 +199,7 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
                             minWidth: 0,
                         },
                         input: {
+                            height: "3rem",
                             paddingInline: '0.5rem',
                             fontWeight: 600,
                             textAlign: 'center',
@@ -235,7 +213,7 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
     );
 }
 
-function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTopBorder = false, isSmallScreen, colorScheme, children}) {
+function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTopBorder = false, isSmallScreen, hasDurationInFields, colorScheme, children}) {
 
     return (
         <Box
@@ -251,7 +229,7 @@ function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTop
             <Box
                 style={{
                     display: 'grid',
-                    gridTemplateColumns: `${stackItem && isSmallScreen ? '4rem' : '5rem'} minmax(6rem, 1fr) fit-content(7rem)`,
+                    gridTemplateColumns: `${!isSmallScreen ? '5.5rem' : stackItem && hasDurationInFields ? '4rem' : '4.8rem'} minmax(6rem, 1fr) fit-content(7rem)`,
                     alignItems: 'center',
                     columnGap: '0.5rem',
                 }}

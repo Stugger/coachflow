@@ -71,7 +71,7 @@ function getTotalSeconds(parts) {
 
 //TODO typing from left input should move caret into right input when maxed, backspacing from second input should bring caret to end of first input when empty, left/right arrows should move between inputs when no more characters left to move between
 
-function DurationInput({value, locked, variant = 'default', width, marginInline = 'auto', radius = 'md', label, description, required = false, error, onChange}) {
+function DurationInput({value, locked, variant = 'default', width, height = undefined, marginInline = 'auto', radius = 'md', label, description, required = false, error, onChange}) {
 
     const generatedId = useId();
 
@@ -184,6 +184,7 @@ function DurationInput({value, locked, variant = 'default', width, marginInline 
                 aria-describedby={describedBy}
                 style={{
                     width,
+                    height,
                     marginInline,
                     paddingInline: 0,
                     borderRadius: radius,
@@ -211,6 +212,7 @@ function DurationInput({value, locked, variant = 'default', width, marginInline 
                         style={{width: 'calc(50% - 0.35rem)'}}
                         styles={{
                             input: {
+                                height,
                                 border: 0,
                                 background: 'transparent',
                                 color: error ? "var(--mantine-color-error)" : undefined,
@@ -245,6 +247,7 @@ function DurationInput({value, locked, variant = 'default', width, marginInline 
                         style={{width: 'calc(50% - 0.35rem)'}}
                         styles={{
                             input: {
+                                height,
                                 border: 0,
                                 background: 'transparent',
                                 color: error ? "var(--mantine-color-error)" : undefined,

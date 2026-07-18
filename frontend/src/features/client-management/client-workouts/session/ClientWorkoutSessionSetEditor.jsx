@@ -1,13 +1,20 @@
 import {useState} from 'react';
 import {
     Alert,
+    Box,
     Button,
     Group,
+    Loader,
     Stack,
     Text,
     Textarea,
+    Tooltip,
 } from '@mantine/core';
-import {IconCheck, IconEdit} from '@tabler/icons-react';
+import {
+    IconAlertTriangle,
+    IconCheck,
+    IconEdit
+} from '@tabler/icons-react';
 
 import ClientWorkoutSessionResultInputs from './ClientWorkoutSessionResultInputs.jsx';
 import ClientWorkoutSessionResultSummary from './ClientWorkoutSessionResultSummary.jsx';
@@ -147,7 +154,10 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
             )}
 
             <Group justify="space-between" align="center">
-                <SaveStatus status={saveStatus}/>
+                <SaveStatus
+                    status={saveStatus}
+                    error={saveError}
+                />
 
                 {completed
                     ? (
@@ -172,19 +182,51 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
     );
 }
 
-function SaveStatus({status}) {
-    if (status === 'dirty') {
-        return <Text size="xs" c="dimmed">Unsaved changes</Text>;
+function SaveStatus({status, error}) {
+    const syncing = status === 'dirty' || status === 'saving';
+
+    const label = syncing
+        ? 'Saving changes'
+        : status === 'saved'
+            ? 'Changes saved'
+            : status === 'error'
+                ? error || 'Failed to save changes'
+                : null;
+
+    if (!label) {
+        return <div/>;
     }
 
-    if (status === 'saving') {
-        return <Text size="xs" c="dimmed">Saving…</Text>;
-    }
-
-    if (status === 'saved') {
-        return <Text size="xs" c="green">Saved</Text>;
-    }
-
-    return <span/>;
+    return (
+        <Tooltip label={label} events={{hover: true, focus: false, touch: true}}>
+            <Box
+                role="status"
+                aria-live="polite"
+                aria-label={label}
+                w="1.5rem"
+                h="1.5rem"
+                style={{
+                    display: 'grid',
+                    placeItems: 'center',
+                    flexShrink: 0,
+                }}
+            >
+                {syncing ? (
+                    <Loader size={15}/>
+                ) : status === 'saved' ? (
+                    <IconCheck
+                        size={19}
+                        color="var(--mantine-color-green-6)"
+                    />
+                ) : (
+                    <IconAlertTriangle
+                        size={19}
+                        color="var(--mantine-color-error)"
+                    />
+                )}
+            </Box>
+        </Tooltip>
+    );
 }
+
 export default ClientWorkoutSessionSetEditor;

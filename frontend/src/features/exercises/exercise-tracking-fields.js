@@ -74,16 +74,6 @@ export const TRACKING_FIELD_DEFINITIONS = {
         key: TRACKING_FIELD_KEY.TIME,
         label: 'Time',
         type: TRACKING_FIELD_TYPE.TIME,
-        modes: [
-            {
-                value: 'TIMER',
-                label: 'Countdown',
-            },
-            {
-                value: 'STOPWATCH',
-                label: 'Stopwatch',
-            },
-        ],
         minColumnWidth: '8rem',
         inputWidth: '5.2rem',
     },
