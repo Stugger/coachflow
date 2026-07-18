@@ -48,7 +48,18 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResult
                 radius="md"
             >
                 {sets.map((set, index) => (
-                    <Accordion.Item key={set.setKey} value={set.setKey}>
+                    <Accordion.Item
+                        key={set.setKey}
+                        value={set.setKey}
+                        style={{
+                            borderLeft: set.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+                                ? '3px solid var(--mantine-color-green-outline)'
+                                : set.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
+                                    ? '3px solid var(--mantine-color-yellow-outline)'
+                                    : '3px solid gray',
+                            boxShadow: expandedSetKey === String(set.setKey) ? "0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)" : undefined,
+                        }}
+                    >
                         <Accordion.Control icon={<ClientWorkoutProgressIcon status={set.status}/>}>
                             <Group justify="space-between" pr="sm" wrap="nowrap">
                                 <Group gap="xs">

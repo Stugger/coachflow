@@ -95,7 +95,18 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
                 ).length;
 
                 return (
-                    <Accordion.Item key={round.number} value={String(round.number)}>
+                    <Accordion.Item
+                        key={round.number}
+                        value={String(round.number)}
+                        style={{
+                            borderLeft: round.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+                                ? '3px solid var(--mantine-color-green-outline)'
+                                : round.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
+                                    ? '3px solid var(--mantine-color-yellow-outline)'
+                                    : '3px solid gray',
+                            boxShadow: expandedRound === String(round.number) ? "0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)" : undefined,
+                        }}
+                    >
                         <Accordion.Control icon={<ClientWorkoutProgressIcon status={round.status}/>}>
                             <Group justify="space-between" pr="sm" wrap="nowrap">
                                 <Stack gap={1}>
@@ -116,8 +127,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
                             <Accordion
                                 value={expandedExercise}
                                 onChange={setExpandedExercise}
-                                variant="contained"
-                                radius="md"
+                                variant="separated"
                             >
                                 {round.exercises.map(exercise => {
                                     if (!exercise.set) {
@@ -139,7 +149,17 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
                                             : 'Complete & Next Exercise';
 
                                     return (
-                                        <Accordion.Item key={exercise.itemExercise.id} value={stepKey}>
+                                        <Accordion.Item
+                                            key={exercise.itemExercise.id}
+                                            value={stepKey}
+                                            style={{
+                                                borderRight: exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+                                                    ? '3px solid var(--mantine-color-green-outline)'
+                                                    : exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
+                                                        ? '3px solid var(--mantine-color-yellow-outline)'
+                                                        : '3px solid gray',
+                                            }}
+                                        >
                                             <Accordion.Control
                                                 icon={
                                                     <Avatar
