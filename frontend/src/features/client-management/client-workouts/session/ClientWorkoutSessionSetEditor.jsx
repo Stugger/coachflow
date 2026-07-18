@@ -1,4 +1,5 @@
-import {useEffect, useRef, useState} from 'react';
+import {useState} from 'react';
+import useClientWorkoutSetResultDraft from './useClientWorkoutSetResultDraft.js';
 import {
     Alert,
     Button,
@@ -21,128 +22,48 @@ import {
 import {getExerciseUnitLabel} from '../../../exercises/exercise-units.js';
 import {formatDurationSeconds} from '../../../../utils/time-utils.js';
 
-import {apiSaveClientWorkoutSetResult} from '../client-workout-api.js';
-
-const AUTOSAVE_DELAY = 700;
-
 function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, onResultSaved, onCompleted}) {
 
     const completed = Boolean(result?.completedAt);
 
-    const [values, setValues] = useState(() => createInitialValues(config, result));
-    const [notes, setNotes] = useState(result?.notes ?? '');
     const [editing, setEditing] = useState(!completed);
-    const [saveStatus, setSaveStatus] = useState('idle');
-    const [saveError, setSaveError] = useState('');
     const [completing, setCompleting] = useState(false);
 
-    const valuesRef = useRef(values);
-    const notesRef = useRef(notes);
-    const completedRef = useRef(completed);
-    const revisionRef = useRef(0);
-    const saveTimerRef = useRef(null);
-    const saveQueueRef = useRef(Promise.resolve());
-
-    const identity = {
+    const {
+        values,
+        notes,
+        saveStatus,
+        saveError,
+        updateValue,
+        updateNotes,
+        flushAutosave,
+        saveResult,
+    } = useClientWorkoutSetResultDraft({
+        workoutId,
         clientWorkoutItemId,
         clientWorkoutItemExerciseId,
         setKey: set.setKey,
-    };
+        config,
+        result,
+        onResultSaved,
+    });
 
-    const inputFields = config.trackingFields.filter(field => field.key !== TRACKING_FIELD_KEY.NOTES);
+    const inputFields = config.trackingFields.filter(
+        field => field.key !== TRACKING_FIELD_KEY.NOTES
+    );
+
     const instruction = getSetInstruction(config, set);
-
-    useEffect(() => {
-        return () => clearTimeout(saveTimerRef.current);
-    }, []);
-
-    function updateValue(side, fieldKey, nextValue) {
-        const nextSideValues = {...valuesRef.current[side]};
-
-        if (nextValue === '' || nextValue === null || nextValue === undefined) {
-            delete nextSideValues[fieldKey];
-        } else {
-            nextSideValues[fieldKey] = nextValue;
-        }
-
-        const nextValues = {
-            ...valuesRef.current,
-            [side]: nextSideValues,
-        };
-
-        valuesRef.current = nextValues;
-        setValues(nextValues);
-        scheduleAutosave();
-    }
-
-    function updateNotes(nextNotes) {
-        notesRef.current = nextNotes;
-        setNotes(nextNotes);
-        scheduleAutosave();
-    }
-
-    function scheduleAutosave() {
-        revisionRef.current += 1;
-        setSaveStatus('dirty');
-        setSaveError('');
-
-        clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => {
-            queueSave(completedRef.current);
-        }, AUTOSAVE_DELAY);
-    }
-
-    function queueSave(nextCompleted = completedRef.current) {
-        clearTimeout(saveTimerRef.current);
-
-        const revision = revisionRef.current;
-        const payload = {
-            ...identity,
-            valuesJson: JSON.stringify(normalizeResultValues(valuesRef.current)),
-            notes: notesRef.current,
-            completed: nextCompleted,
-        };
-
-        setSaveStatus('saving');
-        setSaveError('');
-
-        const request = saveQueueRef.current
-            .catch(() => null)
-            .then(() => apiSaveClientWorkoutSetResult(workoutId, payload));
-
-        saveQueueRef.current = request.catch(() => null);
-
-        return request
-            .then(savedResult => {
-                completedRef.current = Boolean(savedResult?.completedAt);
-                onResultSaved(savedResult, identity);
-
-                if (revision === revisionRef.current) {
-                    setSaveStatus('saved');
-                }
-
-                return savedResult;
-            })
-            .catch(error => {
-                console.error('Failed to save workout set result:', error);
-                setSaveStatus('error');
-                setSaveError(error.message || 'Failed to save this set.');
-                throw error;
-            });
-    }
-
-    function handleBlur() {
-        if (saveStatus === 'dirty') {
-            queueSave(completedRef.current);
-        }
-    }
 
     async function handleComplete() {
         setCompleting(true);
 
         try {
-            await queueSave(true);
-            completedRef.current = true;
+            const saveSucceeded = await saveResult(true);
+
+            if (!saveSucceeded) {
+                return;
+            }
+
             setEditing(false);
             onCompleted?.();
         } finally {
@@ -154,8 +75,11 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
         setCompleting(true);
 
         try {
-            await queueSave(true);
-            setEditing(false);
+            const saveSucceeded = await saveResult(true);
+
+            if (saveSucceeded) {
+                setEditing(false);
+            }
         } finally {
             setCompleting(false);
         }
@@ -164,10 +88,17 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
     if (completed && !editing) {
         return (
             <Stack gap="sm">
-                <SessionResultSummary config={config} values={values}/>
+                <SessionResultSummary
+                    config={config}
+                    values={values}
+                />
 
                 {notes.trim() && (
-                    <Text size="sm" c="dimmed" style={{whiteSpace: 'pre-wrap'}}>
+                    <Text
+                        size="sm"
+                        c="dimmed"
+                        style={{whiteSpace: 'pre-wrap'}}
+                    >
                         {notes}
                     </Text>
                 )}
@@ -185,9 +116,14 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
     }
 
     return (
-        <Stack gap="md" onBlurCapture={handleBlur}>
+        <Stack gap="md" onBlurCapture={flushAutosave}>
             {instruction && (
-                <Text size="sm" c="dimmed" fs="italic" style={{whiteSpace: 'pre-wrap'}}>
+                <Text
+                    size="sm"
+                    c="dimmed"
+                    fs="italic"
+                    style={{whiteSpace: 'pre-wrap'}}
+                >
                     {instruction}
                 </Text>
             )}
@@ -230,21 +166,29 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
                 value={notes}
                 minRows={2}
                 autosize
-                onChange={event => updateNotes(event.currentTarget.value)}
+                onChange={event =>
+                    updateNotes(event.currentTarget.value)
+                }
             />
 
-            {saveError && <Alert color="red">{saveError}</Alert>}
+            {saveError && (
+                <Alert color="red">
+                    {saveError}
+                </Alert>
+            )}
 
             <Group justify="space-between" align="center">
                 <SaveStatus status={saveStatus}/>
 
                 {completed
                     ? (
-                        <Button loading={completing} onClick={handleSaveChanges}>
+                        <Button
+                            loading={completing}
+                            onClick={handleSaveChanges}
+                        >
                             Save Changes
                         </Button>
-                    )
-                    : (
+                    ) : (
                         <Button
                             color="green"
                             loading={completing}
@@ -376,34 +320,6 @@ function SaveStatus({status}) {
     }
 
     return <span/>;
-}
-
-function createInitialValues(config, result) {
-    if (config.eachSide) {
-        return {
-            left: {...(result?.values?.left ?? {})},
-            right: {...(result?.values?.right ?? {})},
-        };
-    }
-
-    return {
-        default: {...(result?.values?.default ?? {})},
-    };
-}
-
-function normalizeResultValues(values) {
-    return Object.fromEntries(
-        Object.entries(values)
-            .map(([side, sideValues]) => [
-                side,
-                Object.fromEntries(
-                    Object.entries(sideValues).filter(([, value]) =>
-                        value !== '' && value !== null && value !== undefined
-                    ),
-                ),
-            ])
-            .filter(([, sideValues]) => Object.keys(sideValues).length),
-    );
 }
 
 function getSetInstruction(config, set) {
