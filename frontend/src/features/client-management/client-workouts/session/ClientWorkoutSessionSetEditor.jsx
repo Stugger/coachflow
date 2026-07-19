@@ -21,7 +21,8 @@ import ClientWorkoutSessionResultSummary from './ClientWorkoutSessionResultSumma
 import {getSetInstruction} from './client-workout-set-result-utils.js';
 import useClientWorkoutSetResultDraft from './useClientWorkoutSetResultDraft.js';
 
-function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, onResultSaved, onCompleted}) {
+function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, colorScheme,
+                                           onResultSaved, onCompleted}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -148,6 +149,7 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
                 values={values}
                 stackItem={clientWorkoutItemExerciseId !== null}
                 separateSides={separateSides}
+                colorScheme={colorScheme}
                 onChange={updateValue}
                 onSplitSides={splitSides}
                 onMergeSides={mergeSides}

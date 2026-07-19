@@ -11,6 +11,7 @@ import {
     Container,
     Group,
     Loader,
+    Menu,
     Paper,
     Stack,
     Text,
@@ -18,9 +19,11 @@ import {
     useMantineColorScheme,
 } from '@mantine/core';
 import {
+    IconDotsVertical,
     IconLogout2,
     IconMoon,
     IconSun,
+    IconTrash,
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
@@ -195,18 +198,35 @@ function ClientWorkoutSessionPage() {
                                         Exit Workout
                                     </Button>
 
-                                    <ActionIcon
-                                        variant="default"
-                                        size="lg"
-                                        color="gray"
-                                        aria-label={colorScheme === 'dark' ? 'Use light mode' : 'Use dark mode'}
-                                        onClick={() => toggleColorScheme()}
-                                    >
-                                        {colorScheme === 'dark'
-                                            ? <IconSun size={20} stroke={1.8}/>
-                                            : <IconMoon size={20} stroke={1.8}/>
-                                        }
-                                    </ActionIcon>
+                                    <Menu position="bottom-end" withinPortal>
+                                        <Menu.Target>
+                                            <ActionIcon variant="subtle" color="gray" aria-label="Workout options">
+                                                <IconDotsVertical size={18}/>
+                                            </ActionIcon>
+                                        </Menu.Target>
+
+                                        <Menu.Dropdown>
+                                            <Menu.Item
+                                                color="red"
+                                                leftSection={<IconTrash size={16}/>}
+                                                onClick={() => console.log("TODO -> delete all set results and exit session (confirm modal)")}
+                                            >
+                                                Abandon workout
+                                            </Menu.Item>
+
+                                            <Menu.Divider/>
+
+                                            <Menu.Item
+                                                leftSection={colorScheme === 'dark'
+                                                    ? <IconSun size={16}/>
+                                                    : <IconMoon size={16}/>
+                                                }
+                                                onClick={toggleColorScheme}
+                                            >
+                                                {colorScheme === 'light' ? "Dark mode" : "Light mode"}
+                                            </Menu.Item>
+                                        </Menu.Dropdown>
+                                    </Menu>
                                 </Group>
 
                                 <Paper

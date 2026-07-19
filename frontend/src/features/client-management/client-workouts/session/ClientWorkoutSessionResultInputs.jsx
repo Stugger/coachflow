@@ -9,7 +9,6 @@ import {
     Stack,
     Text,
     TextInput,
-    useComputedColorScheme,
 } from '@mantine/core';
 import {
     IconChevronDown,
@@ -25,14 +24,13 @@ import {
 
 import {getSetResultInputDetails} from './client-workout-set-result-utils.js';
 
-function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separateSides, onChange, onSplitSides, onMergeSides}) {
+function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separateSides, colorScheme, onChange, onSplitSides, onMergeSides}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
     const isSmallScreen = useIsSmallScreen();
-    const colorScheme = useComputedColorScheme('light')
 
     const fields = config.trackingFields.filter(field =>
         field.key !== TRACKING_FIELD_KEY.NOTES

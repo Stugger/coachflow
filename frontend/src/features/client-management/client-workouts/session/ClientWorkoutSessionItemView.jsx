@@ -174,6 +174,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                     workoutId={workout.id}
                     item={item}
                     resultIndex={resultIndex}
+                    colorScheme={colorScheme}
                     onResultSaved={onResultSaved}
                 />
             ) : (
@@ -183,6 +184,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                     item={item}
                     resultIndex={resultIndex}
                     isSmallScreen={isSmallScreen}
+                    colorScheme={colorScheme}
                     onResultSaved={onResultSaved}
                 />
             )}

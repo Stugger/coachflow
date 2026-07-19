@@ -29,7 +29,7 @@ function getStackStepKey(roundNumber, itemExerciseId) {
     return `round:${roundNumber}:exercise:${itemExerciseId}`;
 }
 
-function ClientWorkoutStackView({workoutId, item, resultIndex, isSmallScreen, onResultSaved}) {
+function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSmallScreen, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -153,7 +153,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, isSmallScreen, on
                         ? '3px solid var(--mantine-color-green-outline)'
                         : round.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
                             ? '3px solid var(--mantine-color-yellow-outline)'
-                            : '3px solid gray',
+                            : (colorScheme === 'light' ? '3px solid darkgray' : '3px solid gray'),
                     boxShadow: expandedRound === String(round.number) ? "0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)" : undefined,
                 }}
             >
@@ -226,7 +226,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, isSmallScreen, on
                         ? '3px solid var(--mantine-color-green-outline)'
                         : exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
                             ? '3px solid var(--mantine-color-yellow-outline)'
-                            : '3px solid gray',
+                            : (colorScheme === 'light' ? '3px solid darkgray' : '3px solid gray'),
                 }}
             >
                 <Accordion.Control
@@ -271,6 +271,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, isSmallScreen, on
                         set={exercise.set}
                         result={exercise.result}
                         completeLabel={completeLabel}
+                        colorScheme={colorScheme}
                         onResultSaved={onResultSaved}
                         onCompleted={() => handleExerciseCompleted(stepKey)}
                     />

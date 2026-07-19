@@ -22,7 +22,7 @@ import {
     getSetRestSeconds,
 } from './client-workout-set-result-utils.js';
 
-function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResultSaved}) {
+function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorScheme, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -88,7 +88,7 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResult
                                     ? '3px solid var(--mantine-color-green-outline)'
                                     : set.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
                                         ? '3px solid var(--mantine-color-yellow-outline)'
-                                        : '3px solid gray',
+                                        : (colorScheme === 'light' ? '3px solid darkgray' : '3px solid gray'),
                                 boxShadow: expandedSetKey === String(set.setKey) ? "0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)" : undefined,
                             }}
                         >
@@ -118,6 +118,7 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResult
                                     set={set}
                                     result={set.result}
                                     completeLabel={index === sets.length - 1 ? 'Complete Exercise' : 'Complete & Next Set'}
+                                    colorScheme={colorScheme}
                                     onResultSaved={onResultSaved}
                                     onCompleted={() => handleSetCompleted(index)}
                                 />
