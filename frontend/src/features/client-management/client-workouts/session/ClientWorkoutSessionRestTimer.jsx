@@ -20,7 +20,6 @@ function ClientWorkoutSessionRestTimer({durationSeconds, startedAt, onFinished})
 
     const finishedRef = useRef(false);
     const onFinishedRef = useRef(onFinished);
-    const rowRef = useRef(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -42,14 +41,6 @@ function ClientWorkoutSessionRestTimer({durationSeconds, startedAt, onFinished})
 
         setRemainingSeconds(getRemainingSeconds());
 
-        const focusFrame = window.requestAnimationFrame(() => {
-            rowRef.current?.focus({preventScroll: true});
-            rowRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest',
-            });
-        });
-
         function updateCountdown() {
             const remaining = getRemainingSeconds();
 
@@ -65,7 +56,6 @@ function ClientWorkoutSessionRestTimer({durationSeconds, startedAt, onFinished})
         const intervalId = window.setInterval(updateCountdown, 250);
 
         return () => {
-            window.cancelAnimationFrame(focusFrame);
             window.clearInterval(intervalId);
         };
     }, [duration, startedAt]);
@@ -85,9 +75,7 @@ function ClientWorkoutSessionRestTimer({durationSeconds, startedAt, onFinished})
 
     return (
         <Paper
-            ref={rowRef}
             className="workout-rest-timer"
-            tabIndex={-1}
             role="timer"
             aria-label={`Rest timer, ${formatCountdown(remainingSeconds)} remaining`}
             withBorder

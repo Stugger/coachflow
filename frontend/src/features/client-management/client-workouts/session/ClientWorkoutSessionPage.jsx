@@ -1,7 +1,7 @@
-import {useEffect, useState} from 'react';
+import {useEffect, useLayoutEffect, useState} from 'react';
+import {useLocation, useNavigate, useParams,} from 'react-router-dom';
 import {useScreenWakeLock} from '../../../../hooks/useScreenWakeLock.js';
 import {useIsSmallScreen} from '../../../../hooks/useIsSmallScreen.js';
-import {useLocation, useNavigate, useParams,} from 'react-router-dom';
 import {
     ActionIcon,
     Alert,
@@ -92,6 +92,14 @@ function ClientWorkoutSessionPage() {
             });
     }, [clientWorkoutId]);
 
+    useLayoutEffect(() => {
+        window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'auto',
+        });
+    }, [clientWorkoutId, itemId]);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
@@ -119,9 +127,14 @@ function ClientWorkoutSessionPage() {
     }
 
     function openItem(nextItemId) {
-        navigate(`${ROUTES.clientWorkoutSessionItem(workout.id, nextItemId)}${location.search}`, {
-            state: location.state,
-        });
+        navigate(`${ROUTES.clientWorkoutSessionItem(workout.id, nextItemId)}${location.search}`,
+            {
+                state: {
+                    ...(location.state ?? {}),
+                    sessionOverviewItemId: nextItemId,
+                },
+            },
+        );
     }
 
     function handleResultSaved(savedResult, identity) {
@@ -142,7 +155,6 @@ function ClientWorkoutSessionPage() {
             };
         });
     }
-
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Conditional return
@@ -286,6 +298,7 @@ function ClientWorkoutSessionPage() {
                             <ClientWorkoutSessionOverview
                                 workout={workout}
                                 results={results}
+                                scrollItemId={location.state?.sessionOverviewItemId}
                                 onOpenItem={openItem}
                             />
                         )}

@@ -1,4 +1,4 @@
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
 import {
     Accordion,
     Alert,
@@ -8,7 +8,9 @@ import {
     Stack,
     Text,
 } from '@mantine/core';
-import {IconPhoto} from '@tabler/icons-react';
+import {
+    IconPhoto,
+} from '@tabler/icons-react';
 
 import {resolveMediaUrl} from '../../../../utils/media-url-utils.js';
 
@@ -23,7 +25,15 @@ import {
     getStackSessionRounds,
 } from './client-workout-session-utils.js';
 
-import {getSetRestSeconds} from './client-workout-set-result-utils.js';
+import {
+    getSetRestSeconds
+} from './client-workout-set-result-utils.js';
+
+import {
+    getSessionRestScrollId,
+    getSessionStepScrollId,
+    scheduleSessionScroll,
+} from './client-workout-session-scroll.js';
 
 function getStackStepKey(roundNumber, itemExerciseId) {
     return `round:${roundNumber}:exercise:${itemExerciseId}`;
@@ -58,6 +68,40 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSm
     const [expandedExercise, setExpandedExercise] = useState(firstIncompleteStep?.key ?? null);
 
     const [activeRest, setActiveRest] = useState(null);
+
+    const [scrollTarget, setScrollTarget] = useState(() =>
+        firstIncompleteStep
+            ? {
+                id: getSessionStepScrollId(firstIncompleteStep.key),
+                block: 'start',
+            }
+            : null
+    );
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        if (!scrollTarget) {
+            return undefined;
+        }
+
+        return scheduleSessionScroll(
+            scrollTarget.id,
+            {
+                block: scrollTarget.block,
+                delay: scrollTarget.delay,
+                onScrolled: () => {
+                    setScrollTarget(current =>
+                        current?.id === scrollTarget.id
+                            ? null
+                            : current
+                    );
+                },
+            },
+        );
+    }, [scrollTarget]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
@@ -115,10 +159,28 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSm
                     && step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
             );
 
+        const changesRound = Boolean(nextStep && nextStep.roundNumber !== completedStep.roundNumber);
+
         if (nextStep) {
             setExpandedRound(String(nextStep.roundNumber));
             setExpandedExercise(nextStep.key);
         }
+
+        setScrollTarget(
+            restSeconds
+                ? {
+                    id: getSessionRestScrollId(completedStep.key),
+                    block: 'start',
+                    delay: changesRound ? 450 : undefined,
+                }
+                : nextStep
+                    ? {
+                        id: getSessionStepScrollId(nextStep.key),
+                        block: 'start',
+                        delay: changesRound ? 450 : undefined,
+                    }
+                    : null
+        );
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -195,7 +257,12 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSm
                                     {renderRoundExerciseItem(round, exercise, stepKey)}
 
                                     {activeRest?.sourceKey === stepKey && !activeRest.afterRound && expandedRound === String(round.number) && (
-                                        <Box mt="sm" mb="sm">
+                                        <Box
+                                            id={getSessionRestScrollId(stepKey)}
+                                            mt="sm"
+                                            mb="sm"
+                                            style={{scrollMarginTop: '1rem'}}
+                                        >
                                             {renderActiveRest()}
                                         </Box>
                                     )}
@@ -220,8 +287,10 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSm
 
         return (
             <Accordion.Item
+                id={getSessionStepScrollId(stepKey)}
                 value={stepKey}
                 style={{
+                    scrollMarginTop: '1rem',
                     borderRight: exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
                         ? '3px solid var(--mantine-color-green-outline)'
                         : exercise.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
@@ -301,7 +370,12 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSm
                         {renderRoundItem(round)}
 
                         {activeRest?.roundNumber === round.number && (activeRest.afterRound || expandedRound !== String(round.number)) && (
-                            <Box mt="md" mb="md">
+                            <Box
+                                id={getSessionRestScrollId(activeRest.sourceKey)}
+                                mt="md"
+                                mb="md"
+                                style={{scrollMarginTop: '1rem'}}
+                            >
                                 {renderActiveRest()}
                             </Box>
                         )}

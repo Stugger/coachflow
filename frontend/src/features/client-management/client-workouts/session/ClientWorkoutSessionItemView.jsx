@@ -151,7 +151,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                         {section.name?.trim() || `Section ${section.position}`}
                     </Text>
 
-                    <Group justify="space-between" align="center" wrap="nowrap">
+                    <Group gap={4} justify="space-between" align="center" wrap="nowrap">
                         <Title order={2}>
                             {item.displayName}
                         </Title>

@@ -1,4 +1,4 @@
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
 import {
     Accordion,
     Box,
@@ -22,6 +22,12 @@ import {
     getSetRestSeconds,
 } from './client-workout-set-result-utils.js';
 
+import {
+    getSessionRestScrollId,
+    getSessionSetScrollId,
+    scheduleSessionScroll,
+} from './client-workout-session-scroll.js';
+
 function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorScheme, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -38,6 +44,40 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorSch
 
     const [activeRest, setActiveRest] = useState(null);
 
+    const [scrollTarget, setScrollTarget] = useState(() =>
+        firstIncompleteSet
+            ? {
+                id: getSessionSetScrollId(firstIncompleteSet.setKey),
+                block: 'start',
+            }
+            : null
+    );
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        if (!scrollTarget) {
+            return undefined;
+        }
+
+        return scheduleSessionScroll(
+            scrollTarget.id,
+            {
+                block: scrollTarget.block,
+                delay: scrollTarget.delay,
+                onScrolled: () => {
+                    setScrollTarget(current =>
+                        current?.id === scrollTarget.id
+                            ? null
+                            : current
+                    );
+                },
+            },
+        );
+    }, [scrollTarget]);
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
@@ -45,6 +85,12 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorSch
     function handleSetCompleted(setIndex) {
         const completedSet = sets[setIndex];
         const restSeconds = getSetRestSeconds(completedSet);
+
+        const nextSet = sets
+            .slice(setIndex + 1)
+            .find(set =>
+                set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+            );
 
         setActiveRest(
             restSeconds
@@ -56,13 +102,23 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorSch
                 : null
         );
 
-        const nextSet = sets
-            .slice(setIndex + 1)
-            .find(set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED);
-
         if (nextSet) {
             setExpandedSetKey(nextSet.setKey);
         }
+
+        setScrollTarget(
+            restSeconds
+                ? {
+                    id: getSessionRestScrollId(completedSet.setKey),
+                    block: 'start',
+                }
+                : nextSet
+                    ? {
+                        id: getSessionSetScrollId(nextSet.setKey),
+                        block: 'start',
+                    }
+                    : null
+        );
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -82,8 +138,10 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorSch
                 {sets.map((set, index) => (
                     <Fragment key={set.setKey}>
                         <Accordion.Item
+                            id={getSessionSetScrollId(set.setKey)}
                             value={set.setKey}
                             style={{
+                                scrollMarginTop: '1rem',
                                 borderLeft: set.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
                                     ? '3px solid var(--mantine-color-green-outline)'
                                     : set.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
@@ -126,7 +184,12 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorSch
                         </Accordion.Item>
 
                         {activeRest?.sourceKey === set.setKey && (
-                            <Box mt="md" mb="md">
+                            <Box
+                                id={getSessionRestScrollId(set.setKey)}
+                                mt="md"
+                                mb="md"
+                                style={{scrollMarginTop: '1rem'}}
+                            >
                                 <ClientWorkoutSessionRestTimer
                                     durationSeconds={activeRest.durationSeconds}
                                     startedAt={activeRest.startedAt}

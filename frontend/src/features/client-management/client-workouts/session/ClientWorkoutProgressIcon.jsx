@@ -15,7 +15,7 @@ function ClientWorkoutProgressIcon({status, size = 24}) {
     return (
         <>
             {!inProgress && !completed ? (
-                <IconCircleDashedCheck size={size} stroke={2} color='gray'/>
+                <IconCircleDashedCheck size={size} stroke={2} color='gray' style={{flexShrink: 0}}/>
             ) : (
                 <ThemeIcon
                     size={size}

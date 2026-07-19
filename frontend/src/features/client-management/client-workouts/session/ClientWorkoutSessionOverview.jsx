@@ -1,4 +1,4 @@
-import {useMemo} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import {
     Accordion,
@@ -20,6 +20,12 @@ import {
     buildClientWorkoutSessionProgress,
     createClientWorkoutResultIndex,
 } from './client-workout-session-utils.js';
+
+import {
+    getSessionItemScrollId,
+    scheduleSessionScroll,
+} from './client-workout-session-scroll.js';
+
 import {
     WORKOUT_ITEM_TYPE,
 } from '../../../workout-builder/workout-builder-constants.js';
@@ -29,13 +35,24 @@ import {getSectionTypeLabel} from "../../../workout-builder/workout-builder-util
 
 const OPEN_SECTIONS_PARAM = 'openSections';
 
-function ClientWorkoutSessionOverview({workout, results, onOpenItem}) {
+function ClientWorkoutSessionOverview({workout, results, scrollItemId, onOpenItem}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Layout state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const theme = useMantineTheme();
+    const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f',}, theme);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Router state
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const theme = useMantineTheme();
-
-    const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f',}, theme);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const resultIndex = useMemo(
         () => createClientWorkoutResultIndex(results),
@@ -59,8 +76,33 @@ function ClientWorkoutSessionOverview({workout, results, onOpenItem}) {
         : getDefaultExpandedSections(sessionProgress.sections);
 
     const progress = sessionProgress.progress;
-
     const progressPercent = progress.totalItemCount ? (progress.completedItemCount / progress.totalItemCount) * 100 : 0;
+
+    const restoredScrollRef = useRef(false);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    useEffect(() => {
+        if (!scrollItemId || restoredScrollRef.current) {
+            return undefined;
+        }
+
+        return scheduleSessionScroll(
+            getSessionItemScrollId(scrollItemId),
+            {
+                block: 'center',
+                onScrolled: () => {
+                    restoredScrollRef.current = true;
+                },
+            },
+        );
+    }, [scrollItemId]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     function handleExpandedSectionsChange(nextExpandedSections) {
         const nextSearchParams =
@@ -79,6 +121,10 @@ function ClientWorkoutSessionOverview({workout, results, onOpenItem}) {
             replace: true,
         });
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <Stack gap="md">
@@ -230,6 +276,10 @@ function ClientWorkoutSessionOverview({workout, results, onOpenItem}) {
     );
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Components
+// ------------------------------------------------------------------------------------------------------------------------
+
 function WorkoutSessionItemRow({item, onOpen}) {
     const progress = item.progress;
     const isStack = item.itemType !== WORKOUT_ITEM_TYPE.EXERCISE;
@@ -245,6 +295,7 @@ function WorkoutSessionItemRow({item, onOpen}) {
 
     return (
         <Paper
+            id={getSessionItemScrollId(item.id)}
             component="button"
             type="button"
             className="interactive-card subtle"
@@ -307,6 +358,10 @@ function WorkoutSessionItemRow({item, onOpen}) {
         </Paper>
     );
 }
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Utils
+// ------------------------------------------------------------------------------------------------------------------------
 
 function parseExpandedSections(searchParams, validSectionIds) {
     const validSectionIdSet = new Set(validSectionIds);
