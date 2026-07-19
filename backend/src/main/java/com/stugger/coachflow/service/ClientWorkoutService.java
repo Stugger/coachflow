@@ -92,22 +92,6 @@ public class ClientWorkoutService {
         return new ClientWorkoutResponse(clientWorkout);
     }
 
-    @Transactional
-    public void deleteClientWorkout(Long clientWorkoutId) {
-        Trainer trainer = currentTrainerService.getCurrentTrainer();
-        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
-
-        switch (clientWorkout.getStatus()) {
-            case READY -> clientWorkoutRepository.delete(clientWorkout);
-            case IN_PROGRESS -> throw new ResponseStatusException(HttpStatus.CONFLICT, "In-progress client workouts must be cancelled before they can be deleted.");
-            case COMPLETED -> {
-                LocalDateTime now = LocalDateTime.now();
-                clientWorkout.setArchivedAt(now);
-                clientWorkout.setUpdatedAt(now);
-            }
-        }
-    }
-
     @Transactional(readOnly = true)
     public ClientWorkoutResponse getClientWorkout(Long clientWorkoutId) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
@@ -177,6 +161,45 @@ public class ClientWorkoutService {
         }
 
         return new ClientWorkoutResponse(clientWorkout);
+    }
+
+    @Transactional
+    public ClientWorkoutResponse abandonClientWorkout(Long clientWorkoutId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
+
+        if (clientWorkout.getStatus() != ClientWorkoutStatus.IN_PROGRESS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Only in-progress client workouts can be abandoned.");
+        }
+
+        clientWorkoutSetResultRepository.deleteAllByClientWorkoutId(clientWorkoutId);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        clientWorkout.setStatus(ClientWorkoutStatus.READY);
+        clientWorkout.setStartedAt(null);
+        clientWorkout.setCompletedAt(null);
+        clientWorkout.setUpdatedAt(now);
+
+        clientWorkoutRepository.saveAndFlush(clientWorkout);
+
+        return new ClientWorkoutResponse(clientWorkout);
+    }
+
+    @Transactional
+    public void deleteClientWorkout(Long clientWorkoutId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
+
+        switch (clientWorkout.getStatus()) {
+            case READY -> clientWorkoutRepository.delete(clientWorkout);
+            case IN_PROGRESS -> throw new ResponseStatusException(HttpStatus.CONFLICT, "In-progress client workouts must be cancelled before they can be deleted.");
+            case COMPLETED -> {
+                LocalDateTime now = LocalDateTime.now();
+                clientWorkout.setArchivedAt(now);
+                clientWorkout.setUpdatedAt(now);
+            }
+        }
     }
 
     @Transactional

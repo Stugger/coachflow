@@ -12,6 +12,7 @@ import {
     Group,
     Loader,
     Menu,
+    Modal,
     Paper,
     Stack,
     Text,
@@ -27,7 +28,7 @@ import {
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
-import {apiGetClientWorkoutSession} from '../client-workout-api.js';
+import {apiAbandonClientWorkout, apiGetClientWorkoutSession} from '../client-workout-api.js';
 import {getClientWorkoutOriginLabel} from '../client-workout-constants.js';
 import {getClientWorkoutSourceNavigation} from '../client-workout-navigation.js';
 
@@ -68,6 +69,10 @@ function ClientWorkoutSessionPage() {
 
     const workout = session?.workout;
     const results = session?.results ?? [];
+
+    const [abandonConfirmationOpen, setAbandonConfirmationOpen] = useState(false);
+    const [abandoningWorkout, setAbandoningWorkout] = useState(false);
+    const [abandonError, setAbandonError] = useState('');
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects & hooks
@@ -156,18 +161,58 @@ function ClientWorkoutSessionPage() {
         });
     }
 
+    function openAbandonConfirmation() {
+        setAbandonError('');
+        setAbandonConfirmationOpen(true);
+    }
+
+    async function abandonWorkout() {
+        if (!workout || workout.status !== 'IN_PROGRESS') {
+            return;
+        }
+
+        setAbandoningWorkout(true);
+        setAbandonError('');
+
+        try {
+            await apiAbandonClientWorkout(workout.id);
+
+            setAbandonConfirmationOpen(false);
+            returnToSource();
+        } catch (error) {
+            console.error('Failed to abandon client workout:', error);
+
+            setAbandonError(error.message || 'Failed to abandon the workout.');
+        } finally {
+            setAbandoningWorkout(false);
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Conditional return
     // ------------------------------------------------------------------------------------------------------------------------
 
     if (!loaded) {
         return (
-            <Group gap="sm">
-                <Loader size="sm"/>
-                <Text size="sm" c="dimmed">
-                    Loading workout session…
-                </Text>
-            </Group>
+            <Box mih="100dvh" bg={isSmallScreen ? "var(--mantine-color-body)" : "var(--color-background)"}>
+                <Container
+                    size="sm"
+                    mih="100dvh"
+                    px={{base: 'xs', sm: 'md'}}
+                    py={{base: 'xs', sm: 'sm'}}
+                >
+                    <Group
+                        gap="sm"
+                        px={{base: 'xs', sm: 'md'}}
+                        py={{base: 'xs', sm: 'sm'}}
+                    >
+                        <Loader size="sm"/>
+                        <Text size="sm" c="dimmed">
+                            Loading workout session…
+                        </Text>
+                    </Group>
+                </Container>
+            </Box>
         );
     }
 
@@ -218,16 +263,19 @@ function ClientWorkoutSessionPage() {
                                         </Menu.Target>
 
                                         <Menu.Dropdown>
-                                            <Menu.Item
-                                                color="red"
-                                                leftSection={<IconTrash size={16}/>}
-                                                onClick={() => console.log("TODO -> delete all set results and exit session (confirm modal)")}
-                                            >
-                                                Abandon workout
-                                            </Menu.Item>
+                                            {workout.status === 'IN_PROGRESS' && (
+                                                <>
+                                                    <Menu.Item
+                                                        color="red"
+                                                        leftSection={<IconTrash size={16}/>}
+                                                        onClick={openAbandonConfirmation}
+                                                    >
+                                                        Abandon workout
+                                                    </Menu.Item>
 
-                                            <Menu.Divider/>
-
+                                                    <Menu.Divider/>
+                                                </>
+                                            )}
                                             <Menu.Item
                                                 leftSection={colorScheme === 'dark'
                                                     ? <IconSun size={16}/>
@@ -292,6 +340,7 @@ function ClientWorkoutSessionPage() {
                                 itemId={itemId}
                                 isSmallScreen={isSmallScreen}
                                 onExitWorkout={returnToSource}
+                                onAbandonWorkout={openAbandonConfirmation}
                                 onResultSaved={handleResultSaved}
                             />
                         ) : (
@@ -305,6 +354,53 @@ function ClientWorkoutSessionPage() {
                     </Stack>
                 </Paper>
             </Container>
+            <Modal
+                opened={abandonConfirmationOpen}
+                onClose={() => {
+                    if (!abandoningWorkout) {
+                        setAbandonConfirmationOpen(false);
+                    }
+                }}
+                title="Abandon workout?"
+                centered
+                closeOnClickOutside={!abandoningWorkout}
+                closeOnEscape={!abandoningWorkout}
+                withCloseButton={!abandoningWorkout}
+            >
+                <Stack gap="lg">
+                    {abandonError && (
+                        <Alert color="red">
+                            {abandonError}
+                        </Alert>
+                    )}
+
+                    <Text size="sm" c="dimmed">
+                        This will erase all recorded set results and return the
+                        workout to Ready. The workout structure and targets will
+                        be kept so it can be restarted later or deleted from its
+                        source.
+                    </Text>
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            disabled={abandoningWorkout}
+                            onClick={() => setAbandonConfirmationOpen(false)}
+                        >
+                            Keep active
+                        </Button>
+
+                        <Button
+                            color="red"
+                            leftSection={<IconTrash size={16}/>}
+                            loading={abandoningWorkout}
+                            onClick={abandonWorkout}
+                        >
+                            Abandon workout
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         </Box>
     );
 }

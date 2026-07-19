@@ -48,6 +48,11 @@ public class ClientWorkoutController {
         return clientWorkoutService.startClientWorkout(clientWorkoutId);
     }
 
+    @PostMapping("/client-workouts/{clientWorkoutId}/abandon")
+    public ClientWorkoutResponse abandonClientWorkout(@PathVariable Long clientWorkoutId) {
+        return clientWorkoutService.abandonClientWorkout(clientWorkoutId);
+    }
+
     @PutMapping("/client-workouts/{clientWorkoutId}/set-results")
     public ResponseEntity<ClientWorkoutSetResultResponse> saveClientWorkoutSetResult(@PathVariable Long clientWorkoutId, @Valid @RequestBody SaveClientWorkoutSetResultRequest request) {
         return clientWorkoutService.saveClientWorkoutSetResult(clientWorkoutId, request)

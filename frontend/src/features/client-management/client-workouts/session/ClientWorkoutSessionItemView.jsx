@@ -18,6 +18,7 @@ import {
     IconLogout2,
     IconSun,
     IconMoon,
+    IconTrash,
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
@@ -32,7 +33,7 @@ import {
     findClientWorkoutSessionItem,
 } from './client-workout-session-utils.js';
 
-function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, onExitWorkout, onResultSaved}) {
+function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -119,12 +120,21 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
 
                     <Menu.Dropdown>
                         <Menu.Item
-                            color="red"
                             leftSection={<IconLogout2 size={16}/>}
                             onClick={onExitWorkout}
                         >
                             Exit workout
                         </Menu.Item>
+
+                        {workout.status === 'IN_PROGRESS' && (
+                            <Menu.Item
+                                color="red"
+                                leftSection={<IconTrash size={16}/>}
+                                onClick={onAbandonWorkout}
+                            >
+                                Abandon workout
+                            </Menu.Item>
+                        )}
 
                         <Menu.Divider/>
 
@@ -135,7 +145,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                             }
                             onClick={toggleColorScheme}
                         >
-                            {colorScheme === 'light' ? "Dark mode" : "Light mode"}
+                            {colorScheme === 'light' ? 'Dark mode' : 'Light mode'}
                         </Menu.Item>
                     </Menu.Dropdown>
                 </Menu>
