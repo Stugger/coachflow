@@ -1,12 +1,9 @@
 import {useEffect, useState} from 'react';
 import {useScreenWakeLock} from '../../../../hooks/useScreenWakeLock.js';
 import {useIsSmallScreen} from '../../../../hooks/useIsSmallScreen.js';
+import {useLocation, useNavigate, useParams,} from 'react-router-dom';
 import {
-    useLocation,
-    useNavigate,
-    useParams,
-} from 'react-router-dom';
-import {
+    ActionIcon,
     Alert,
     Badge,
     Box,
@@ -18,8 +15,13 @@ import {
     Stack,
     Text,
     Title,
+    useMantineColorScheme,
 } from '@mantine/core';
-import {IconLogout2} from '@tabler/icons-react';
+import {
+    IconLogout2,
+    IconMoon,
+    IconSun,
+} from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
 import {apiGetClientWorkoutSession} from '../client-workout-api.js';
@@ -37,10 +39,25 @@ function isSameSetResult(result, identity) {
 
 function ClientWorkoutSessionPage() {
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Layout state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const {colorScheme, toggleColorScheme} = useMantineColorScheme();
+
+    const isSmallScreen = useIsSmallScreen();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Router state
+    // ------------------------------------------------------------------------------------------------------------------------
+
     const navigate = useNavigate();
     const location = useLocation();
     const {clientWorkoutId, itemId} = useParams();
-    const isSmallScreen = useIsSmallScreen();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const [session, setSession] = useState(null);
     const [loaded, setLoaded] = useState(false);
@@ -48,6 +65,10 @@ function ClientWorkoutSessionPage() {
 
     const workout = session?.workout;
     const results = session?.results ?? [];
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects & hooks
+    // ------------------------------------------------------------------------------------------------------------------------
 
     useScreenWakeLock(workout?.status === 'IN_PROGRESS');
 
@@ -68,6 +89,10 @@ function ClientWorkoutSessionPage() {
             });
     }, [clientWorkoutId]);
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function returnToSource() {
         if (!workout) {
             return;
@@ -87,25 +112,6 @@ function ClientWorkoutSessionPage() {
                 replace: true,
                 state: sourceNavigation?.state ?? null,
             },
-        );
-    }
-
-    if (!loaded) {
-        return (
-            <Group gap="sm">
-                <Loader size="sm"/>
-                <Text size="sm" c="dimmed">
-                    Loading workout session…
-                </Text>
-            </Group>
-        );
-    }
-
-    if (error || !workout) {
-        return (
-            <Alert color="red">
-                {error || 'Workout session not found.'}
-            </Alert>
         );
     }
 
@@ -134,7 +140,33 @@ function ClientWorkoutSessionPage() {
         });
     }
 
-    const originLabel = getClientWorkoutOriginLabel(workout.origin);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Conditional return
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    if (!loaded) {
+        return (
+            <Group gap="sm">
+                <Loader size="sm"/>
+                <Text size="sm" c="dimmed">
+                    Loading workout session…
+                </Text>
+            </Group>
+        );
+    }
+
+    if (error || !workout) {
+        return (
+            <Alert color="red">
+                {error || 'Workout session not found.'}
+            </Alert>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <Box mih="100dvh" bg={isSmallScreen ? "var(--mantine-color-body)" : "var(--color-background)"}>
@@ -151,16 +183,31 @@ function ClientWorkoutSessionPage() {
                     <Stack gap="md">
                         {!itemId && (
                             <>
-                                <Button
-                                    variant="subtle"
-                                    w="fit-content"
-                                    pl={{base: 'xs', sm: 0}}
-                                    pr='xs'
-                                    leftSection={<IconLogout2 size={16}/>}
-                                    onClick={returnToSource}
-                                >
-                                    Exit Workout
-                                </Button>
+                                <Group justify="space-between">
+                                    <Button
+                                        variant="subtle"
+                                        w="fit-content"
+                                        pl={{base: 'xs', sm: 0}}
+                                        pr='xs'
+                                        leftSection={<IconLogout2 size={16}/>}
+                                        onClick={returnToSource}
+                                    >
+                                        Exit Workout
+                                    </Button>
+
+                                    <ActionIcon
+                                        variant="default"
+                                        size="lg"
+                                        color="gray"
+                                        aria-label={colorScheme === 'dark' ? 'Use light mode' : 'Use dark mode'}
+                                        onClick={() => toggleColorScheme()}
+                                    >
+                                        {colorScheme === 'dark'
+                                            ? <IconSun size={20} stroke={1.8}/>
+                                            : <IconMoon size={20} stroke={1.8}/>
+                                        }
+                                    </ActionIcon>
+                                </Group>
 
                                 <Paper
                                     radius={0}
@@ -188,7 +235,7 @@ function ClientWorkoutSessionPage() {
                                             </Badge>
 
                                             <Text size="sm" c="dimmed">
-                                                {originLabel}
+                                                {getClientWorkoutOriginLabel(workout.origin)}
                                             </Text>
                                         </Group>
 

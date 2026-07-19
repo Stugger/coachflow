@@ -10,11 +10,14 @@ import {
     Stack,
     Text,
     Title,
+    useMantineColorScheme,
 } from '@mantine/core';
 import {
     IconArrowLeft,
     IconDotsVertical,
     IconLogout2,
+    IconSun,
+    IconMoon,
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
@@ -31,8 +34,22 @@ import {
 
 function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, onExitWorkout, onResultSaved}) {
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Layout state
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const {colorScheme, toggleColorScheme} = useMantineColorScheme();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Router state
+    // ------------------------------------------------------------------------------------------------------------------------
+
     const navigate = useNavigate();
     const location = useLocation();
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const resultIndex = useMemo(() => createClientWorkoutResultIndex(results), [results]);
 
@@ -41,11 +58,19 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
         [workout, itemId, resultIndex],
     );
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function returnToOverview() {
         navigate(`${ROUTES.clientWorkoutSession(workout.id)}${location.search}`, {
             state: location.state,
         });
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Conditional return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     if (!itemContext) {
         return (
@@ -65,6 +90,10 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
             </Stack>
         );
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const {section, item} = itemContext;
 
@@ -95,6 +124,18 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                             onClick={onExitWorkout}
                         >
                             Exit workout
+                        </Menu.Item>
+
+                        <Menu.Divider/>
+
+                        <Menu.Item
+                            leftSection={colorScheme === 'dark'
+                                ? <IconSun size={16}/>
+                                : <IconMoon size={16}/>
+                            }
+                            onClick={toggleColorScheme}
+                        >
+                            {colorScheme === 'light' ? "Dark mode" : "Light mode"}
                         </Menu.Item>
                     </Menu.Dropdown>
                 </Menu>

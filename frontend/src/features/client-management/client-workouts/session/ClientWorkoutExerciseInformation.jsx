@@ -28,8 +28,6 @@ function ClientWorkoutExerciseInformation({exercise}) {
         return null;
     }
 
-    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
-
     return (
         <Accordion
             variant="contained"
@@ -59,34 +57,9 @@ function ClientWorkoutExerciseInformation({exercise}) {
                 </Accordion.Control>
 
                 <Accordion.Panel>
-                    <Stack gap="md">
-                        <Text size="sm" c={exercise.details ? undefined : 'dimmed'} style={{whiteSpace: 'pre-wrap'}}>
-                            {exercise.details || 'No exercise instructions provided.'}
-                        </Text>
-
-                        {exercise.demoVideoUrl && (
-                            <ExerciseVideoPreview
-                                url={exercise.demoVideoUrl}
-                                title={`${exercise.name} demo video`}
-                            />
-                        )}
-
-                        <SimpleGrid cols={{base: 1, sm: 2}}>
-                            <MetadataBadges
-                                icon={<IconTarget size={16}/>}
-                                label="Primary muscles"
-                                values={metadata.primaryMuscles}
-                                options={MUSCLE_OPTIONS}
-                            />
-
-                            <MetadataBadges
-                                icon={<IconDumbbell size={16}/>}
-                                label="Equipment"
-                                values={metadata.equipment}
-                                options={EQUIPMENT_OPTIONS}
-                            />
-                        </SimpleGrid>
-                    </Stack>
+                    <ClientWorkoutExerciseInformationContent
+                        exercise={exercise}
+                    />
                 </Accordion.Panel>
             </Accordion.Item>
         </Accordion>
@@ -115,6 +88,50 @@ function MetadataBadges({icon, label, values, options}) {
                     : <Text size="sm" c="dimmed">—</Text>}
             </Stack>
         </Paper>
+    );
+}
+
+export function ClientWorkoutExerciseInformationContent({exercise}) {
+
+    if (!exercise) {
+        return null;
+    }
+
+    const metadata = ExerciseMetadataUtils.parseExerciseMetadataJson(exercise.metadataJson);
+
+    return (
+        <Stack gap="md">
+            <Text
+                size="sm"
+                c={exercise.details ? undefined : 'dimmed'}
+                style={{whiteSpace: 'pre-wrap'}}
+            >
+                {exercise.details || 'No exercise instructions provided.'}
+            </Text>
+
+            {exercise.demoVideoUrl && (
+                <ExerciseVideoPreview
+                    url={exercise.demoVideoUrl}
+                    title={`${exercise.name} demo video`}
+                />
+            )}
+
+            <SimpleGrid cols={{base: 1, sm: 2}}>
+                <MetadataBadges
+                    icon={<IconTarget size={16}/>}
+                    label="Primary muscles"
+                    values={metadata.primaryMuscles}
+                    options={MUSCLE_OPTIONS}
+                />
+
+                <MetadataBadges
+                    icon={<IconDumbbell size={16}/>}
+                    label="Equipment"
+                    values={metadata.equipment}
+                    options={EQUIPMENT_OPTIONS}
+                />
+            </SimpleGrid>
+        </Stack>
     );
 }
 
