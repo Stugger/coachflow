@@ -24,7 +24,10 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, onCha
     const isSmallScreen = useIsSmallScreen();
     const colorScheme = useComputedColorScheme('light')
 
-    const fields = config.trackingFields.filter(field => field.key !== TRACKING_FIELD_KEY.NOTES);
+    const fields = config.trackingFields.filter(field =>
+        field.key !== TRACKING_FIELD_KEY.NOTES
+        && field.key !== TRACKING_FIELD_KEY.REST
+    );
 
     if (config.eachSide) {
         return (
@@ -214,7 +217,6 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
 }
 
 function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTopBorder = false, isSmallScreen, hasDurationInFields, colorScheme, children}) {
-
     return (
         <Box
             px="sm"

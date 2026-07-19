@@ -13,6 +13,10 @@ import DurationInput from '../../../../components/input/DurationInput.jsx';
 
 function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onChange}) {
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
     const [running, setRunning] = useState(false);
     const [displayValue, setDisplayValue] = useState(() => normalizeSeconds(value));
 
@@ -20,6 +24,10 @@ function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onCha
     const startedAtRef = useRef(null);
     const lastReportedValueRef = useRef(normalizeSeconds(value));
     const onChangeRef = useRef(onChange);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
         onChangeRef.current = onChange;
@@ -58,6 +66,10 @@ function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onCha
         return () => window.clearInterval(intervalId);
     }, [running]);
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
     function toggleRunning(event) {
         if (running) {
             pause(event.timeStamp);
@@ -72,10 +84,6 @@ function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onCha
 
         setDisplayValue(nextBaseValue);
         setRunning(true);
-
-        if (nextBaseValue === 0) {
-            onChangeRef.current(0);
-        }
     }
 
     function pause(pausedAt) {
@@ -116,6 +124,10 @@ function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onCha
 
         onChangeRef.current(normalizedValue);
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <Group gap={0} wrap="nowrap" w="100%" style={{minWidth: 0}}>
@@ -171,6 +183,10 @@ function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onCha
         </Group>
     );
 }
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Utils
+// ------------------------------------------------------------------------------------------------------------------------
 
 function normalizeSeconds(value) {
     if (value === '' || value === null || value === undefined) {

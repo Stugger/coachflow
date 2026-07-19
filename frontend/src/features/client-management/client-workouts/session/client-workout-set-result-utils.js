@@ -42,6 +42,7 @@ export function formatSetResultValues(trackingFields, values) {
     return trackingFields
         .filter(field =>
             field.key !== TRACKING_FIELD_KEY.NOTES
+            && field.key !== TRACKING_FIELD_KEY.REST
             && values[field.key] !== ''
             && values[field.key] !== null
             && values[field.key] !== undefined
@@ -60,6 +61,14 @@ export function formatSetResultValues(trackingFields, values) {
             return `${definition?.label ?? field.key}: ${value}${unit ? ` ${unit}` : ''}`;
         })
         .join(' · ');
+}
+
+export function getSetRestSeconds(set) {
+    const seconds = Number(set?.targets?.[TRACKING_FIELD_KEY.REST]);
+
+    return Number.isFinite(seconds) && seconds > 0
+        ? Math.floor(seconds)
+        : null;
 }
 
 function getModeLabel(field, definition, activeMode) {
