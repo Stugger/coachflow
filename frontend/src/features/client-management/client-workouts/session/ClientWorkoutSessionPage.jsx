@@ -211,6 +211,7 @@ function ClientWorkoutSessionPage() {
                                 workout={workout}
                                 results={results}
                                 itemId={itemId}
+                                isSmallScreen={isSmallScreen}
                                 onExitWorkout={returnToSource}
                                 onResultSaved={handleResultSaved}
                             />

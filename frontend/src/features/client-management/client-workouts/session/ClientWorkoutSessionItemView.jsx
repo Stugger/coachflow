@@ -29,7 +29,7 @@ import {
     findClientWorkoutSessionItem,
 } from './client-workout-session-utils.js';
 
-function ClientWorkoutSessionItemView({workout, results, itemId, onExitWorkout, onResultSaved}) {
+function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, onExitWorkout, onResultSaved}) {
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -141,6 +141,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, onExitWorkout, 
                     workoutId={workout.id}
                     item={item}
                     resultIndex={resultIndex}
+                    isSmallScreen={isSmallScreen}
                     onResultSaved={onResultSaved}
                 />
             )}

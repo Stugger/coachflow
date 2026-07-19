@@ -2,16 +2,14 @@ import {Fragment, useState} from 'react';
 import {
     Accordion,
     Box,
-    Badge,
     Group,
     Stack,
     Text,
 } from '@mantine/core';
 
-import {WORKOUT_SET_TYPE_OPTIONS} from '../../../workout-builder/workout-builder-constants.js';
-
 import ClientWorkoutExerciseInformation from './ClientWorkoutExerciseInformation.jsx';
 import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
+import ClientWorkoutSessionSetMetadata from './ClientWorkoutSessionSetMetadata.jsx';
 import ClientWorkoutSessionSetEditor from './ClientWorkoutSessionSetEditor.jsx';
 import ClientWorkoutSessionRestTimer from './ClientWorkoutSessionRestTimer.jsx';
 
@@ -96,13 +94,18 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResult
                         >
                             <Accordion.Control icon={<ClientWorkoutProgressIcon status={set.status}/>}>
                                 <Group justify="space-between" pr="sm" wrap="nowrap">
-                                    <Group gap="xs">
+                                    <Group gap={8} wrap="wrap">
                                         <Text fw={700}>Set {set.number}</Text>
-                                        <SetTypeBadge setType={set.setType}/>
+                                        <ClientWorkoutSessionSetMetadata setType={set.setType} eachSide={config.eachSide}/>
                                     </Group>
 
                                     <Text size="sm" fw={600} c="dimmed">
-                                        {getStatusLabel(set.status)}
+                                        {set.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+                                            ? 'Complete'
+                                            : set.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
+                                                ? 'In progress'
+                                                : 'Not started'
+                                        }
                                     </Text>
                                 </Group>
                             </Accordion.Control>
@@ -134,32 +137,6 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, onResult
                 ))}
             </Accordion>
         </Stack>
-    );
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-// Components
-// ------------------------------------------------------------------------------------------------------------------------
-
-function getStatusLabel(status) {
-    if (status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED) {
-        return 'Complete';
-    }
-
-    if (status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS) {
-        return 'In progress';
-    }
-
-    return 'Not started';
-}
-
-function SetTypeBadge({setType}) {
-    const option = WORKOUT_SET_TYPE_OPTIONS.find(option => option.value === setType);
-
-    return (
-        <Badge size="xs" variant="light" color={option?.color ?? 'gray'}>
-            {option?.label ?? setType}
-        </Badge>
     );
 }
 

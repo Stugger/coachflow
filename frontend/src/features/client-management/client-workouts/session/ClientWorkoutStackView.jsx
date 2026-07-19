@@ -13,6 +13,7 @@ import {IconPhoto} from '@tabler/icons-react';
 import {resolveMediaUrl} from '../../../../utils/media-url-utils.js';
 
 import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
+import ClientWorkoutSessionSetMetadata from './ClientWorkoutSessionSetMetadata.jsx';
 import ClientWorkoutSessionSetEditor from './ClientWorkoutSessionSetEditor.jsx';
 import ClientWorkoutSessionRestTimer from './ClientWorkoutSessionRestTimer.jsx';
 
@@ -27,7 +28,7 @@ function getStackStepKey(roundNumber, itemExerciseId) {
     return `round:${roundNumber}:exercise:${itemExerciseId}`;
 }
 
-function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
+function ClientWorkoutStackView({workoutId, item, resultIndex, isSmallScreen, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -225,7 +226,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
                                                             <Avatar
                                                                 src={resolveMediaUrl(exercise.itemExercise.exercise?.thumbnailUrl)}
                                                                 alt={exercise.itemExercise.displayName}
-                                                                size={40}
+                                                                size={isSmallScreen ? 38 : 42}
                                                                 radius="sm"
                                                             >
                                                                 <IconPhoto size={20}/>
@@ -238,9 +239,16 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, onResultSaved}) {
                                                                     {exercise.itemExercise.displayName}
                                                                 </Text>
 
-                                                                <Text size="xs" c="dimmed">
-                                                                    Exercise {exercise.itemExercise.position}
-                                                                </Text>
+                                                                <Group gap={6} wrap="wrap">
+                                                                    <Text size="xs" c="dimmed">
+                                                                        {isSmallScreen ? '#' : 'Exercise '}{exercise.itemExercise.position}
+                                                                    </Text>
+
+                                                                    <ClientWorkoutSessionSetMetadata
+                                                                        setType={exercise.set.setType}
+                                                                        eachSide={exercise.config.eachSide}
+                                                                    />
+                                                                </Group>
                                                             </Stack>
 
                                                             <ClientWorkoutProgressIcon status={exercise.status}/>
