@@ -1,10 +1,16 @@
 import {Stack, Text} from '@mantine/core';
 
-import {formatSetResultValues} from './client-workout-set-result-utils.js';
+import {
+    formatSetResultValues,
+    usesSeparateSideValues,
+} from './client-workout-set-result-utils.js';
 
 function ClientWorkoutSessionResultSummary({config, values}) {
+
     const groups = config.eachSide
-        ? [['Left', values.left], ['Right', values.right]]
+        ? usesSeparateSideValues(values)
+            ? [['Left', values.left], ['Right', values.right]]
+            : [['Both sides', values.default]]
         : [['', values.default]];
 
     const summaries = groups

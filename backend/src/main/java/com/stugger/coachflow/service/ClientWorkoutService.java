@@ -672,15 +672,26 @@ public class ClientWorkoutService {
         }
 
         Set<String> allowedSideKeys = config.eachSide()
-                ? Set.of("left", "right")
+                ? Set.of("default", "left", "right")
                 : Set.of("default");
+
+        if (config.eachSide()) {
+            boolean hasSharedValues = valuesNode.has("default");
+            boolean hasSeparateValues = valuesNode.has("left") || valuesNode.has("right");
+
+            if (hasSharedValues && hasSeparateValues) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Each-side results must contain either shared default values or separate left and right values, not both.");
+            }
+        }
 
         for (Map.Entry<String, JsonNode> sideEntry : valuesNode.properties()) {
             String sideKey = sideEntry.getKey();
             JsonNode sideValues = sideEntry.getValue();
 
             if (!allowedSideKeys.contains(sideKey)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, config.eachSide() ? "Each-side results may only contain left and right values." : "Standard results may only contain default values.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, config.eachSide()
+                        ? "Each-side results may only contain default, or left and right values."
+                        : "Standard results may only contain default values.");
             }
             if (!sideValues.isObject()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Values for " + sideKey + " must be a JSON object.");

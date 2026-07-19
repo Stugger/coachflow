@@ -1,6 +1,9 @@
 import useIsSmallScreen from '../../../../hooks/useIsSmallScreen.js';
 import {
     Box,
+    Button,
+    Group,
+    Menu,
     NumberInput,
     Paper,
     Stack,
@@ -8,6 +11,9 @@ import {
     TextInput,
     useComputedColorScheme,
 } from '@mantine/core';
+import {
+    IconChevronDown,
+} from '@tabler/icons-react';
 
 import ClientWorkoutSessionStopwatch from './ClientWorkoutSessionStopwatch.jsx';
 import DurationInput from '../../../../components/input/DurationInput.jsx';
@@ -19,7 +25,11 @@ import {
 
 import {getSetResultInputDetails} from './client-workout-set-result-utils.js';
 
-function ClientWorkoutSessionResultInputs({config, set, values, stackItem, onChange}) {
+function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separateSides, onChange, onSplitSides, onMergeSides}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
 
     const isSmallScreen = useIsSmallScreen();
     const colorScheme = useComputedColorScheme('light')
@@ -29,11 +39,41 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, onCha
         && field.key !== TRACKING_FIELD_KEY.REST
     );
 
-    if (config.eachSide) {
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Conditional return
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    if (config.eachSide && separateSides) {
         return (
             <Stack gap="lg">
                 <ResultInputGroup
                     label="Left"
+                    action={
+                        <Menu position="bottom-end" withinPortal>
+                            <Menu.Target>
+                                <Button
+                                    type="button"
+                                    variant="subtle"
+                                    size="compact-sm"
+                                    rightSection={<IconChevronDown size={14}/>}
+                                >
+                                    Use same results
+                                </Button>
+                            </Menu.Target>
+
+                            <Menu.Dropdown>
+                                <Menu.Label>Keep values from</Menu.Label>
+
+                                <Menu.Item onClick={() => onMergeSides('left')}>
+                                    Left side
+                                </Menu.Item>
+
+                                <Menu.Item onClick={() => onMergeSides('right')}>
+                                    Right side
+                                </Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
+                    }
                     side="left"
                     fields={fields}
                     set={set}
@@ -59,8 +99,23 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, onCha
         );
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
         <ResultInputGroup
+            label={config.eachSide ? 'Both sides' : undefined}
+            action={config.eachSide ? (
+                <Button
+                    type="button"
+                    variant="subtle"
+                    size="compact-sm"
+                    onClick={onSplitSides}
+                >
+                    Track separately
+                </Button>
+            ) : undefined}
             side="default"
             fields={fields}
             set={set}
@@ -73,28 +128,32 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, onCha
     );
 }
 
-function ResultInputGroup({label, side, fields, set, values = {}, stackItem, isSmallScreen, colorScheme, onChange}) {
+// ------------------------------------------------------------------------------------------------------------------------
+// Components
+// ------------------------------------------------------------------------------------------------------------------------
+
+function ResultInputGroup({label, action, side, fields, set, values = {}, stackItem, isSmallScreen, colorScheme, onChange}) {
 
     const hasDurationInFields = fields.find(field => field.key === TRACKING_FIELD_KEY.TIME);
 
     return (
         <Stack gap="xs">
-            {label && (
-                <Text fw={700}>
-                    {label}
-                </Text>
+            {(label || action) && (
+                <Group justify="space-between" align="center" wrap="nowrap">
+                    {label ? <Text fw={700}>{label}</Text> : <span/>}
+                    {action}
+                </Group>
             )}
 
             {fields.length ? (
                 <Paper
                     withBorder
                     radius="md"
-                    maw="36rem"
-                    mx="auto"
                     w="100%"
                     style={{
                         overflow: 'hidden',
                         backgroundColor: 'var(--color-workout-exercise-bg)',
+                        borderColor: 'var(--color-border)',
                     }}
                 >
                     {fields.map((field, index) => (
@@ -221,12 +280,8 @@ function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTop
         <Box
             px="sm"
             py="sm"
-            bg={
-                alternate ? colorScheme === 'light' ? 'rgba(0, 0, 0, 0.01)' : 'rgba(255, 255, 255, 0.01)' : undefined
-            }
-            style={{
-                borderTop: withTopBorder ? '1px solid var(--mantine-color-disabled)' : undefined,
-            }}
+            bg={alternate ? colorScheme === 'light' ? 'rgba(0, 0, 0, 0.01)' : 'rgba(255, 255, 255, 0.01)' : undefined}
+            style={{borderTop: withTopBorder ? '1px solid var(--mantine-color-disabled)' : undefined}}
         >
             <Box
                 style={{
@@ -255,10 +310,7 @@ function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTop
                 <Stack
                     gap={0}
                     align="flex-end"
-                    style={{
-                        minWidth: 0,
-                        maxWidth: '7rem',
-                    }}
+                    style={{minWidth: 0, maxWidth: '7rem'}}
                 >
                     <Text size="xs" c="dimmed">
                         Target
@@ -268,9 +320,7 @@ function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTop
                         size="sm"
                         fw={600}
                         ta="right"
-                        style={{
-                            overflowWrap: 'break-word',
-                        }}
+                        style={{overflowWrap: 'break-word'}}
                     >
                         {targetLabel}
                     </Text>

@@ -23,17 +23,26 @@ import useClientWorkoutSetResultDraft from './useClientWorkoutSetResultDraft.js'
 
 function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, onResultSaved, onCompleted}) {
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
     const completed = Boolean(result?.completedAt);
 
     const [editing, setEditing] = useState(!completed);
     const [completing, setCompleting] = useState(false);
+
+    const instruction = getSetInstruction(config, set);
 
     const {
         values,
         notes,
         saveStatus,
         saveError,
+        separateSides,
         updateValue,
+        splitSides,
+        mergeSides,
         updateNotes,
         flushAutosave,
         saveResult,
@@ -47,7 +56,9 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
         onResultSaved,
     });
 
-    const instruction = getSetInstruction(config, set);
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
 
     async function handleComplete() {
         setCompleting(true);
@@ -80,6 +91,10 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Conditional return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     if (completed && !editing) {
         return (
             <Stack gap="sm">
@@ -110,6 +125,10 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
         );
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
+
     return (
         <Stack gap="md" onBlurCapture={flushAutosave}>
             {instruction && (
@@ -128,7 +147,10 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
                 set={set}
                 values={values}
                 stackItem={clientWorkoutItemExerciseId !== null}
+                separateSides={separateSides}
                 onChange={updateValue}
+                onSplitSides={splitSides}
+                onMergeSides={mergeSides}
             />
 
             <Textarea
@@ -138,7 +160,7 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
                 value={notes}
                 autosize
                 label={
-                    <Text size="sm" fw={600} pl="0.7rem">
+                    <Text size="sm" fw={600} pl="0.5rem">
                         Trainer note
                     </Text>
                 }
@@ -181,6 +203,10 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
         </Stack>
     );
 }
+
+// ------------------------------------------------------------------------------------------------------------------------
+// Components
+// ------------------------------------------------------------------------------------------------------------------------
 
 function SaveStatus({status, error}) {
     const syncing = status === 'dirty' || status === 'saving';

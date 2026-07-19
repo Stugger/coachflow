@@ -2,6 +2,8 @@ import {useEffect, useRef, useState} from 'react';
 
 import {apiSaveClientWorkoutSetResult} from '../client-workout-api.js';
 
+import {usesSeparateSideValues} from './client-workout-set-result-utils.js';
+
 const AUTOSAVE_DELAY = 700;
 
 function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, setKey, config, result, onResultSaved}) {
@@ -26,6 +28,8 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
         setKey,
     };
 
+    const separateSides = config.eachSide && usesSeparateSideValues(values);
+
     useEffect(() => {
         return () => clearTimeout(saveTimerRef.current);
     }, []);
@@ -39,23 +43,40 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
             nextSideValues[fieldKey] = nextValue;
         }
 
-        const nextValues = {
+        replaceValues({
             ...valuesRef.current,
             [side]: nextSideValues,
-        };
-
-        valuesRef.current = nextValues;
-        setValues(nextValues);
-
-        if (autosave) {
-            scheduleAutosave();
-        }
+        }, autosave);
     }
 
     function updateNotes(nextNotes) {
         notesRef.current = nextNotes;
         setNotes(nextNotes);
         scheduleAutosave();
+    }
+
+    function splitSides() {
+        const sharedValues = {...(valuesRef.current.default ?? {})};
+
+        replaceValues({
+            left: {...sharedValues},
+            right: {...sharedValues},
+        });
+    }
+
+    function mergeSides(sourceSide) {
+        replaceValues({
+            default: {...(valuesRef.current[sourceSide] ?? {})},
+        });
+    }
+
+    function replaceValues(nextValues, autosave = true) {
+        valuesRef.current = nextValues;
+        setValues(nextValues);
+
+        if (autosave) {
+            scheduleAutosave();
+        }
     }
 
     function scheduleAutosave() {
@@ -135,7 +156,10 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
         notes,
         saveStatus,
         saveError,
+        separateSides,
         updateValue,
+        splitSides,
+        mergeSides,
         updateNotes,
         flushAutosave,
         saveResult,
@@ -144,9 +168,15 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
 
 function createInitialValues(config, result) {
     if (config.eachSide) {
+        if (usesSeparateSideValues(result?.values)) {
+            return {
+                left: {...(result?.values?.left ?? {})},
+                right: {...(result?.values?.right ?? {})},
+            };
+        }
+
         return {
-            left: {...(result?.values?.left ?? {})},
-            right: {...(result?.values?.right ?? {})},
+            default: {...(result?.values?.default ?? {})},
         };
     }
 

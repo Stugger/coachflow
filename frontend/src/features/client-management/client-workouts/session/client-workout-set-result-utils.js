@@ -34,6 +34,15 @@ export function getSetResultInputDetails(field, target) {
     };
 }
 
+export function getSetRestSeconds(set) {
+    const seconds = Number(set?.targets?.[TRACKING_FIELD_KEY.REST]);
+    return Number.isFinite(seconds) && seconds > 0 ? Math.floor(seconds) : null;
+}
+
+export function usesSeparateSideValues(values) {
+    return Boolean(values && (Object.hasOwn(values, 'left') || Object.hasOwn(values, 'right')));
+}
+
 export function formatSetResultValues(trackingFields, values) {
     if (!values) {
         return '';
@@ -61,14 +70,6 @@ export function formatSetResultValues(trackingFields, values) {
             return `${definition?.label ?? field.key}: ${value}${unit ? ` ${unit}` : ''}`;
         })
         .join(' · ');
-}
-
-export function getSetRestSeconds(set) {
-    const seconds = Number(set?.targets?.[TRACKING_FIELD_KEY.REST]);
-
-    return Number.isFinite(seconds) && seconds > 0
-        ? Math.floor(seconds)
-        : null;
 }
 
 function getModeLabel(field, definition, activeMode) {
