@@ -48,6 +48,11 @@ public class ClientWorkoutController {
         return clientWorkoutService.startClientWorkout(clientWorkoutId);
     }
 
+    @PostMapping("/client-workouts/{clientWorkoutId}/complete")
+    public ClientWorkoutResponse completeClientWorkout(@PathVariable Long clientWorkoutId) {
+        return clientWorkoutService.completeClientWorkout(clientWorkoutId);
+    }
+
     @PostMapping("/client-workouts/{clientWorkoutId}/abandon")
     public ClientWorkoutResponse abandonClientWorkout(@PathVariable Long clientWorkoutId) {
         return clientWorkoutService.abandonClientWorkout(clientWorkoutId);

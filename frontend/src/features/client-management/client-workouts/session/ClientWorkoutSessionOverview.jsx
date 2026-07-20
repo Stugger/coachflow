@@ -3,6 +3,7 @@ import {useSearchParams} from 'react-router-dom';
 import {
     Accordion,
     Badge,
+    Button,
     Group,
     Paper,
     Progress,
@@ -12,6 +13,7 @@ import {
     useMantineTheme,
 } from '@mantine/core';
 import {
+    IconCheck,
     IconChevronRight,
 } from '@tabler/icons-react';
 
@@ -35,7 +37,7 @@ import {getSectionTypeLabel} from "../../../workout-builder/workout-builder-util
 
 const OPEN_SECTIONS_PARAM = 'openSections';
 
-function ClientWorkoutSessionOverview({workout, results, scrollItemId, onOpenItem}) {
+function ClientWorkoutSessionOverview({workout, results, scrollItemId, completingWorkout, onOpenItem, onCompleteWorkout}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -77,6 +79,10 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, onOpenIte
 
     const progress = sessionProgress.progress;
     const progressPercent = progress.totalItemCount ? (progress.completedItemCount / progress.totalItemCount) * 100 : 0;
+
+    const remainingSetCount = Math.max(0, progress.totalSetCount - progress.completedSetCount);
+
+    const fullyCompleted = remainingSetCount === 0;
 
     const restoredScrollRef = useRef(false);
 
@@ -271,6 +277,34 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, onOpenIte
                         This workout does not contain any sections yet.
                     </Text>
                 </Paper>
+            )}
+            {workout.status === 'IN_PROGRESS' && (
+                <Stack gap={5} mt="xs">
+                    <Button
+                        fullWidth
+                        size="md"
+                        variant={fullyCompleted ? 'filled' : 'default'}
+                        color={fullyCompleted ? 'green' : undefined}
+                        leftSection={<IconCheck size={18}/>}
+                        loading={completingWorkout}
+                        onClick={() => onCompleteWorkout({
+                            completedSetCount: progress.completedSetCount,
+                            totalSetCount: progress.totalSetCount,
+                            remainingSetCount,
+                            fullyCompleted,
+                        })}
+                        style={fullyCompleted ? {boxShadow: '0 0 18px rgba(64, 192, 87, 0.35)'} : undefined}
+                    >
+                        Complete workout
+                    </Button>
+
+                    {!fullyCompleted && (
+                        <Text size="xs" c="dimmed" ta="center">
+                            {remainingSetCount} unfinished{' '}
+                            {remainingSetCount === 1 ? 'set' : 'sets'}
+                        </Text>
+                    )}
+                </Stack>
             )}
         </Stack>
     );

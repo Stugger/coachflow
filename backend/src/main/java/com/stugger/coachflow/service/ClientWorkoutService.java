@@ -164,6 +164,38 @@ public class ClientWorkoutService {
     }
 
     @Transactional
+    public ClientWorkoutResponse completeClientWorkout(Long clientWorkoutId) {
+        Trainer trainer = currentTrainerService.getCurrentTrainer();
+        ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
+
+        if (clientWorkout.getArchivedAt() != null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Archived workout records cannot be completed.");
+        }
+
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.READY) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Client workout must be started before it can be completed.");
+        }
+
+        /*
+         * Completing the same workout more than once is idempotent.
+         * This handles double clicks and repeated requests safely.
+         */
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.COMPLETED) {
+            return new ClientWorkoutResponse(clientWorkout);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+
+        clientWorkout.setStatus(ClientWorkoutStatus.COMPLETED);
+        clientWorkout.setCompletedAt(now);
+        clientWorkout.setUpdatedAt(now);
+
+        clientWorkoutRepository.saveAndFlush(clientWorkout);
+
+        return new ClientWorkoutResponse(clientWorkout);
+    }
+
+    @Transactional
     public ClientWorkoutResponse abandonClientWorkout(Long clientWorkoutId) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
         ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);

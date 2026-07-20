@@ -20,6 +20,7 @@ import {
     useMantineColorScheme,
 } from '@mantine/core';
 import {
+    IconCheck,
     IconDotsVertical,
     IconLogout2,
     IconMoon,
@@ -28,7 +29,11 @@ import {
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
-import {apiAbandonClientWorkout, apiGetClientWorkoutSession} from '../client-workout-api.js';
+import {
+    apiAbandonClientWorkout,
+    apiCompleteClientWorkout,
+    apiGetClientWorkoutSession,
+} from '../client-workout-api.js';
 import {getClientWorkoutOriginLabel} from '../client-workout-constants.js';
 import {getClientWorkoutSourceNavigation} from '../client-workout-navigation.js';
 
@@ -69,6 +74,10 @@ function ClientWorkoutSessionPage() {
 
     const workout = session?.workout;
     const results = session?.results ?? [];
+
+    const [completionSummary, setCompletionSummary] = useState(null);
+    const [completingWorkout, setCompletingWorkout] = useState(false);
+    const [completionError, setCompletionError] = useState('');
 
     const [abandonConfirmationOpen, setAbandonConfirmationOpen] = useState(false);
     const [abandoningWorkout, setAbandoningWorkout] = useState(false);
@@ -159,6 +168,42 @@ function ClientWorkoutSessionPage() {
                 results: nextResults,
             };
         });
+    }
+
+    function requestWorkoutCompletion(summary) {
+        setCompletionError('');
+        setCompletionSummary(summary);
+    }
+
+    function closeCompletionConfirmation() {
+        if (completingWorkout) {
+            return;
+        }
+
+        setCompletionError('');
+        setCompletionSummary(null);
+    }
+
+    async function completeWorkout() {
+        if (!workout || workout.status !== 'IN_PROGRESS') {
+            return;
+        }
+
+        setCompletingWorkout(true);
+        setCompletionError('');
+
+        try {
+            await apiCompleteClientWorkout(workout.id);
+
+            setCompletionSummary(null);
+            returnToSource();
+        } catch (error) {
+            console.error('Failed to complete client workout:', error);
+
+            setCompletionError(error.message || 'Failed to complete the workout.');
+        } finally {
+            setCompletingWorkout(false);
+        }
     }
 
     function openAbandonConfirmation() {
@@ -348,12 +393,69 @@ function ClientWorkoutSessionPage() {
                                 workout={workout}
                                 results={results}
                                 scrollItemId={location.state?.sessionOverviewItemId}
+                                completingWorkout={completingWorkout}
                                 onOpenItem={openItem}
+                                onCompleteWorkout={requestWorkoutCompletion}
                             />
                         )}
                     </Stack>
                 </Paper>
             </Container>
+            <Modal
+                opened={completionSummary !== null}
+                onClose={closeCompletionConfirmation}
+                title={completionSummary?.fullyCompleted ? 'Complete workout?' : 'Complete workout with unfinished sets?'}
+                centered
+                closeOnClickOutside={!completingWorkout}
+                closeOnEscape={!completingWorkout}
+                withCloseButton={!completingWorkout}
+            >
+                <Stack gap="lg">
+                    {completionError && (
+                        <Alert color="red">
+                            {completionError}
+                        </Alert>
+                    )}
+
+                    {completionSummary?.fullyCompleted ? (
+                        <Text size="sm" c="dimmed">
+                            This workout will be finalized with all sets
+                            completed. The session can no longer be edited.
+                        </Text>
+                    ) : (
+                        <Text size="sm" c="dimmed">
+                            {completionSummary?.remainingSetCount}{' '}
+                            {completionSummary?.remainingSetCount === 1
+                                ? 'set has'
+                                : 'sets have'
+                            } not been completed. Saved values and notes will be
+                            preserved, while untouched sets will remain unrecorded.
+                        </Text>
+                    )}
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            disabled={completingWorkout}
+                            onClick={closeCompletionConfirmation}
+                        >
+                            Continue
+                        </Button>
+
+                        <Button
+                            color="green"
+                            leftSection={<IconCheck size={16}/>}
+                            loading={completingWorkout}
+                            onClick={completeWorkout}
+                        >
+                            {completionSummary?.fullyCompleted
+                                ? 'Complete workout'
+                                : 'Complete anyway'
+                            }
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
             <Modal
                 opened={abandonConfirmationOpen}
                 onClose={() => {

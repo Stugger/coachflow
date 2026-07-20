@@ -28,6 +28,10 @@ export function apiStartClientWorkout(clientWorkoutId) {
     return sendJson(`/api/client-workouts/${clientWorkoutId}/start`, 'POST');
 }
 
+export function apiCompleteClientWorkout(clientWorkoutId) {
+    return sendJson(`/api/client-workouts/${clientWorkoutId}/complete`, 'POST');
+}
+
 export function apiAbandonClientWorkout(clientWorkoutId) {
     return sendJson(`/api/client-workouts/${clientWorkoutId}/abandon`, 'POST');
 }
