@@ -12,13 +12,13 @@ function ClientWorkoutSessionSetMetadata({setType, eachSide}) {
     return (
         <Group gap={5} wrap="wrap">
             {setTypeOption?.value !== WORKOUT_SET_TYPE.STANDARD && (
-                <Badge size="xs" color={setTypeOption?.color ?? 'gray'}>
+                <Badge size="xs" mb={1} color={setTypeOption?.color ?? 'gray'}>
                     {setTypeOption?.label ?? setType}
                 </Badge>
             )}
 
             {eachSide && (
-                <Badge size="xs" variant="outline" color="gray">
+                <Badge size="xs" mb={1} variant="outline" color="gray">
                     Each side
                 </Badge>
             )}

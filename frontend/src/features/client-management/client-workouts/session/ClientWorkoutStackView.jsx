@@ -39,7 +39,7 @@ function getStackStepKey(roundNumber, itemExerciseId) {
     return `round:${roundNumber}:exercise:${itemExerciseId}`;
 }
 
-function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSmallScreen, onResultSaved}) {
+function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, colorScheme, isSmallScreen, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -336,6 +336,8 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, colorScheme, isSm
                     <ClientWorkoutSessionSetEditor
                         workoutId={workoutId}
                         clientWorkoutItemExerciseId={exercise.itemExercise.id}
+                        exerciseId={exercise.itemExercise.exercise?.id}
+                        benchmarks={benchmarks}
                         config={exercise.config}
                         set={exercise.set}
                         result={exercise.result}

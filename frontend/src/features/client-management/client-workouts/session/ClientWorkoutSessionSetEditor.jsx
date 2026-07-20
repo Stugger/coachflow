@@ -21,7 +21,7 @@ import ClientWorkoutSessionResultSummary from './ClientWorkoutSessionResultSumma
 import {getSetInstruction} from './client-workout-set-result-utils.js';
 import useClientWorkoutSetResultDraft from './useClientWorkoutSetResultDraft.js';
 
-function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, colorScheme,
+function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, exerciseId, benchmarks, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, colorScheme,
                                            onResultSaved, onCompleted}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -144,6 +144,8 @@ function ClientWorkoutSessionSetEditor({workoutId, clientWorkoutItemId = null, c
             )}
 
             <ClientWorkoutSessionResultInputs
+                exerciseId={exerciseId}
+                benchmarks={benchmarks}
                 config={config}
                 set={set}
                 values={values}

@@ -105,6 +105,7 @@ export function resolveExerciseBenchmarkPercentageTarget({benchmarks, exerciseId
         resolved: true,
         percentage: numericPercentage,
         resolvedValue: convertedBenchmarkValue * (numericPercentage / 100),
+        resolvedBenchmarkValue: convertedBenchmarkValue,
         resolvedUnit,
         benchmark,
     };

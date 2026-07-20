@@ -3,8 +3,19 @@ import {
     TRACKING_FIELD_KEY,
     TRACKING_FIELD_TYPE,
 } from '../../../exercises/exercise-tracking-fields.js';
+
 import {getExerciseUnitLabel} from '../../../exercises/exercise-units.js';
 import {formatDurationSeconds} from '../../../../utils/time-utils.js';
+
+import {
+    BENCHMARK_TARGET_RESOLUTION_REASON,
+    getBenchmarkTargetResolutionMessage,
+    resolveExerciseBenchmarkPercentageTarget,
+} from '../../benchmarks/exercise-benchmark-resolution.js';
+
+import {
+    getExerciseBenchmarkDefinition,
+} from '../../benchmarks/exercise-benchmark-definitions.js';
 
 export function getSetInstruction(config, set) {
     const notesField = config.trackingFields.find(field => field.key === TRACKING_FIELD_KEY.NOTES);
@@ -16,12 +27,22 @@ export function getSetInstruction(config, set) {
     return String(set.targets?.[TRACKING_FIELD_KEY.NOTES] ?? '').trim();
 }
 
-export function getSetResultInputDetails(field, target) {
+export function getSetResultInputDetails(field, target, {exerciseId = null, benchmarks = []} = {}) {
     const definition = TRACKING_FIELD_DEFINITIONS[field.key];
     const activeMode = definition?.modes?.find(mode => mode.value === field.mode) ?? definition?.modes?.[0];
     const type = activeMode?.type ?? definition?.type;
-    const unit = getExerciseUnitLabel(field.unit ?? activeMode?.unit ?? definition?.unit);
+    const targetUnit = field.unit ?? activeMode?.unit ?? definition?.unit ?? null;
+    const unit = getExerciseUnitLabel(targetUnit);
     const width = type !== TRACKING_FIELD_TYPE.RANGE ? activeMode?.inputWidth ?? definition.inputWidth ?? '5rem' : '5rem';
+
+    const targetDisplay = type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT
+        ? getBenchmarkPercentageTargetDisplay({value: target, exerciseId, benchmarks, benchmarkType: activeMode?.benchmarkType, targetUnit})
+        : {
+            label: formatTarget(field, target, type, unit),
+            detail: null,
+            detailColor: null,
+            placeholder: getTargetPlaceholder(target, type),
+        };
 
     return {
         width,
@@ -29,8 +50,10 @@ export function getSetResultInputDetails(field, target) {
         modeLabel: getModeLabel(field, definition, activeMode),
         type,
         unit,
-        targetLabel: formatTarget(field, target, type, unit),
-        placeholder: getTargetPlaceholder(target, type),
+        targetLabel: targetDisplay.label,
+        targetDetailLabel: targetDisplay.detail,
+        targetDetailColor: targetDisplay.detailColor,
+        placeholder: targetDisplay.placeholder,
     };
 }
 
@@ -72,20 +95,73 @@ export function formatSetResultValues(trackingFields, values) {
         .join(' · ');
 }
 
-function getModeLabel(field, definition, activeMode) {
-    if (!activeMode) {
-        return '';
+function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, benchmarkType, targetUnit}) {
+    if (value === '' || value === null || value === undefined) {
+        return {
+            label: '—',
+            detail: null,
+            detailColor: null,
+            placeholder: '—',
+        };
     }
 
-    if (field.key === TRACKING_FIELD_KEY.TIME) {
-        return activeMode.label;
+    const percentageLabel = formatNumber(value);
+
+    const benchmarkDefinition = getExerciseBenchmarkDefinition(benchmarkType);
+
+    const benchmarkLabel =
+        benchmarkDefinition?.shortLabel
+        ?? benchmarkDefinition?.label
+        ?? 'benchmark';
+
+    const resolution = resolveExerciseBenchmarkPercentageTarget({
+        benchmarks,
+        exerciseId,
+        benchmarkType,
+        percentage: value,
+        targetUnit,
+    });
+
+    if (!resolution.resolved) {
+        const detail = resolution.reason === BENCHMARK_TARGET_RESOLUTION_REASON.MISSING_BENCHMARK
+            ? 'Missing benchmark'
+            : getBenchmarkTargetResolutionMessage(resolution, benchmarkType);
+
+        return {
+            label: `${percentageLabel}% ${benchmarkLabel}`,
+            detail,
+            detailColor: 'red',
+            placeholder: '—',
+        };
     }
 
-    const defaultMode = definition?.modes?.[0];
+    return {
+        label: formatBenchmarkValue(resolution.resolvedValue, resolution.resolvedUnit),
+        detail: `${percentageLabel}% of ${formatBenchmarkValue(resolution.resolvedBenchmarkValue, resolution.resolvedUnit)}`,
+        detailColor: 'dimmed',
+        placeholder: String(resolution.resolvedValue),
+    };
+}
 
-    return activeMode.value !== defaultMode?.value
-        ? activeMode.label
-        : '';
+function formatBenchmarkValue(value, unit) {
+    const formattedValue = formatNumber(value);
+    const unitLabel = getExerciseUnitLabel(unit);
+
+    return unitLabel
+        ? `${formattedValue} ${unitLabel}`
+        : formattedValue;
+}
+
+function formatNumber(value) {
+    const numericValue = Number(value);
+
+    if (!Number.isFinite(numericValue)) {
+        return String(value);
+    }
+
+    return new Intl.NumberFormat(undefined, {
+        maximumFractionDigits: 2,
+    }).format(numericValue);
 }
 
 function formatTarget(field, value, type, unit) {
@@ -101,10 +177,6 @@ function formatTarget(field, value, type, unit) {
         return formatDurationSeconds(value) ?? '—';
     }
 
-    if (type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT) {
-        return `${value}% 1RM`;
-    }
-
     return unit ? `${value} ${unit}` : String(value);
 }
 
@@ -117,9 +189,21 @@ function getTargetPlaceholder(value, type) {
         return `${value.min ?? '—'}–${value.max ?? '—'}`;
     }
 
-    if (type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT) {
-        return '—';
+    return String(value);
+}
+
+function getModeLabel(field, definition, activeMode) {
+    if (!activeMode) {
+        return '';
     }
 
-    return String(value);
+    if (field.key === TRACKING_FIELD_KEY.TIME) {
+        return activeMode.label;
+    }
+
+    const defaultMode = definition?.modes?.[0];
+
+    return activeMode.value !== defaultMode?.value
+        ? activeMode.label
+        : '';
 }

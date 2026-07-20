@@ -24,7 +24,7 @@ import {
 
 import {getSetResultInputDetails} from './client-workout-set-result-utils.js';
 
-function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separateSides, colorScheme, onChange, onSplitSides, onMergeSides}) {
+function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, values, stackItem, separateSides, colorScheme, onChange, onSplitSides, onMergeSides}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -76,6 +76,8 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separ
                     fields={fields}
                     set={set}
                     values={values.left}
+                    exerciseId={exerciseId}
+                    benchmarks={benchmarks}
                     stackItem={stackItem}
                     isSmallScreen={isSmallScreen}
                     colorScheme={colorScheme}
@@ -88,6 +90,8 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separ
                     fields={fields}
                     set={set}
                     values={values.right}
+                    exerciseId={exerciseId}
+                    benchmarks={benchmarks}
                     stackItem={stackItem}
                     isSmallScreen={isSmallScreen}
                     colorScheme={colorScheme}
@@ -118,6 +122,8 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separ
             fields={fields}
             set={set}
             values={values.default}
+            exerciseId={exerciseId}
+            benchmarks={benchmarks}
             stackItem={stackItem}
             isSmallScreen={isSmallScreen}
             colorScheme={colorScheme}
@@ -130,7 +136,7 @@ function ClientWorkoutSessionResultInputs({config, set, values, stackItem, separ
 // Components
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ResultInputGroup({label, action, side, fields, set, values = {}, stackItem, isSmallScreen, colorScheme, onChange}) {
+function ResultInputGroup({label, action, side, fields, set, values = {}, exerciseId, benchmarks, stackItem, isSmallScreen, colorScheme, onChange}) {
 
     const hasDurationInFields = fields.find(field => field.key === TRACKING_FIELD_KEY.TIME);
 
@@ -160,6 +166,8 @@ function ResultInputGroup({label, action, side, fields, set, values = {}, stackI
                             field={field}
                             target={set.targets?.[field.key]}
                             value={values[field.key] ?? ''}
+                            exerciseId={exerciseId}
+                            benchmarks={benchmarks}
                             index={index}
                             stackItem={stackItem}
                             withTopBorder={index > 0}
@@ -181,7 +189,7 @@ function ResultInputGroup({label, action, side, fields, set, values = {}, stackI
     );
 }
 
-function SessionResultInput({field, target, value, index, stackItem, withTopBorder, isSmallScreen, hasDurationInFields, colorScheme, onChange}) {
+function SessionResultInput({field, target, value, exerciseId, benchmarks, index, stackItem, withTopBorder, isSmallScreen, hasDurationInFields, colorScheme, onChange}) {
     const {
         width,
         label,
@@ -189,14 +197,25 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
         type,
         unit,
         targetLabel,
+        targetDetailLabel,
+        targetDetailColor,
         placeholder,
-    } = getSetResultInputDetails(field, target);
+    } = getSetResultInputDetails(
+        field,
+        target,
+        {
+            exerciseId,
+            benchmarks,
+        },
+    );
 
     return (
         <MetricRow
             label={label}
             modeLabel={modeLabel}
             targetLabel={targetLabel}
+            targetDetailLabel={targetDetailLabel}
+            targetDetailColor={targetDetailColor}
             stackItem={stackItem}
             alternate={index % 2 === 0}
             withTopBorder={withTopBorder}
@@ -242,7 +261,6 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
                     onChange={event => onChange(event.currentTarget.value)}
                 />
             ) : (
-
                 <NumberInput
                     value={value}
                     placeholder={placeholder}
@@ -273,7 +291,7 @@ function SessionResultInput({field, target, value, index, stackItem, withTopBord
     );
 }
 
-function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTopBorder = false, isSmallScreen, hasDurationInFields, colorScheme, children}) {
+function MetricRow({label, modeLabel, targetLabel, targetDetailLabel, targetDetailColor, stackItem, alternate, withTopBorder = false, isSmallScreen, hasDurationInFields, colorScheme, children}) {
     return (
         <Box
             px="sm"
@@ -322,6 +340,22 @@ function MetricRow({label, modeLabel, targetLabel, stackItem, alternate, withTop
                     >
                         {targetLabel}
                     </Text>
+
+                    {targetDetailLabel && (
+                        <Text
+                            size="xs"
+                            c={targetDetailColor ?? 'dimmed'}
+                            fw={500}
+                            ta="right"
+                            lh={1.2}
+                            style={{
+                                overflowWrap: 'break-word',
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            {targetDetailLabel}
+                        </Text>
+                    )}
                 </Stack>
             </Box>
         </Box>

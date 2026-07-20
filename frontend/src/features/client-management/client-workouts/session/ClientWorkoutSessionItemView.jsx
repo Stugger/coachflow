@@ -33,7 +33,7 @@ import {
     findClientWorkoutSessionItem,
 } from './client-workout-session-utils.js';
 
-function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onResultSaved}) {
+function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -184,6 +184,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                     workoutId={workout.id}
                     item={item}
                     resultIndex={resultIndex}
+                    benchmarks={benchmarks}
                     colorScheme={colorScheme}
                     onResultSaved={onResultSaved}
                 />
@@ -193,6 +194,7 @@ function ClientWorkoutSessionItemView({workout, results, itemId, isSmallScreen, 
                     workoutId={workout.id}
                     item={item}
                     resultIndex={resultIndex}
+                    benchmarks={benchmarks}
                     isSmallScreen={isSmallScreen}
                     colorScheme={colorScheme}
                     onResultSaved={onResultSaved}

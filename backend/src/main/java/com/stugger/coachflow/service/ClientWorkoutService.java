@@ -2,11 +2,13 @@ package com.stugger.coachflow.service;
 
 import com.stugger.coachflow.api.dto.request.workout.*;
 import com.stugger.coachflow.api.dto.response.workout.*;
+import com.stugger.coachflow.entity.benchmark.ClientExerciseBenchmark;
 import com.stugger.coachflow.entity.exercise.Exercise;
 import com.stugger.coachflow.entity.exercise.ExerciseVisibility;
 import com.stugger.coachflow.entity.person.Client;
 import com.stugger.coachflow.entity.person.Trainer;
 import com.stugger.coachflow.entity.workout.*;
+import com.stugger.coachflow.repository.benchmark.ClientExerciseBenchmarkRepository;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
 import com.stugger.coachflow.repository.workout.ClientWorkoutItemRepository;
@@ -39,6 +41,7 @@ public class ClientWorkoutService {
     private final ClientWorkoutRepository clientWorkoutRepository;
     private final ClientWorkoutItemRepository clientWorkoutItemRepository;
     private final ClientWorkoutSetResultRepository clientWorkoutSetResultRepository;
+    private final ClientExerciseBenchmarkRepository clientExerciseBenchmarkRepository;
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final ExerciseRepository exerciseRepository;
@@ -50,13 +53,15 @@ public class ClientWorkoutService {
 
     private final JsonMapper jsonMapper;
 
-    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository, ClientWorkoutSetResultRepository clientWorkoutSetResultRepository,
+    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository,
+                                ClientWorkoutSetResultRepository clientWorkoutSetResultRepository, ClientExerciseBenchmarkRepository  clientExerciseBenchmarkRepository,
                                 WorkoutTemplateRepository workoutTemplateRepository, ExerciseRepository exerciseRepository,
                                 ClientRepository clientRepository, CurrentTrainerService currentTrainerService,
                                 WorkoutStructureValidator workoutStructureValidator, JsonMapper jsonMapper) {
         this.clientWorkoutRepository = clientWorkoutRepository;
         this.clientWorkoutItemRepository = clientWorkoutItemRepository;
         this.clientWorkoutSetResultRepository = clientWorkoutSetResultRepository;
+        this.clientExerciseBenchmarkRepository = clientExerciseBenchmarkRepository;
         this.workoutTemplateRepository = workoutTemplateRepository;
         this.exerciseRepository = exerciseRepository;
         this.clientRepository = clientRepository;
@@ -111,7 +116,13 @@ public class ClientWorkoutService {
 
         List<ClientWorkoutSetResult> results = clientWorkoutSetResultRepository.findAllByClientWorkout_Id(clientWorkoutId);
 
-        return new ClientWorkoutSessionResponse(clientWorkout, results);
+        Set<Long> exerciseIds = getClientWorkoutExerciseIds(clientWorkout);
+
+        List<ClientExerciseBenchmark> benchmarks = exerciseIds.isEmpty()
+                ? List.of()
+                : clientExerciseBenchmarkRepository.findLatestForClientAndExercises(clientWorkout.getClient().getId(), trainer.getId(), exerciseIds);
+
+        return new ClientWorkoutSessionResponse(clientWorkout, results, benchmarks);
     }
 
     @Transactional
@@ -659,6 +670,25 @@ public class ClientWorkoutService {
             return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItem_IdAndSetKey(clientWorkoutId, target.item().getId(), setKey);
         }
         return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItemExercise_IdAndSetKey(clientWorkoutId, target.itemExercise().getId(), setKey);
+    }
+
+    private Set<Long> getClientWorkoutExerciseIds(ClientWorkout clientWorkout) {
+        Set<Long> exerciseIds = new LinkedHashSet<>();
+
+        for (ClientWorkoutSection section : clientWorkout.getSections()) {
+            for (ClientWorkoutItem item : section.getItems()) {
+                if (item.getExercise() != null) {
+                    exerciseIds.add(item.getExercise().getId());
+                }
+                for (ClientWorkoutItemExercise itemExercise : item.getItemExercises()) {
+                    if (itemExercise.getExercise() != null) {
+                        exerciseIds.add(itemExercise.getExercise().getId());
+                    }
+                }
+            }
+        }
+
+        return exerciseIds;
     }
 
     //---------------------------------------------------------------------------------------------------------

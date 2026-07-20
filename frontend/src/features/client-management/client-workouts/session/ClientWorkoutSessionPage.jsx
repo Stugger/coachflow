@@ -74,6 +74,7 @@ function ClientWorkoutSessionPage() {
 
     const workout = session?.workout;
     const results = session?.results ?? [];
+    const benchmarks = session?.benchmarks ?? [];
 
     const [completionSummary, setCompletionSummary] = useState(null);
     const [completingWorkout, setCompletingWorkout] = useState(false);
@@ -382,6 +383,7 @@ function ClientWorkoutSessionPage() {
                             <ClientWorkoutSessionItemView
                                 workout={workout}
                                 results={results}
+                                benchmarks={benchmarks}
                                 itemId={itemId}
                                 isSmallScreen={isSmallScreen}
                                 onExitWorkout={returnToSource}
@@ -404,7 +406,7 @@ function ClientWorkoutSessionPage() {
             <Modal
                 opened={completionSummary !== null}
                 onClose={closeCompletionConfirmation}
-                title={completionSummary?.fullyCompleted ? 'Complete workout?' : 'Complete workout with unfinished sets?'}
+                title={completionSummary?.fullyCompleted ? 'Complete workout?' : 'Complete unfinished workout?'}
                 centered
                 closeOnClickOutside={!completingWorkout}
                 closeOnEscape={!completingWorkout}
@@ -428,7 +430,7 @@ function ClientWorkoutSessionPage() {
                             {completionSummary?.remainingSetCount === 1
                                 ? 'set has'
                                 : 'sets have'
-                            } not been completed. Saved values and notes will be
+                            } not been completed.<br/><br/>Saved values and notes will be
                             preserved, while untouched sets will remain unrecorded.
                         </Text>
                     )}
@@ -439,7 +441,7 @@ function ClientWorkoutSessionPage() {
                             disabled={completingWorkout}
                             onClick={closeCompletionConfirmation}
                         >
-                            Continue
+                            {isSmallScreen ? 'Stay here' : 'Continue workout'}
                         </Button>
 
                         <Button

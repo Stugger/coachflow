@@ -28,7 +28,7 @@ import {
     scheduleSessionScroll,
 } from './client-workout-session-scroll.js';
 
-function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorScheme, onResultSaved}) {
+function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmarks, colorScheme, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -172,6 +172,8 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, colorSch
                                 <ClientWorkoutSessionSetEditor
                                     workoutId={workoutId}
                                     clientWorkoutItemId={item.id}
+                                    exerciseId={item.exercise?.id}
+                                    benchmarks={benchmarks}
                                     config={config}
                                     set={set}
                                     result={set.result}
