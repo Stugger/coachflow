@@ -28,7 +28,7 @@ import {
     scheduleSessionScroll,
 } from './client-workout-session-scroll.js';
 
-function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmarks, colorScheme, onResultSaved}) {
+function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmarks, recordMode, colorScheme, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -40,12 +40,12 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
 
     const hasProgress = sets.some(set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED);
 
-    const [expandedSetKey, setExpandedSetKey] = useState(firstIncompleteSet?.setKey ?? null);
+    const [expandedSetKey, setExpandedSetKey] = useState(recordMode ? null : firstIncompleteSet?.setKey ?? null);
 
     const [activeRest, setActiveRest] = useState(null);
 
     const [scrollTarget, setScrollTarget] = useState(() =>
-        hasProgress && firstIncompleteSet
+        !recordMode && hasProgress && firstIncompleteSet
             ? {
                 id: getSessionSetScrollId(firstIncompleteSet.setKey),
                 block: 'start',
@@ -158,10 +158,10 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
 
                                     <Text size="sm" fw={600} c="dimmed">
                                         {set.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
-                                            ? 'Complete'
+                                            ? recordMode ? 'Completed' : 'Complete'
                                             : set.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
-                                                ? 'In progress'
-                                                : 'Not started'
+                                                ? recordMode ? 'Incomplete' : 'In progress'
+                                                : recordMode ? 'Not recorded' : 'Not started'
                                         }
                                     </Text>
                                 </Group>
@@ -177,6 +177,7 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
                                     set={set}
                                     result={set.result}
                                     completeLabel={index === sets.length - 1 ? 'Complete Exercise' : 'Complete & Next Set'}
+                                    recordMode={recordMode}
                                     colorScheme={colorScheme}
                                     onResultSaved={onResultSaved}
                                     onCompleted={() => handleSetCompleted(index)}
@@ -184,7 +185,7 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
                             </Accordion.Panel>
                         </Accordion.Item>
 
-                        {activeRest?.sourceKey === set.setKey && (
+                        {!recordMode && activeRest?.sourceKey === set.setKey && (
                             <Box
                                 id={getSessionRestScrollId(set.setKey)}
                                 mt="md"

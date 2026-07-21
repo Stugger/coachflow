@@ -65,6 +65,13 @@ public class ClientWorkoutController {
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
+    @PutMapping("/client-workouts/{clientWorkoutId}/record-set-results")
+    public ResponseEntity<ClientWorkoutSetResultResponse> saveClientWorkoutRecordSetResult(@PathVariable Long clientWorkoutId, @Valid @RequestBody SaveClientWorkoutSetResultRequest request) {
+        return clientWorkoutService.saveClientWorkoutRecordSetResult(clientWorkoutId, request)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     @DeleteMapping("/client-workouts/{clientWorkoutId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteClientWorkout(@PathVariable Long clientWorkoutId) {

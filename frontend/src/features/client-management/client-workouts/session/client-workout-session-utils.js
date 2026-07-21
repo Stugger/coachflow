@@ -125,10 +125,25 @@ export function findNextIncompleteClientWorkoutSessionItem(workout, itemId, resu
     ];
 
     return candidates.find(
-        context =>
-            context.item.progress.status
-            !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+        context => context.item.progress.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
     ) ?? null;
+}
+
+export function findNextClientWorkoutSessionItem(workout, itemId, resultIndex,) {
+    const sessionProgress = buildClientWorkoutSessionProgress(workout, resultIndex,);
+
+    const itemContexts = sessionProgress.sections.flatMap(section =>
+        section.items.map(item => ({
+            section,
+            item,
+        }))
+    );
+
+    const currentIndex = itemContexts.findIndex(context => String(context.item.id) === String(itemId));
+
+    return currentIndex >= 0
+        ? itemContexts[currentIndex + 1] ?? null
+        : null;
 }
 
 export function getDirectExerciseSessionSets(item, resultIndex) {

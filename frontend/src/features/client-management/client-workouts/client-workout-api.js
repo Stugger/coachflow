@@ -40,6 +40,10 @@ export function apiSaveClientWorkoutSetResult(clientWorkoutId, payload) {
     return sendJson(`/api/client-workouts/${clientWorkoutId}/set-results`, 'PUT', payload);
 }
 
+export function apiSaveClientWorkoutRecordSetResult(clientWorkoutId, payload) {
+    return sendJson(`/api/client-workouts/${clientWorkoutId}/record-set-results`, 'PUT', payload);
+}
+
 export function apiDeleteClientWorkout(clientWorkoutId) {
     return deleteRequest(`/api/client-workouts/${clientWorkoutId}`);
 }

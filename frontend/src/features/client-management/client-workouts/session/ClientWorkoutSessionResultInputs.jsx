@@ -24,7 +24,7 @@ import {
 
 import {getSetResultInputDetails} from './client-workout-set-result-utils.js';
 
-function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, values, stackItem, separateSides, colorScheme, onChange, onSplitSides, onMergeSides}) {
+function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, values, stackItem, separateSides, recordMode = false, colorScheme, onChange, onSplitSides, onMergeSides}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -79,6 +79,7 @@ function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, 
                     exerciseId={exerciseId}
                     benchmarks={benchmarks}
                     stackItem={stackItem}
+                    recordMode={recordMode}
                     isSmallScreen={isSmallScreen}
                     colorScheme={colorScheme}
                     onChange={onChange}
@@ -93,6 +94,7 @@ function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, 
                     exerciseId={exerciseId}
                     benchmarks={benchmarks}
                     stackItem={stackItem}
+                    recordMode={recordMode}
                     isSmallScreen={isSmallScreen}
                     colorScheme={colorScheme}
                     onChange={onChange}
@@ -125,6 +127,7 @@ function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, 
             exerciseId={exerciseId}
             benchmarks={benchmarks}
             stackItem={stackItem}
+            recordMode={recordMode}
             isSmallScreen={isSmallScreen}
             colorScheme={colorScheme}
             onChange={onChange}
@@ -136,7 +139,7 @@ function ClientWorkoutSessionResultInputs({exerciseId, benchmarks, config, set, 
 // Components
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ResultInputGroup({label, action, side, fields, set, values = {}, exerciseId, benchmarks, stackItem, isSmallScreen, colorScheme, onChange}) {
+function ResultInputGroup({label, action, side, fields, set, values = {}, exerciseId, benchmarks, stackItem, recordMode, isSmallScreen, colorScheme, onChange}) {
 
     const hasDurationInFields = fields.find(field => field.key === TRACKING_FIELD_KEY.TIME);
 
@@ -170,6 +173,7 @@ function ResultInputGroup({label, action, side, fields, set, values = {}, exerci
                             benchmarks={benchmarks}
                             index={index}
                             stackItem={stackItem}
+                            recordMode={recordMode}
                             withTopBorder={index > 0}
                             isSmallScreen={isSmallScreen}
                             hasDurationInFields={hasDurationInFields}
@@ -189,7 +193,7 @@ function ResultInputGroup({label, action, side, fields, set, values = {}, exerci
     );
 }
 
-function SessionResultInput({field, target, value, exerciseId, benchmarks, index, stackItem, withTopBorder, isSmallScreen, hasDurationInFields, colorScheme, onChange}) {
+function SessionResultInput({field, target, value, exerciseId, benchmarks, index, stackItem, recordMode, withTopBorder, isSmallScreen, hasDurationInFields, colorScheme, onChange}) {
     const {
         width,
         label,
@@ -223,12 +227,20 @@ function SessionResultInput({field, target, value, exerciseId, benchmarks, index
             hasDurationInFields={hasDurationInFields}
             colorScheme={colorScheme}
         >
-            {field.key === TRACKING_FIELD_KEY.TIME ? (
+            {field.key === TRACKING_FIELD_KEY.TIME && !recordMode ? (
                 <ClientWorkoutSessionStopwatch
                     value={value}
                     width={width}
-                    height={"3rem"}
-                    buttonWidth={!isSmallScreen ? "3rem" : stackItem ? "2rem" : "2.7rem"}
+                    height="3rem"
+                    buttonWidth={!isSmallScreen ? '3rem' : stackItem ? '2rem' : '2.7rem'}
+                    onChange={onChange}
+                />
+            ) : field.key === TRACKING_FIELD_KEY.TIME ? (
+                <DurationInput
+                    value={value}
+                    width={width}
+                    height="3rem"
+                    marginInline={0}
                     onChange={onChange}
                 />
             ) : field.key === TRACKING_FIELD_KEY.REST ? (

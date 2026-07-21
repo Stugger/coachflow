@@ -256,6 +256,15 @@ public class ClientWorkoutService {
 
     @Transactional
     public Optional<ClientWorkoutSetResultResponse> saveClientWorkoutSetResult(Long clientWorkoutId, @Valid SaveClientWorkoutSetResultRequest request) {
+        return saveClientWorkoutSetResult(clientWorkoutId, request, ClientWorkoutStatus.IN_PROGRESS);
+    }
+
+    @Transactional
+    public Optional<ClientWorkoutSetResultResponse> saveClientWorkoutRecordSetResult(Long clientWorkoutId, @Valid SaveClientWorkoutSetResultRequest request) {
+        return saveClientWorkoutSetResult(clientWorkoutId, request, ClientWorkoutStatus.COMPLETED);
+    }
+
+    private Optional<ClientWorkoutSetResultResponse> saveClientWorkoutSetResult(Long clientWorkoutId, SaveClientWorkoutSetResultRequest request, ClientWorkoutStatus requiredStatus) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
 
         ClientWorkout clientWorkout = getClientWorkoutOrThrow(clientWorkoutId, trainer);
@@ -264,8 +273,12 @@ public class ClientWorkoutService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Archived workout records cannot be updated.");
         }
 
-        if (clientWorkout.getStatus() != ClientWorkoutStatus.IN_PROGRESS) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Set results can only be updated while a workout is in progress.");
+        if (clientWorkout.getStatus() != requiredStatus) {
+            String message = requiredStatus == ClientWorkoutStatus.COMPLETED
+                    ? "Record results can only be updated after a workout is completed."
+                    : "Set results can only be updated while a workout is in progress.";
+
+            throw new ResponseStatusException(HttpStatus.CONFLICT, message);
         }
 
         ClientWorkoutResultTarget target = resolveResultTarget(clientWorkout, request);
@@ -308,7 +321,7 @@ public class ClientWorkoutService {
 
         result.setValuesJson(normalizedValuesJson);
         result.setNotes(notes);
-        result.setCompletedAt(request.completed() ? now : null);
+        result.setCompletedAt(resolveSetResultCompletedAt(clientWorkout, result, request.completed(), requiredStatus, now));
         result.setUpdatedAt(now);
 
         ClientWorkoutSetResult savedResult = clientWorkoutSetResultRepository.saveAndFlush(result);
@@ -679,6 +692,23 @@ public class ClientWorkoutService {
                 : "Workout item exercise with id " + request.clientWorkoutItemExerciseId();
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, targetLabel + " does not belong to client workout with id " + clientWorkout.getId() + ".");
+    }
+
+    private LocalDateTime resolveSetResultCompletedAt(ClientWorkout clientWorkout, ClientWorkoutSetResult result, boolean completed, ClientWorkoutStatus requiredStatus, LocalDateTime now) {
+        if (!completed) {
+            return null;
+        }
+        if (result.getCompletedAt() != null) {
+            return result.getCompletedAt();
+        }
+        /*
+         * When correcting a historical record, use the workout completion
+         * time rather than pretending the set was performed at edit time.
+         */
+        if (requiredStatus == ClientWorkoutStatus.COMPLETED) {
+            return Objects.requireNonNullElse(clientWorkout.getCompletedAt(), now);
+        }
+        return now;
     }
 
     /*

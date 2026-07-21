@@ -34,7 +34,9 @@ import {
     createClientWorkoutResultIndex,
     findClientWorkoutSessionItem,
     findNextIncompleteClientWorkoutSessionItem,
+    findNextClientWorkoutSessionItem,
 } from './client-workout-session-utils.js';
+import {ClientWorkoutLiveDurationBadge} from "./ClientWorkoutSessionTiming.jsx";
 
 function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
 
@@ -55,6 +57,8 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
     // State
     // ------------------------------------------------------------------------------------------------------------------------
 
+    const recordMode = workout.status === 'COMPLETED';
+
     const resultIndex = useMemo(() => createClientWorkoutResultIndex(results), [results]);
 
     const itemContext = useMemo(
@@ -63,12 +67,18 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
     );
 
     const nextItemContext = useMemo(
-        () => findNextIncompleteClientWorkoutSessionItem(
-            workout,
-            itemId,
-            resultIndex,
-        ),
-        [workout, itemId, resultIndex],
+        () => recordMode
+            ? findNextClientWorkoutSessionItem(
+                workout,
+                itemId,
+                resultIndex,
+            )
+            : findNextIncompleteClientWorkoutSessionItem(
+                workout,
+                itemId,
+                resultIndex,
+            ),
+        [workout, itemId, resultIndex, recordMode],
     );
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -175,9 +185,18 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                 style={{borderBottom: '1px solid var(--color-border)'}}
             >
                 <Stack gap={2} px={{base: 'xs', sm: 0}}>
-                    <Text size="sm" c="dimmed">
-                        {section.name?.trim() || `Section ${section.position}`}
-                    </Text>
+                    <Group justify="space-between" wrap="nowrap">
+                        <Text size="sm" c="dimmed">
+                            {section.name?.trim() || `Section ${section.position}`}
+                        </Text>
+
+                        {!recordMode && (
+                            <ClientWorkoutLiveDurationBadge
+                                startedAt={workout.startedAt}
+                                subtle
+                            />
+                        )}
+                    </Group>
 
                     <Group gap={4} justify="space-between" align="center" wrap="nowrap">
                         <Title order={2}>
@@ -191,7 +210,7 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                     </Group>
 
                     <Text size="sm" c="dimmed">
-                        {item.progress.completedUnitCount} of{' '}{item.progress.totalUnitCount}{' '}{getUnitLabel(item.progress)} complete
+                        {item.progress.completedUnitCount} of{' '}{item.progress.totalUnitCount}{' '}{getUnitLabel(item.progress)} {recordMode ? 'completed' : 'complete'}
                     </Text>
                 </Stack>
             </Paper>
@@ -203,6 +222,7 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                     item={item}
                     resultIndex={resultIndex}
                     benchmarks={benchmarks}
+                    recordMode={recordMode}
                     colorScheme={colorScheme}
                     onResultSaved={onResultSaved}
                 />
@@ -213,12 +233,13 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                     item={item}
                     resultIndex={resultIndex}
                     benchmarks={benchmarks}
+                    recordMode={recordMode}
                     isSmallScreen={isSmallScreen}
                     colorScheme={colorScheme}
                     onResultSaved={onResultSaved}
                 />
             )}
-            {item.progress.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED && (
+            {(recordMode || item.progress.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED) && (
                 <Stack gap="xs" mt={isSmallScreen ? "sm" : "md"}>
                     {nextItemContext ? (
                         <>

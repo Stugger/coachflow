@@ -40,7 +40,7 @@ function getStackStepKey(roundNumber, itemExerciseId) {
     return `round:${roundNumber}:exercise:${itemExerciseId}`;
 }
 
-function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, colorScheme, isSmallScreen, onResultSaved}) {
+function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, recordMode, colorScheme, isSmallScreen, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -63,15 +63,15 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
     const hasProgress = steps.some(step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED);
 
     const [expandedRound, setExpandedRound] = useState(
-        firstIncompleteStep ? String(firstIncompleteStep.roundNumber) : null,
+        recordMode ? null : firstIncompleteStep ? String(firstIncompleteStep.roundNumber) : null
     );
 
-    const [expandedExercise, setExpandedExercise] = useState(firstIncompleteStep?.key ?? null);
+    const [expandedExercise, setExpandedExercise] = useState(recordMode ? null : firstIncompleteStep?.key ?? null);
 
     const [activeRest, setActiveRest] = useState(null);
 
     const [scrollTarget, setScrollTarget] = useState(() =>
-        hasProgress && firstIncompleteStep
+        !recordMode && hasProgress && firstIncompleteStep
             ? {
                 id: getSessionRoundScrollId(firstIncompleteStep.roundNumber),
                 block: 'start',
@@ -113,6 +113,11 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
         setExpandedRound(nextRound);
 
         if (!nextRound) {
+            return;
+        }
+
+        if (recordMode) {
+            setExpandedExercise(null);
             return;
         }
 
@@ -198,7 +203,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
     // ------------------------------------------------------------------------------------------------------------------------
 
     function renderActiveRest() {
-        if (!activeRest) {
+        if (recordMode || !activeRest) {
             return null;
         }
 
@@ -239,7 +244,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
                             <Text fw={700}>Round {round.number}</Text>
 
                             <Text size="xs" c="dimmed">
-                                {completedExercises} of {round.exercises.length} exercises complete
+                                {completedExercises} of {round.exercises.length} exercises {recordMode ? 'completed' : 'complete'}
                             </Text>
                         </Stack>
 
@@ -270,7 +275,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
                                 <Fragment key={stepKey}>
                                     {renderRoundExerciseItem(round, exercise, stepKey)}
 
-                                    {activeRest?.sourceKey === stepKey && !activeRest.afterRound && expandedRound === String(round.number) && (
+                                    {!recordMode && activeRest?.sourceKey === stepKey && !activeRest.afterRound && expandedRound === String(round.number) && (
                                         <Box
                                             id={getSessionRestScrollId(stepKey)}
                                             mt="sm"
@@ -356,6 +361,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
                         set={exercise.set}
                         result={exercise.result}
                         completeLabel={completeLabel}
+                        recordMode={recordMode}
                         colorScheme={colorScheme}
                         onResultSaved={onResultSaved}
                         onCompleted={() => handleExerciseCompleted(stepKey)}
@@ -385,7 +391,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
                     <Fragment key={round.number}>
                         {renderRoundItem(round)}
 
-                        {activeRest?.roundNumber === round.number && (activeRest.afterRound || expandedRound !== String(round.number)) && (
+                        {!recordMode && activeRest?.roundNumber === round.number && (activeRest.afterRound || expandedRound !== String(round.number)) && (
                             <Box
                                 id={getSessionRestScrollId(activeRest.sourceKey)}
                                 mt="md"

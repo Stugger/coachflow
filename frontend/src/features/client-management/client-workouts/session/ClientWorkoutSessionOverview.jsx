@@ -33,11 +33,12 @@ import {
 } from '../../../workout-builder/workout-builder-constants.js';
 
 import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
+import {ClientWorkoutRecordTiming} from "./ClientWorkoutSessionTiming.jsx";
 import {getSectionTypeLabel} from "../../../workout-builder/workout-builder-utils.js";
 
 const OPEN_SECTIONS_PARAM = 'openSections';
 
-function ClientWorkoutSessionOverview({workout, results, scrollItemId, completingWorkout, onOpenItem, onCompleteWorkout}) {
+function ClientWorkoutSessionOverview({workout, results, scrollItemId, completingWorkout, isSmallScreen, onOpenItem, onCompleteWorkout}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -55,6 +56,8 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
     // ------------------------------------------------------------------------------------------------------------------------
     // State
     // ------------------------------------------------------------------------------------------------------------------------
+
+    const recordMode = workout.status === 'COMPLETED';
 
     const resultIndex = useMemo(
         () => createClientWorkoutResultIndex(results),
@@ -75,10 +78,14 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
 
     const expandedSections = hasExpandedSectionState
         ? parseExpandedSections(searchParams, sectionIds)
-        : getDefaultExpandedSections(sessionProgress.sections);
+        : recordMode ? [] : getDefaultExpandedSections(sessionProgress.sections);
 
     const progress = sessionProgress.progress;
-    const progressPercent = progress.totalItemCount ? (progress.completedItemCount / progress.totalItemCount) * 100 : 0;
+    const progressPercent = recordMode
+        ? progress.totalSetCount ? (progress.completedSetCount / progress.totalSetCount) * 100 : 0
+        : progress.totalItemCount ? (progress.completedItemCount / progress.totalItemCount) * 100 : 0;
+    const incompleteSetCount = Math.max(0, progress.startedSetCount - progress.completedSetCount);
+    const unrecordedSetCount = Math.max(0, progress.totalSetCount - progress.startedSetCount);
 
     const remainingSetCount = Math.max(0, progress.totalSetCount - progress.completedSetCount);
 
@@ -134,6 +141,13 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
 
     return (
         <Stack gap="md">
+            {recordMode && (
+                <ClientWorkoutRecordTiming
+                    startedAt={workout.startedAt}
+                    completedAt={workout.completedAt}
+                    isSmallScreen={isSmallScreen}
+                />
+            )}
             <Paper
                 radius={0}
                 style={{ borderBottom: '1px solid var(--color-border)'}}
@@ -146,21 +160,41 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
                     >
                         <Stack gap={1}>
                             <Text fw={700}>
-                                Workout progress
+                                {recordMode ? 'Workout record' : 'Workout progress'}
                             </Text>
 
-                            <Text size="sm" c="dimmed">
-                                {progress.completedItemCount}{' '}of{' '}{progress.totalItemCount}{' '}workout items complete
-                            </Text>
+                            {recordMode ? (
+                                <Group gap="0.3rem">
+                                    <ClientWorkoutProgressIcon status={CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED} size={12}/>
+                                    <Text size="sm" fw={600} c="dimmed">
+                                        {progress.completedSetCount}{' / '}{progress.totalSetCount}{' sets'}
+                                    </Text>
+                                    <Text size="sm" fw={600} c="dimmed">
+                                        {' · '}
+                                    </Text>
+                                    <ClientWorkoutProgressIcon status={CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS} size={12}/>
+                                    <Text size="sm" c="dimmed">
+                                        {incompleteSetCount} incomplete
+                                    </Text>
+                                    <Text size="sm" fw={600} c="dimmed">
+                                        {' · '}
+                                    </Text>
+                                    <ClientWorkoutProgressIcon status={CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED} size={15}/>
+                                    <Text size="sm" c="dimmed">
+                                        {unrecordedSetCount} not recorded
+                                    </Text>
+                                </Group>
+                            ) : (
+                                <Text size="sm" c="dimmed">
+                                    {progress.completedItemCount}{' '}of {progress.totalItemCount}{' '}workout items complete
+                                </Text>
+                            )}
                         </Stack>
-
-                        <Text
-                            size="sm"
-                            fw={600}
-                            c="dimmed"
-                        >
-                            {progress.completedSetCount}{' / '}{progress.totalSetCount}{' sets'}
-                        </Text>
+                        {!recordMode && (
+                            <Text size="sm" fw={600} c="dimmed">
+                                {progress.completedSetCount}{' / '}{progress.totalSetCount}{' sets'}
+                            </Text>
+                        )}
                     </Group>
 
                     <Progress
@@ -218,7 +252,7 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
 
                                         <Text size="xs" c="lightgray">
                                             {section.progress.completedItemCount}{' of '}
-                                            {section.progress.totalItemCount}{' items complete'}
+                                            {section.progress.totalItemCount}{' items '}{recordMode ? 'completed' : 'complete'}
                                         </Text>
                                     </Stack>
 
@@ -254,6 +288,7 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
                                                 <WorkoutSessionItemRow
                                                     key={item.id}
                                                     item={item}
+                                                    recordMode={recordMode}
                                                     onOpen={() => onOpenItem(item.id)}
                                                 />
                                             ),
@@ -314,7 +349,7 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
 // Components
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutSessionItemRow({item, onOpen}) {
+function WorkoutSessionItemRow({item, recordMode, onOpen}) {
     const progress = item.progress;
     const isStack = item.itemType !== WORKOUT_ITEM_TYPE.EXERCISE;
     const unitLabel = progress.totalUnitCount === 1 ? progress.unitLabel : `${progress.unitLabel}s`;
@@ -366,7 +401,7 @@ function WorkoutSessionItemRow({item, onOpen}) {
                         </Group>
 
                         <Text size="xs" c="dimmed">
-                            {progress.completedUnitCount} of {progress.totalUnitCount} {unitLabel} complete
+                            {progress.completedUnitCount} of {progress.totalUnitCount} {unitLabel} {recordMode ? 'completed' : 'complete'}
                         </Text>
 
                         {stackExerciseNames.length > 0 && (

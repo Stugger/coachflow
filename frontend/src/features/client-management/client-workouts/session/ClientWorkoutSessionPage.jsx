@@ -39,6 +39,7 @@ import {getClientWorkoutSourceNavigation} from '../client-workout-navigation.js'
 
 import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
 import ClientWorkoutSessionItemView from './ClientWorkoutSessionItemView.jsx';
+import {ClientWorkoutLiveDurationBadge} from "./ClientWorkoutSessionTiming.jsx";
 
 function isSameSetResult(result, identity) {
     return result.setKey === identity.setKey
@@ -194,10 +195,32 @@ function ClientWorkoutSessionPage() {
         setCompletionError('');
 
         try {
-            await apiCompleteClientWorkout(workout.id);
+            const completedWorkout = await apiCompleteClientWorkout(workout.id);
+
+            setSession(currentSession =>
+                currentSession
+                    ? {...currentSession, workout: completedWorkout}
+                    : currentSession
+            );
 
             setCompletionSummary(null);
-            returnToSource();
+
+            navigate(
+                ROUTES.clientWorkoutSession(workout.id),
+                {
+                    replace: true,
+                    state: {
+                        ...(location.state ?? {}),
+                        sessionOverviewItemId: null,
+                    },
+                },
+            );
+
+            window.scrollTo({
+                top: 0,
+                left: 0,
+                behavior: 'smooth',
+            });
         } catch (error) {
             console.error('Failed to complete client workout:', error);
 
@@ -267,6 +290,122 @@ function ClientWorkoutSessionPage() {
             <Alert color="red">
                 {error || 'Workout session not found.'}
             </Alert>
+        );
+    }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Render utils
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function renderCompleteWorkoutConfirmationModal() {
+        return (
+            <Modal
+                opened={completionSummary !== null}
+                onClose={closeCompletionConfirmation}
+                title={completionSummary?.fullyCompleted ? 'Complete workout?' : 'Complete unfinished workout?'}
+                centered
+                closeOnClickOutside={!completingWorkout}
+                closeOnEscape={!completingWorkout}
+                withCloseButton={!completingWorkout}
+                transitionProps={{exitDuration: 0}} //prevent seeing the modal state change when fading on close due to completionSummary being null
+            >
+                <Stack gap="lg">
+                    {completionError && (
+                        <Alert color="red">
+                            {completionError}
+                        </Alert>
+                    )}
+
+                    {completionSummary?.fullyCompleted ? (
+                        <Text size="sm" c="dimmed">
+                            This workout will be finalized as a client record.
+                        </Text>
+                    ) : (
+                        <Text size="sm" c="dimmed">
+                            {completionSummary ? completionSummary.remainingSetCount : '--'}{' '}
+                            {completionSummary?.remainingSetCount === 1
+                                ? 'set has'
+                                : 'sets have'
+                            } not been completed.<br/><br/>Saved values and notes will be
+                            preserved, while untouched sets will remain unrecorded.
+                        </Text>
+                    )}
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            disabled={completingWorkout}
+                            onClick={closeCompletionConfirmation}
+                        >
+                            Stay here
+                        </Button>
+
+                        <Button
+                            color="green"
+                            leftSection={<IconCheck size={16}/>}
+                            loading={completingWorkout}
+                            onClick={completeWorkout}
+                        >
+                            {completionSummary?.fullyCompleted
+                                ? 'Complete workout'
+                                : 'Complete anyway'
+                            }
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
+        );
+    }
+
+    function renderAbandonWorkoutConfirmationModal() {
+        return (
+            <Modal
+                opened={abandonConfirmationOpen}
+                onClose={() => {
+                    if (!abandoningWorkout) {
+                        setAbandonConfirmationOpen(false);
+                    }
+                }}
+                title="Abandon workout?"
+                centered
+                closeOnClickOutside={!abandoningWorkout}
+                closeOnEscape={!abandoningWorkout}
+                withCloseButton={!abandoningWorkout}
+            >
+                <Stack gap="lg">
+                    {abandonError && (
+                        <Alert color="red">
+                            {abandonError}
+                        </Alert>
+                    )}
+
+                    <Text size="sm" c="dimmed">
+                        This will erase all recorded set results and return the
+                        workout to Ready. The workout structure and targets will
+                        be kept so it can be restarted later or deleted from its
+                        source.
+                    </Text>
+
+                    <Group justify="flex-end">
+                        <Button
+                            variant="default"
+                            disabled={abandoningWorkout}
+                            onClick={() => setAbandonConfirmationOpen(false)}
+                        >
+                            Keep active
+                        </Button>
+
+                        <Button
+                            color="red"
+                            leftSection={<IconTrash size={16}/>}
+                            loading={abandoningWorkout}
+                            onClick={abandonWorkout}
+                        >
+                            Abandon workout
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
         );
     }
 
@@ -354,23 +493,15 @@ function ClientWorkoutSessionPage() {
                                 >
                                     <Stack gap="xs" px={{base: 'xs', sm: 0}}>
                                         <Group gap="sm">
-                                            <Badge
-                                                color={
-                                                    workout.status === 'IN_PROGRESS'
-                                                        ? 'green'
-                                                        : 'gray'
-                                                }
-                                                variant="light"
-                                                leftSection={
-                                                    workout.status === 'IN_PROGRESS'
-                                                        ? <span className={'client-session-live-dot'}/>
-                                                        : null
-                                                }
-                                            >
-                                                {workout.status === 'IN_PROGRESS'
-                                                    ? 'In progress'
-                                                    : workout.status}
-                                            </Badge>
+                                            {workout.status === 'IN_PROGRESS' ? (
+                                                <ClientWorkoutLiveDurationBadge
+                                                    startedAt={workout.startedAt}
+                                                />
+                                            ) : (
+                                                <Badge color="gray" variant="light">
+                                                    Completed
+                                                </Badge>
+                                            )}
 
                                             <Text size="sm" c="dimmed">
                                                 {getClientWorkoutOriginLabel(workout.origin)}
@@ -409,6 +540,7 @@ function ClientWorkoutSessionPage() {
                                 results={results}
                                 scrollItemId={location.state?.sessionOverviewItemId}
                                 completingWorkout={completingWorkout}
+                                isSmallScreen={isSmallScreen}
                                 onOpenItem={openItem}
                                 onCompleteWorkout={requestWorkoutCompletion}
                             />
@@ -416,107 +548,8 @@ function ClientWorkoutSessionPage() {
                     </Stack>
                 </Paper>
             </Container>
-            <Modal
-                opened={completionSummary !== null}
-                onClose={closeCompletionConfirmation}
-                title={completionSummary?.fullyCompleted ? 'Complete workout?' : 'Complete unfinished workout?'}
-                centered
-                closeOnClickOutside={!completingWorkout}
-                closeOnEscape={!completingWorkout}
-                withCloseButton={!completingWorkout}
-            >
-                <Stack gap="lg">
-                    {completionError && (
-                        <Alert color="red">
-                            {completionError}
-                        </Alert>
-                    )}
-
-                    {completionSummary?.fullyCompleted ? (
-                        <Text size="sm" c="dimmed">
-                            This workout will be finalized as a client record.
-                        </Text>
-                    ) : (
-                        <Text size="sm" c="dimmed">
-                            {completionSummary?.remainingSetCount}{' '}
-                            {completionSummary?.remainingSetCount === 1
-                                ? 'set has'
-                                : 'sets have'
-                            } not been completed.<br/><br/>Saved values and notes will be
-                            preserved, while untouched sets will remain unrecorded.
-                        </Text>
-                    )}
-
-                    <Group justify="flex-end">
-                        <Button
-                            variant="default"
-                            disabled={completingWorkout}
-                            onClick={closeCompletionConfirmation}
-                        >
-                            {isSmallScreen ? 'Stay here' : 'Continue workout'}
-                        </Button>
-
-                        <Button
-                            color="green"
-                            leftSection={<IconCheck size={16}/>}
-                            loading={completingWorkout}
-                            onClick={completeWorkout}
-                        >
-                            {completionSummary?.fullyCompleted
-                                ? 'Complete workout'
-                                : 'Complete anyway'
-                            }
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
-            <Modal
-                opened={abandonConfirmationOpen}
-                onClose={() => {
-                    if (!abandoningWorkout) {
-                        setAbandonConfirmationOpen(false);
-                    }
-                }}
-                title="Abandon workout?"
-                centered
-                closeOnClickOutside={!abandoningWorkout}
-                closeOnEscape={!abandoningWorkout}
-                withCloseButton={!abandoningWorkout}
-            >
-                <Stack gap="lg">
-                    {abandonError && (
-                        <Alert color="red">
-                            {abandonError}
-                        </Alert>
-                    )}
-
-                    <Text size="sm" c="dimmed">
-                        This will erase all recorded set results and return the
-                        workout to Ready. The workout structure and targets will
-                        be kept so it can be restarted later or deleted from its
-                        source.
-                    </Text>
-
-                    <Group justify="flex-end">
-                        <Button
-                            variant="default"
-                            disabled={abandoningWorkout}
-                            onClick={() => setAbandonConfirmationOpen(false)}
-                        >
-                            Keep active
-                        </Button>
-
-                        <Button
-                            color="red"
-                            leftSection={<IconTrash size={16}/>}
-                            loading={abandoningWorkout}
-                            onClick={abandonWorkout}
-                        >
-                            Abandon workout
-                        </Button>
-                    </Group>
-                </Stack>
-            </Modal>
+            {renderCompleteWorkoutConfirmationModal()}
+            {renderAbandonWorkoutConfirmationModal()}
         </Box>
     );
 }
