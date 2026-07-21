@@ -31,6 +31,7 @@ import {
 
 import {
     getSessionRestScrollId,
+    getSessionRoundScrollId,
     getSessionStepScrollId,
     scheduleSessionScroll,
 } from './client-workout-session-scroll.js';
@@ -57,9 +58,9 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
             })),
     );
 
-    const firstIncompleteStep = steps.find(
-        step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
-    ) ?? null;
+    const firstIncompleteStep = steps.find(step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED) ?? null;
+
+    const hasProgress = steps.some(step => step.exercise.status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED);
 
     const [expandedRound, setExpandedRound] = useState(
         firstIncompleteStep ? String(firstIncompleteStep.roundNumber) : null,
@@ -70,10 +71,11 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
     const [activeRest, setActiveRest] = useState(null);
 
     const [scrollTarget, setScrollTarget] = useState(() =>
-        firstIncompleteStep
+        hasProgress && firstIncompleteStep
             ? {
-                id: getSessionStepScrollId(firstIncompleteStep.key),
+                id: getSessionRoundScrollId(firstIncompleteStep.roundNumber),
                 block: 'start',
+                delay: 350,
             }
             : null
     );
@@ -164,6 +166,9 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
         if (nextStep) {
             setExpandedRound(String(nextStep.roundNumber));
             setExpandedExercise(nextStep.key);
+        } else {
+            setExpandedExercise(null);
+            setExpandedRound(null);
         }
 
         setScrollTarget(
@@ -173,13 +178,18 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
                     block: 'start',
                     delay: changesRound ? 450 : undefined,
                 }
-                : nextStep
+                : changesRound
                     ? {
-                        id: getSessionStepScrollId(nextStep.key),
+                        id: getSessionRoundScrollId(nextStep.roundNumber),
                         block: 'start',
-                        delay: changesRound ? 450 : undefined,
+                        delay: 450,
                     }
-                    : null
+                    : nextStep
+                        ? {
+                            id: getSessionStepScrollId(nextStep.key),
+                            block: 'start',
+                        }
+                        : null
         );
     }
 
@@ -209,14 +219,18 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, color
 
         return (
             <Accordion.Item
+                id={getSessionRoundScrollId(round.number)}
                 value={String(round.number)}
                 style={{
+                    scrollMarginTop: '1rem',
                     borderLeft: round.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
                         ? '3px solid var(--mantine-color-green-outline)'
                         : round.status === CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS
                             ? '3px solid var(--mantine-color-yellow-outline)'
                             : (colorScheme === 'light' ? '3px solid darkgray' : '3px solid gray'),
-                    boxShadow: expandedRound === String(round.number) ? "0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)" : undefined,
+                    boxShadow: expandedRound === String(round.number)
+                        ? "0px 3px 10px -1px rgba(0, 0, 0, 0.1), 0px 6px 20px -4px rgba(0, 0, 0, 0.05)"
+                        : undefined,
                 }}
             >
                 <Accordion.Control icon={<ClientWorkoutProgressIcon status={round.status}/>}>

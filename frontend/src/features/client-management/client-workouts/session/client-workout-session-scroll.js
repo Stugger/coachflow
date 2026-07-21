@@ -10,6 +10,10 @@ export function getSessionSetScrollId(setKey) {
     return `session-set-${setKey}`;
 }
 
+export function getSessionRoundScrollId(roundNumber) {
+    return `session-round-${roundNumber}`;
+}
+
 export function getSessionStepScrollId(stepKey) {
     return `session-step-${stepKey}`;
 }

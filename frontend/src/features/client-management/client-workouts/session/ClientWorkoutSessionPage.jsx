@@ -400,6 +400,7 @@ function ClientWorkoutSessionPage() {
                                 isSmallScreen={isSmallScreen}
                                 onExitWorkout={returnToSource}
                                 onAbandonWorkout={openAbandonConfirmation}
+                                onOpenItem={openItem}
                                 onResultSaved={handleResultSaved}
                             />
                         ) : (
@@ -433,8 +434,7 @@ function ClientWorkoutSessionPage() {
 
                     {completionSummary?.fullyCompleted ? (
                         <Text size="sm" c="dimmed">
-                            This workout will be finalized with all sets
-                            completed. The session can no longer be edited.
+                            This workout will be finalized as a client record.
                         </Text>
                     ) : (
                         <Text size="sm" c="dimmed">

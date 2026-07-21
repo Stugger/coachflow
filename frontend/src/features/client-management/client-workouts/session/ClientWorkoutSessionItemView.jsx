@@ -14,6 +14,7 @@ import {
 } from '@mantine/core';
 import {
     IconArrowLeft,
+    IconArrowRight,
     IconDotsVertical,
     IconLogout2,
     IconSun,
@@ -29,11 +30,13 @@ import ClientWorkoutDirectExerciseView from './ClientWorkoutDirectExerciseView.j
 import ClientWorkoutStackView from './ClientWorkoutStackView.jsx';
 
 import {
+    CLIENT_WORKOUT_PROGRESS_STATUS,
     createClientWorkoutResultIndex,
     findClientWorkoutSessionItem,
+    findNextIncompleteClientWorkoutSessionItem,
 } from './client-workout-session-utils.js';
 
-function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onResultSaved}) {
+function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -56,6 +59,15 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
 
     const itemContext = useMemo(
         () => findClientWorkoutSessionItem(workout, itemId, resultIndex),
+        [workout, itemId, resultIndex],
+    );
+
+    const nextItemContext = useMemo(
+        () => findNextIncompleteClientWorkoutSessionItem(
+            workout,
+            itemId,
+            resultIndex,
+        ),
         [workout, itemId, resultIndex],
     );
 
@@ -205,6 +217,42 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                     colorScheme={colorScheme}
                     onResultSaved={onResultSaved}
                 />
+            )}
+            {item.progress.status === CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED && (
+                <Stack gap="xs" mt={isSmallScreen ? "sm" : "md"}>
+                    {nextItemContext ? (
+                        <>
+                            <Button
+                                fullWidth
+                                size="md"
+                                rightSection={<IconArrowRight size={18}/>}
+                                onClick={() => onOpenItem(nextItemContext.item.id)}
+                            >
+                                <Text fw={600} truncate>
+                                    Next: {nextItemContext.item.displayName}
+                                </Text>
+                            </Button>
+
+                            <Button
+                                variant="subtle"
+                                color="gray"
+                                onClick={returnToOverview}
+                            >
+                                Back to overview
+                            </Button>
+                        </>
+                    ) : (
+                        <Button
+                            fullWidth
+                            size="md"
+                            variant="default"
+                            leftSection={<IconArrowLeft size={18}/>}
+                            onClick={returnToOverview}
+                        >
+                            Back to overview
+                        </Button>
+                    )}
+                </Stack>
             )}
         </Stack>
     );

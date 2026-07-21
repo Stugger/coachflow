@@ -36,16 +36,16 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
 
     const {config, sets} = getDirectExerciseSessionSets(item, resultIndex);
 
-    const firstIncompleteSet = sets.find(
-        set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
-    ) ?? null;
+    const firstIncompleteSet = sets.find(set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED) ?? null;
+
+    const hasProgress = sets.some(set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED);
 
     const [expandedSetKey, setExpandedSetKey] = useState(firstIncompleteSet?.setKey ?? null);
 
     const [activeRest, setActiveRest] = useState(null);
 
     const [scrollTarget, setScrollTarget] = useState(() =>
-        firstIncompleteSet
+        hasProgress && firstIncompleteSet
             ? {
                 id: getSessionSetScrollId(firstIncompleteSet.setKey),
                 block: 'start',
@@ -86,11 +86,12 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
         const completedSet = sets[setIndex];
         const restSeconds = getSetRestSeconds(completedSet);
 
-        const nextSet = sets
-            .slice(setIndex + 1)
-            .find(set =>
-                set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
-            );
+        const nextSet = [
+            ...sets.slice(setIndex + 1),
+            ...sets.slice(0, setIndex),
+        ].find(
+            set => set.status !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED,
+        ) ?? null;
 
         setActiveRest(
             restSeconds
@@ -102,9 +103,7 @@ function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmar
                 : null
         );
 
-        if (nextSet) {
-            setExpandedSetKey(nextSet.setKey);
-        }
+        setExpandedSetKey(nextSet?.setKey ?? null);
 
         setScrollTarget(
             restSeconds

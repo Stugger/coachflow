@@ -103,6 +103,34 @@ export function findClientWorkoutSessionItem(workout, itemId, resultIndex) {
     return null;
 }
 
+export function findNextIncompleteClientWorkoutSessionItem(workout, itemId, resultIndex) {
+    const sessionProgress = buildClientWorkoutSessionProgress(workout, resultIndex);
+
+    const itemContexts = sessionProgress.sections.flatMap(section =>
+        section.items.map(item => ({
+            section,
+            item,
+        }))
+    );
+
+    const currentIndex = itemContexts.findIndex(context => String(context.item.id) === String(itemId));
+
+    if (currentIndex < 0) {
+        return null;
+    }
+
+    const candidates = [
+        ...itemContexts.slice(currentIndex + 1),
+        ...itemContexts.slice(0, currentIndex),
+    ];
+
+    return candidates.find(
+        context =>
+            context.item.progress.status
+            !== CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+    ) ?? null;
+}
+
 export function getDirectExerciseSessionSets(item, resultIndex) {
     const config = parseWorkoutConfig(item.configJson);
 

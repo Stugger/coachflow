@@ -4,6 +4,10 @@ import {apiSaveClientWorkoutSetResult} from '../client-workout-api.js';
 
 import {usesSeparateSideValues} from './client-workout-set-result-utils.js';
 
+import {
+    TRACKING_FIELD_KEY,
+} from '../../../exercises/exercise-tracking-fields.js';
+
 const AUTOSAVE_DELAY = 700;
 
 function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, setKey, config, result, onResultSaved}) {
@@ -167,21 +171,42 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
 }
 
 function createInitialValues(config, result) {
-    if (config.eachSide) {
-        if (usesSeparateSideValues(result?.values)) {
-            return {
-                left: {...(result?.values?.left ?? {})},
-                right: {...(result?.values?.right ?? {})},
-            };
-        }
+    const resultValues = result?.values ?? {};
 
+    if (!config.eachSide) {
         return {
-            default: {...(result?.values?.default ?? {})},
+            default: {...(resultValues.default ?? {})},
+        };
+    }
+
+    if (usesSeparateSideValues(resultValues)) {
+        return {
+            left: {...(resultValues.left ?? {})},
+            right: {...(resultValues.right ?? {})},
+        };
+    }
+
+    /*
+     * Preserve an existing shared result.
+     * This avoids silently changing the result shape when loading results created before timed fields defaulted to separate sides.
+     */
+    if (Object.hasOwn(resultValues, 'default')) {
+        return {
+            default: {...resultValues.default},
+        };
+    }
+
+    const hasTimeField = config.trackingFields?.some(field => field.key === TRACKING_FIELD_KEY.TIME);
+
+    if (hasTimeField) {
+        return {
+            left: {},
+            right: {},
         };
     }
 
     return {
-        default: {...(result?.values?.default ?? {})},
+        default: {},
     };
 }
 
