@@ -3,6 +3,7 @@ package com.stugger.coachflow.service;
 import com.stugger.coachflow.api.dto.request.workout.*;
 import com.stugger.coachflow.api.dto.response.workout.*;
 import com.stugger.coachflow.entity.benchmark.ClientExerciseBenchmark;
+import com.stugger.coachflow.entity.benchmark.ExerciseBenchmarkType;
 import com.stugger.coachflow.entity.exercise.Exercise;
 import com.stugger.coachflow.entity.exercise.ExerciseVisibility;
 import com.stugger.coachflow.entity.person.Client;
@@ -11,10 +12,7 @@ import com.stugger.coachflow.entity.workout.*;
 import com.stugger.coachflow.repository.benchmark.ClientExerciseBenchmarkRepository;
 import com.stugger.coachflow.repository.exercise.ExerciseRepository;
 import com.stugger.coachflow.repository.person.ClientRepository;
-import com.stugger.coachflow.repository.workout.ClientWorkoutItemRepository;
-import com.stugger.coachflow.repository.workout.ClientWorkoutRepository;
-import com.stugger.coachflow.repository.workout.ClientWorkoutSetResultRepository;
-import com.stugger.coachflow.repository.workout.WorkoutTemplateRepository;
+import com.stugger.coachflow.repository.workout.*;
 import com.stugger.coachflow.security.CurrentTrainerService;
 import com.stugger.coachflow.util.TextUtils;
 import com.stugger.coachflow.validation.WorkoutStructureValidator;
@@ -41,6 +39,7 @@ public class ClientWorkoutService {
     private final ClientWorkoutRepository clientWorkoutRepository;
     private final ClientWorkoutItemRepository clientWorkoutItemRepository;
     private final ClientWorkoutSetResultRepository clientWorkoutSetResultRepository;
+    private final ClientWorkoutBenchmarkSnapshotRepository clientWorkoutBenchmarkSnapshotRepository;
     private final ClientExerciseBenchmarkRepository clientExerciseBenchmarkRepository;
 
     private final WorkoutTemplateRepository workoutTemplateRepository;
@@ -53,14 +52,15 @@ public class ClientWorkoutService {
 
     private final JsonMapper jsonMapper;
 
-    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository,
-                                ClientWorkoutSetResultRepository clientWorkoutSetResultRepository, ClientExerciseBenchmarkRepository  clientExerciseBenchmarkRepository,
+    public ClientWorkoutService(ClientWorkoutRepository clientWorkoutRepository, ClientWorkoutItemRepository clientWorkoutItemRepository, ClientWorkoutSetResultRepository clientWorkoutSetResultRepository,
+                                ClientWorkoutBenchmarkSnapshotRepository clientWorkoutBenchmarkSnapshotRepository, ClientExerciseBenchmarkRepository clientExerciseBenchmarkRepository,
                                 WorkoutTemplateRepository workoutTemplateRepository, ExerciseRepository exerciseRepository,
                                 ClientRepository clientRepository, CurrentTrainerService currentTrainerService,
                                 WorkoutStructureValidator workoutStructureValidator, JsonMapper jsonMapper) {
         this.clientWorkoutRepository = clientWorkoutRepository;
         this.clientWorkoutItemRepository = clientWorkoutItemRepository;
         this.clientWorkoutSetResultRepository = clientWorkoutSetResultRepository;
+        this.clientWorkoutBenchmarkSnapshotRepository  = clientWorkoutBenchmarkSnapshotRepository;
         this.clientExerciseBenchmarkRepository = clientExerciseBenchmarkRepository;
         this.workoutTemplateRepository = workoutTemplateRepository;
         this.exerciseRepository = exerciseRepository;
@@ -94,6 +94,11 @@ public class ClientWorkoutService {
         reconcileSections(clientWorkout, request.sections(), trainer.getId(), now);
 
         clientWorkoutRepository.saveAndFlush(clientWorkout);
+
+        if (clientWorkout.getStatus() == ClientWorkoutStatus.IN_PROGRESS) {
+            ensureBenchmarkSnapshots(clientWorkout);
+        }
+
         return new ClientWorkoutResponse(clientWorkout);
     }
 
@@ -104,7 +109,7 @@ public class ClientWorkoutService {
         return new ClientWorkoutResponse(getClientWorkoutOrThrow(clientWorkoutId, trainer));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public ClientWorkoutSessionResponse getClientWorkoutSession(Long clientWorkoutId) {
         Trainer trainer = currentTrainerService.getCurrentTrainer();
 
@@ -116,11 +121,9 @@ public class ClientWorkoutService {
 
         List<ClientWorkoutSetResult> results = clientWorkoutSetResultRepository.findAllByClientWorkout_Id(clientWorkoutId);
 
-        Set<Long> exerciseIds = getClientWorkoutExerciseIds(clientWorkout);
-
-        List<ClientExerciseBenchmark> benchmarks = exerciseIds.isEmpty()
-                ? List.of()
-                : clientExerciseBenchmarkRepository.findLatestForClientAndExercises(clientWorkout.getClient().getId(), trainer.getId(), exerciseIds);
+        List<ClientWorkoutBenchmarkSnapshot> benchmarks = clientWorkout.getStatus() == ClientWorkoutStatus.IN_PROGRESS
+                ? ensureBenchmarkSnapshots(clientWorkout)
+                : clientWorkoutBenchmarkSnapshotRepository.findAllByClientWorkout_Id(clientWorkoutId);
 
         return new ClientWorkoutSessionResponse(clientWorkout, results, benchmarks);
     }
@@ -139,6 +142,7 @@ public class ClientWorkoutService {
          * This handles double clicks and repeated start requests safely.
          */
         if (clientWorkout.getStatus() == ClientWorkoutStatus.IN_PROGRESS) {
+            ensureBenchmarkSnapshots(clientWorkout);
             return new ClientWorkoutResponse(clientWorkout);
         }
 
@@ -171,6 +175,8 @@ public class ClientWorkoutService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "This client already has a workout in progress.", exception);
         }
 
+        ensureBenchmarkSnapshots(clientWorkout);
+
         return new ClientWorkoutResponse(clientWorkout);
     }
 
@@ -195,6 +201,8 @@ public class ClientWorkoutService {
             return new ClientWorkoutResponse(clientWorkout);
         }
 
+        ensureBenchmarkSnapshots(clientWorkout);
+
         LocalDateTime now = LocalDateTime.now();
 
         clientWorkout.setStatus(ClientWorkoutStatus.COMPLETED);
@@ -216,6 +224,7 @@ public class ClientWorkoutService {
         }
 
         clientWorkoutSetResultRepository.deleteAllByClientWorkoutId(clientWorkoutId);
+        clientWorkoutBenchmarkSnapshotRepository.deleteAllByClientWorkoutId(clientWorkoutId);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -361,6 +370,13 @@ public class ClientWorkoutService {
     //  Mapping
     //
     //---------------------------------------------------------------------------------------------------------
+
+    private Optional<ClientWorkoutSetResult> findSetResult(Long clientWorkoutId, ClientWorkoutResultTarget target, String setKey) {
+        if (target.item() != null) {
+            return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItem_IdAndSetKey(clientWorkoutId, target.item().getId(), setKey);
+        }
+        return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItemExercise_IdAndSetKey(clientWorkoutId, target.itemExercise().getId(), setKey);
+    }
 
     /* Structure Update */
 
@@ -665,30 +681,98 @@ public class ClientWorkoutService {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, targetLabel + " does not belong to client workout with id " + clientWorkout.getId() + ".");
     }
 
-    private Optional<ClientWorkoutSetResult> findSetResult(Long clientWorkoutId, ClientWorkoutResultTarget target, String setKey) {
-        if (target.item() != null) {
-            return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItem_IdAndSetKey(clientWorkoutId, target.item().getId(), setKey);
+    /*
+     * Benchmark snapshots
+     */
+
+    private List<ClientWorkoutBenchmarkSnapshot> ensureBenchmarkSnapshots(ClientWorkout clientWorkout) {
+        List<ClientWorkoutBenchmarkSnapshot> existingSnapshots = new ArrayList<>(clientWorkoutBenchmarkSnapshotRepository.findAllByClientWorkout_Id(clientWorkout.getId()));
+
+        Map<BenchmarkSnapshotKey, ClientWorkoutBenchmarkSnapshot> existingSnapshotsByKey = new HashMap<>();
+
+        for (ClientWorkoutBenchmarkSnapshot snapshot : existingSnapshots) {
+            existingSnapshotsByKey.put(new BenchmarkSnapshotKey(snapshot.getExercise().getId(), snapshot.getBenchmarkType()), snapshot);
         }
-        return clientWorkoutSetResultRepository.findByClientWorkout_IdAndClientWorkoutItemExercise_IdAndSetKey(clientWorkoutId, target.itemExercise().getId(), setKey);
+
+        Map<BenchmarkSnapshotKey, Exercise> requiredSnapshots = getRequiredBenchmarkSnapshots(clientWorkout);
+
+        requiredSnapshots.keySet().removeAll(existingSnapshotsByKey.keySet());
+
+        if (requiredSnapshots.isEmpty()) {
+            return existingSnapshots;
+        }
+
+        Set<Long> missingExerciseIds = requiredSnapshots.keySet().stream()
+                .map(BenchmarkSnapshotKey::exerciseId)
+                .collect(LinkedHashSet::new, Set::add, Set::addAll);
+
+        List<ClientExerciseBenchmark> currentBenchmarks =
+                clientExerciseBenchmarkRepository.findLatestForClientAndExercises(clientWorkout.getClient().getId(), clientWorkout.getTrainer().getId(), missingExerciseIds);
+
+        Map<BenchmarkSnapshotKey, ClientExerciseBenchmark> currentBenchmarksByKey = new HashMap<>();
+
+        for (ClientExerciseBenchmark benchmark : currentBenchmarks) {
+            currentBenchmarksByKey.put(new BenchmarkSnapshotKey(benchmark.getExercise().getId(), benchmark.getBenchmarkType()), benchmark);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<ClientWorkoutBenchmarkSnapshot> createdSnapshots = new ArrayList<>();
+
+        for (Map.Entry<BenchmarkSnapshotKey, Exercise> entry : requiredSnapshots.entrySet()) {
+            ClientExerciseBenchmark sourceBenchmark = currentBenchmarksByKey.get(entry.getKey());
+
+            if (sourceBenchmark == null) {
+                continue;
+            }
+
+            ClientWorkoutBenchmarkSnapshot snapshot = new ClientWorkoutBenchmarkSnapshot();
+
+            snapshot.setClientWorkout(clientWorkout);
+            snapshot.setExercise(entry.getValue());
+            snapshot.setSourceBenchmark(sourceBenchmark);
+            snapshot.setBenchmarkType(sourceBenchmark.getBenchmarkType());
+            snapshot.setValue(sourceBenchmark.getValue());
+            snapshot.setUnit(sourceBenchmark.getUnit());
+            snapshot.setBasis(sourceBenchmark.getBasis());
+            snapshot.setAchievedAt(sourceBenchmark.getAchievedAt());
+            snapshot.setCreatedAt(now);
+
+            createdSnapshots.add(snapshot);
+        }
+
+        if (!createdSnapshots.isEmpty()) {
+            clientWorkoutBenchmarkSnapshotRepository.saveAll(createdSnapshots);
+            existingSnapshots.addAll(createdSnapshots);
+        }
+
+        return existingSnapshots;
     }
 
-    private Set<Long> getClientWorkoutExerciseIds(ClientWorkout clientWorkout) {
-        Set<Long> exerciseIds = new LinkedHashSet<>();
+    private Map<BenchmarkSnapshotKey, Exercise> getRequiredBenchmarkSnapshots(ClientWorkout clientWorkout) {
+        Map<BenchmarkSnapshotKey, Exercise> requiredSnapshots = new LinkedHashMap<>();
 
         for (ClientWorkoutSection section : clientWorkout.getSections()) {
             for (ClientWorkoutItem item : section.getItems()) {
-                if (item.getExercise() != null) {
-                    exerciseIds.add(item.getExercise().getId());
-                }
+                addRequiredBenchmarkSnapshots(requiredSnapshots, item.getExercise(), item.getConfigJson());
                 for (ClientWorkoutItemExercise itemExercise : item.getItemExercises()) {
-                    if (itemExercise.getExercise() != null) {
-                        exerciseIds.add(itemExercise.getExercise().getId());
-                    }
+                    addRequiredBenchmarkSnapshots(requiredSnapshots, itemExercise.getExercise(), itemExercise.getConfigJson());
                 }
             }
         }
 
-        return exerciseIds;
+        return requiredSnapshots;
+    }
+
+    private void addRequiredBenchmarkSnapshots(Map<BenchmarkSnapshotKey, Exercise> requiredSnapshots, Exercise exercise, String configJson) {
+        if (exercise == null || configJson == null || configJson.isBlank()) {
+            return;
+        }
+
+        ParsedWorkoutConfig config = parseWorkoutConfig(configJson);
+
+        for (ExerciseBenchmarkType benchmarkType : config.benchmarkTypes()) {
+            requiredSnapshots.putIfAbsent(new BenchmarkSnapshotKey(exercise.getId(), benchmarkType), exercise);
+        }
     }
 
     //---------------------------------------------------------------------------------------------------------
@@ -835,6 +919,7 @@ public class ClientWorkoutService {
         }
 
         Set<String> inputFieldKeys = new HashSet<>();
+        Set<ExerciseBenchmarkType> benchmarkTypes = EnumSet.noneOf(ExerciseBenchmarkType.class);
 
         JsonNode trackingFieldsNode = configNode.path("trackingFields");
 
@@ -845,16 +930,28 @@ public class ClientWorkoutService {
                 if (fieldKey != null && !fieldKey.equals("notes")) {
                     inputFieldKeys.add(fieldKey);
                 }
+                String fieldMode = TextUtils.trimToNull(trackingFieldNode.path("mode").asString(null));
+                ExerciseBenchmarkType benchmarkType = ExerciseBenchmarkType.getByTrackingMode(fieldMode);
+                if (benchmarkType != null) {
+                    benchmarkTypes.add(benchmarkType);
+                }
             }
         }
 
-        return new ParsedWorkoutConfig(eachSide, Set.copyOf(setKeys), Set.copyOf(inputFieldKeys));
+        return new ParsedWorkoutConfig(eachSide, Set.copyOf(setKeys), Set.copyOf(inputFieldKeys), Set.copyOf(benchmarkTypes));
     }
+
+    //---------------------------------------------------------------------------------------------------------
+    //
+    //  Internal records
+    //
+    //---------------------------------------------------------------------------------------------------------
 
     private record ParsedWorkoutConfig(
             boolean eachSide,
             Set<String> setKeys,
-            Set<String> inputFieldKeys
+            Set<String> inputFieldKeys,
+            Set<ExerciseBenchmarkType> benchmarkTypes
     ) {
     }
 
@@ -862,6 +959,12 @@ public class ClientWorkoutService {
             ClientWorkoutItem item,
             ClientWorkoutItemExercise itemExercise,
             String configJson
+    ) {
+    }
+
+    private record BenchmarkSnapshotKey(
+            Long exerciseId,
+            ExerciseBenchmarkType benchmarkType
     ) {
     }
 }

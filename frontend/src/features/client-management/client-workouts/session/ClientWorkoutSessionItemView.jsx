@@ -126,16 +126,6 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                             Exit workout
                         </Menu.Item>
 
-                        {workout.status === 'IN_PROGRESS' && (
-                            <Menu.Item
-                                color="red"
-                                leftSection={<IconTrash size={16}/>}
-                                onClick={onAbandonWorkout}
-                            >
-                                Abandon workout
-                            </Menu.Item>
-                        )}
-
                         <Menu.Divider/>
 
                         <Menu.Item
@@ -147,6 +137,22 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                         >
                             {colorScheme === 'light' ? 'Dark mode' : 'Light mode'}
                         </Menu.Item>
+
+                        {workout.status === 'IN_PROGRESS' && (
+                            <>
+                                <Menu.Divider/>
+
+                                <Menu.Label>Danger zone</Menu.Label>
+
+                                <Menu.Item
+                                    color="red"
+                                    leftSection={<IconTrash size={16}/>}
+                                    onClick={onAbandonWorkout}
+                                >
+                                    Abandon workout
+                                </Menu.Item>
+                            </>
+                        )}
                     </Menu.Dropdown>
                 </Menu>
             </Group>

@@ -1,4 +1,5 @@
 import {
+    EXERCISE_UNITS,
     convertExerciseUnitValue,
 } from '../../exercises/exercise-units.js';
 
@@ -101,12 +102,20 @@ export function resolveExerciseBenchmarkPercentageTarget({benchmarks, exerciseId
         };
     }
 
+    const resolvedValue = convertedBenchmarkValue * (numericPercentage / 100);
+
     return {
         resolved: true,
         percentage: numericPercentage,
-        resolvedValue: convertedBenchmarkValue * (numericPercentage / 100),
+        resolvedValue: roundResolvedBenchmarkTarget(resolvedValue, resolvedUnit,),
         resolvedBenchmarkValue: convertedBenchmarkValue,
         resolvedUnit,
         benchmark,
     };
+}
+
+function roundResolvedBenchmarkTarget(value, unit) {
+    return unit === EXERCISE_UNITS.POUNDS.value || unit === EXERCISE_UNITS.KILOGRAMS.value
+        ? Math.round(value * 2) / 2
+        : value;
 }

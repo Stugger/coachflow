@@ -26,6 +26,7 @@ import {
 
 import {
     apiDeleteClientWorkout,
+    apiGetClientWorkoutSession,
     apiGetInitialAssessmentWorkout,
     apiStartClientWorkout,
 } from '../../client-workouts/client-workout-api';
@@ -87,6 +88,7 @@ function ClientRecordsTab({client, refreshKey,
     const [intakeError, setIntakeError] = useState('');
 
     const [initialAssessmentWorkout, setInitialAssessmentWorkout] = useState(null);
+    const [initialAssessmentBenchmarks, setInitialAssessmentBenchmarks] = useState(null);
     const [initialAssessmentLoaded, setInitialAssessmentLoaded] = useState(false);
     const [initialAssessmentError, setInitialAssessmentError] = useState('');
 
@@ -143,19 +145,24 @@ function ClientRecordsTab({client, refreshKey,
         setInitialAssessmentError('');
 
         return apiGetInitialAssessmentWorkout(clientId)
-            .then(workout => {
-                setInitialAssessmentWorkout(workout);
+            .then(async workout => {
+                if (workout.status === 'READY') {
+                    setInitialAssessmentWorkout(workout);
+                    setInitialAssessmentBenchmarks(null);
+                    return;
+                }
+                const session = await apiGetClientWorkoutSession(workout.id);
+                setInitialAssessmentWorkout(session.workout);
+                setInitialAssessmentBenchmarks(session.benchmarks ?? []);
             })
             .catch(error => {
                 if (error.status === 404) {
                     setInitialAssessmentWorkout(null);
+                    setInitialAssessmentBenchmarks(null);
                     return;
                 }
-
-                console.error('Failed to load initial assessment workout:', error);
-                setInitialAssessmentError(
-                    error.message || 'Failed to refresh the initial assessment workout.'
-                );
+                console.error('Failed to load initial assessment workout:', error,);
+                setInitialAssessmentError(error.message || 'Failed to refresh the initial assessment workout.');
             })
             .finally(() => {
                 initialAssessmentLoadedRef.current = true;
@@ -219,6 +226,7 @@ function ClientRecordsTab({client, refreshKey,
         if (client.reviewStatus?.initialAssessmentStatus === 'MISSING') {
             initialAssessmentLoadedRef.current = true;
             setInitialAssessmentWorkout(null);
+            setInitialAssessmentBenchmarks(null);
             setInitialAssessmentError('');
             setInitialAssessmentLoaded(true);
             return;
@@ -311,6 +319,7 @@ function ClientRecordsTab({client, refreshKey,
             await apiDeleteClientWorkout(initialAssessmentWorkout.id);
 
             setInitialAssessmentWorkout(null);
+            setInitialAssessmentBenchmarks(null);
             setDeleteConfirmationOpen(false);
             onInitialAssessmentDeleted?.();
         } catch (error) {
@@ -526,6 +535,9 @@ function ClientRecordsTab({client, refreshKey,
         const initialAssessmentStatus = initialAssessmentWorkout?.status ?? null;
         const initialAssessmentInProgress = initialAssessmentStatus === 'IN_PROGRESS';
         const initialAssessmentCompleted = initialAssessmentStatus === 'COMPLETED';
+        const initialAssessmentPreviewBenchmarks = initialAssessmentWorkout?.status === 'READY'
+            ? benchmarksLoaded && !benchmarksError ? benchmarks : null
+            : initialAssessmentBenchmarks;
 
         return (
             <Accordion.Item
@@ -583,7 +595,7 @@ function ClientRecordsTab({client, refreshKey,
                 <Accordion.Panel>
                     <InitialAssessmentRecordCard
                         workout={initialAssessmentWorkout}
-                        benchmarks={benchmarksLoaded && !benchmarksError ? benchmarks : null}
+                        benchmarks={initialAssessmentPreviewBenchmarks}
                         loaded={initialAssessmentLoaded}
                         error={initialAssessmentError}
                         deleting={deletingInitialAssessment}

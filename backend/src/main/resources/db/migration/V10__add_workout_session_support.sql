@@ -2,8 +2,7 @@
 -- Allow workout structures to be reconciled in place
 -- -----------------------------------------------------------------------------------------------------------------
 --
--- Workout templates and client workouts previously deleted and recreated their
--- complete nested structures during updates.
+-- Workout templates and client workouts previously deleted and recreated their complete nested structures during updates.
 --
 -- Stable structure IDs require existing nodes to be updated and reordered in place.
 -- Position constraints are deferred until transaction commit so nodes can temporarily
@@ -109,8 +108,7 @@ CREATE UNIQUE INDEX uq_client_workouts_one_in_progress_per_client
 -- Each row stores the actual values entered for one prescribed workout set.
 --
 -- A direct exercise result references client_workout_items.
--- An exercise inside a superset, triset, or circuit references
--- client_workout_item_exercises.
+-- An exercise inside a superset, triset, or circuit references client_workout_item_exercises.
 --
 -- values_json is organized by result side:
 --
@@ -132,9 +130,8 @@ CREATE UNIQUE INDEX uq_client_workouts_one_in_progress_per_client
 --         }
 --     }
 --
--- completed_at remains null while values are merely autosaved. Once populated,
--- the set is considered completed and its structural workout configuration can
--- no longer be changed.
+-- completed_at remains null while values are merely autosaved. Once populated, the set
+-- is considered completed and its structural workout configuration can no longer be changed.
 -- -----------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE client_workout_set_results (
@@ -185,3 +182,40 @@ CREATE UNIQUE INDEX uq_client_workout_set_results_stack_set ON client_workout_se
 
 CREATE INDEX idx_client_workout_set_results_completed_workout ON client_workout_set_results(client_workout_id)
     WHERE completed_at IS NOT NULL;
+
+
+-- -----------------------------------------------------------------------------------------------------------------
+-- Client workout benchmark snapshots
+-- -----------------------------------------------------------------------------------------------------------------
+--
+-- Benchmark-based workout targets must remain stable after a live session is
+-- completed, even if the client's current benchmark is later changed or removed.
+--
+-- One immutable snapshot is retained for each benchmark type used by an exercise in a client workout.
+-- Missing snapshots may be added while the workout remains in progress when its structure gains a new benchmark-based target.
+-- -----------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE client_workout_benchmark_snapshots (
+    id BIGSERIAL PRIMARY KEY,
+
+    client_workout_id BIGINT NOT NULL REFERENCES client_workouts(id) ON DELETE CASCADE,
+    exercise_id BIGINT NOT NULL REFERENCES exercises(id),
+    source_benchmark_id BIGINT REFERENCES client_exercise_benchmarks(id) ON DELETE SET NULL,
+
+    benchmark_type VARCHAR(64) NOT NULL,
+    value NUMERIC(12, 3) NOT NULL,
+    unit VARCHAR(32),
+    basis VARCHAR(32) NOT NULL,
+
+    achieved_at TIMESTAMP NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_client_workout_benchmark_snapshot UNIQUE (client_workout_id, exercise_id, benchmark_type),
+
+    CONSTRAINT chk_client_workout_benchmark_snapshot_value_positive CHECK (
+        value > 0
+    )
+);
+
+CREATE INDEX idx_client_workout_benchmark_snapshots_workout_id ON client_workout_benchmark_snapshots(client_workout_id);
