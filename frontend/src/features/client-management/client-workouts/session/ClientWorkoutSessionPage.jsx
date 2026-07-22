@@ -122,6 +122,7 @@ function ClientWorkoutSessionPage() {
 
     function returnToSource() {
         if (!workout) {
+            navigate(ROUTES.CLIENTS)
             return;
         }
 
@@ -287,9 +288,21 @@ function ClientWorkoutSessionPage() {
 
     if (error || !workout) {
         return (
-            <Alert color="red">
-                {error || 'Workout session not found.'}
-            </Alert>
+            <Stack gap="sm" px="md" py="md">
+                <Alert color="red">
+                    {error || 'Workout session not found.'}
+                    <Button
+                        fullWidth
+                        size="md"
+                        variant="default"
+                        mt="lg"
+                        leftSection={<IconLogout2 size={16}/>}
+                        onClick={returnToSource}
+                    >
+                        Exit page
+                    </Button>
+                </Alert>
+            </Stack>
         );
     }
 

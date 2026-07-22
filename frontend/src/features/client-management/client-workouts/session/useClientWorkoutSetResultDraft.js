@@ -2,17 +2,23 @@ import {useEffect, useRef, useState} from 'react';
 
 import {apiSaveClientWorkoutSetResult} from '../client-workout-api.js';
 
-import {usesSeparateSideValues} from './client-workout-set-result-utils.js';
+import {
+    usesSeparateSideValues,
+} from './client-workout-set-result-utils.js';
 
 import {
-    TRACKING_FIELD_KEY,
-} from '../../../exercises/exercise-tracking-fields.js';
+    createSetResultValues,
+    mergeSetResultValues,
+    normalizeSetResultValues,
+    splitSetResultValues,
+    updateSetResultValue,
+} from './client-workout-set-result-draft-utils.js';
 
 const AUTOSAVE_DELAY = 700;
 
 function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, clientWorkoutItemExerciseId = null, setKey, config, result, onResultSaved}) {
 
-    const [values, setValues] = useState(() => createInitialValues(config, result));
+    const [values, setValues] = useState(() => createSetResultValues(config, result));
     const [notes, setNotes] = useState(result?.notes ?? '');
     const [saveStatus, setSaveStatus] = useState('idle');
     const [saveError, setSaveError] = useState('');
@@ -39,18 +45,7 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
     }, []);
 
     function updateValue(side, fieldKey, nextValue, {autosave = true} = {}) {
-        const nextSideValues = {...valuesRef.current[side]};
-
-        if (nextValue === '' || nextValue === null || nextValue === undefined) {
-            delete nextSideValues[fieldKey];
-        } else {
-            nextSideValues[fieldKey] = nextValue;
-        }
-
-        replaceValues({
-            ...valuesRef.current,
-            [side]: nextSideValues,
-        }, autosave);
+        replaceValues(updateSetResultValue(valuesRef.current, side, fieldKey, nextValue), autosave);
     }
 
     function updateNotes(nextNotes) {
@@ -60,18 +55,11 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
     }
 
     function splitSides() {
-        const sharedValues = {...(valuesRef.current.default ?? {})};
-
-        replaceValues({
-            left: {...sharedValues},
-            right: {...sharedValues},
-        });
+        replaceValues(splitSetResultValues(valuesRef.current));
     }
 
     function mergeSides(sourceSide) {
-        replaceValues({
-            default: {...(valuesRef.current[sourceSide] ?? {})},
-        });
+        replaceValues(mergeSetResultValues(valuesRef.current, sourceSide));
     }
 
     function replaceValues(nextValues, autosave = true) {
@@ -111,7 +99,7 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
 
         const payload = {
             ...identity,
-            valuesJson: JSON.stringify(normalizeResultValues(valuesRef.current)),
+            valuesJson: JSON.stringify(normalizeSetResultValues(valuesRef.current)),
             notes: notesRef.current,
             completed: nextCompleted,
         };
@@ -168,63 +156,6 @@ function useClientWorkoutSetResultDraft({workoutId, clientWorkoutItemId = null, 
         flushAutosave,
         saveResult,
     };
-}
-
-function createInitialValues(config, result) {
-    const resultValues = result?.values ?? {};
-
-    if (!config.eachSide) {
-        return {
-            default: {...(resultValues.default ?? {})},
-        };
-    }
-
-    if (usesSeparateSideValues(resultValues)) {
-        return {
-            left: {...(resultValues.left ?? {})},
-            right: {...(resultValues.right ?? {})},
-        };
-    }
-
-    /*
-     * Preserve an existing shared result.
-     * This avoids silently changing the result shape when loading results created before timed fields defaulted to separate sides.
-     */
-    if (Object.hasOwn(resultValues, 'default')) {
-        return {
-            default: {...resultValues.default},
-        };
-    }
-
-    const hasTimeField = config.trackingFields?.some(field => field.key === TRACKING_FIELD_KEY.TIME);
-
-    if (hasTimeField) {
-        return {
-            left: {},
-            right: {},
-        };
-    }
-
-    return {
-        default: {},
-    };
-}
-
-function normalizeResultValues(values) {
-    return Object.fromEntries(
-        Object.entries(values)
-            .map(([side, sideValues]) => [
-                side,
-                Object.fromEntries(
-                    Object.entries(sideValues).filter(([, value]) =>
-                        value !== ''
-                        && value !== null
-                        && value !== undefined
-                    ),
-                ),
-            ])
-            .filter(([, sideValues]) => Object.keys(sideValues).length),
-    );
 }
 
 export default useClientWorkoutSetResultDraft;

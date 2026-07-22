@@ -17,21 +17,31 @@ export function addMinutesToLocalDateTime(date, time, minutesToAdd) {
     const [year, month, day] = date.split('-').map(Number);
     const [hour, minute] = time.split(':').map(Number);
     const localDate = new Date(year, month - 1, day, hour, minute);
-    localDate.setMinutes(
-        localDate.getMinutes() + Number(minutesToAdd)
-    );
+    localDate.setMinutes(localDate.getMinutes() + Number(minutesToAdd));
     return toLocalDateTimeString(localDate);
 }
 
 export function formatDisplayTime(dateTime) {
-    return new Date(dateTime).toLocaleTimeString([], {
+    const date = new Date(dateTime);
+
+    if (!Number.isFinite(date.getTime())) {
+        return null;
+    }
+
+    return date.toLocaleTimeString([], {
         hour: 'numeric',
         minute: '2-digit'
     });
 }
 
 export function formatDisplayDate(dateTime) {
-    return new Date(dateTime).toLocaleDateString([], {
+    const date = new Date(dateTime);
+
+    if (!Number.isFinite(date.getTime())) {
+        return null;
+    }
+
+    return date.toLocaleDateString([], {
         weekday: 'short',
         month: 'short',
         day: 'numeric'

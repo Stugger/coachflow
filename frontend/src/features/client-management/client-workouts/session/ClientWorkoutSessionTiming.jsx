@@ -5,11 +5,27 @@ import {
     Group,
     Text,
 } from '@mantine/core';
-import {IconClock} from '@tabler/icons-react';
+import {
+    IconClock
+} from '@tabler/icons-react';
+
 import {formatDisplayTime} from "../../../../utils/time-utils.js";
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Live duration display
+// ------------------------------------------------------------------------------------------------------------------------
+
 export function ClientWorkoutLiveDurationBadge({startedAt, subtle}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
     const [now, setNow] = useState(() => Date.now());
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Effects
+    // ------------------------------------------------------------------------------------------------------------------------
 
     useEffect(() => {
         const interval = window.setInterval(() => {
@@ -22,6 +38,10 @@ export function ClientWorkoutLiveDurationBadge({startedAt, subtle}) {
     const duration = formatElapsedDuration(
         getElapsedSeconds(startedAt, now),
     );
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     if (subtle) {
         return (
@@ -45,14 +65,27 @@ export function ClientWorkoutLiveDurationBadge({startedAt, subtle}) {
     );
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Record duration display
+// ------------------------------------------------------------------------------------------------------------------------
+
 export function ClientWorkoutRecordTiming({startedAt, completedAt, isSmallScreen}) {
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // State
+    // ------------------------------------------------------------------------------------------------------------------------
+
     const completedDate = formatCompletedDate(completedAt);
-    const completedTime = formatCompletedTime(completedAt);
+    const completedTime = completedAt ? formatDisplayTime(completedAt) : null;
     const duration = formatElapsedDuration(getElapsedSeconds(startedAt, completedAt));
 
     if (!completedDate && !completedTime && !duration) {
         return null;
     }
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Main return
+    // ------------------------------------------------------------------------------------------------------------------------
 
     return (
         <Alert
@@ -98,11 +131,13 @@ export function ClientWorkoutRecordTiming({startedAt, completedAt, isSmallScreen
     );
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+// Utility
+// ------------------------------------------------------------------------------------------------------------------------
+
 function getElapsedSeconds(startedAt, endedAt) {
     const startTime = getTime(startedAt);
-    const endTime = typeof endedAt === 'number'
-        ? endedAt
-        : getTime(endedAt);
+    const endTime = typeof endedAt === 'number' ? endedAt : getTime(endedAt);
 
     if (startTime === null || endTime === null || endTime < startTime) {
         return null;
@@ -153,22 +188,5 @@ function formatCompletedDate(completedAt) {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
-    });
-}
-
-function formatCompletedTime(completedAt) {
-    if (!completedAt) {
-        return null;
-    }
-
-    const date = new Date(completedAt);
-
-    if (!Number.isFinite(date.getTime())) {
-        return null;
-    }
-
-    return date.toLocaleTimeString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
     });
 }

@@ -7,7 +7,6 @@ import {
     Loader,
     Stack,
     Text,
-    Textarea,
     Tooltip,
 } from '@mantine/core';
 import {
@@ -16,10 +15,9 @@ import {
     IconEdit
 } from '@tabler/icons-react';
 
-import ClientWorkoutSessionResultInputs from './ClientWorkoutSessionResultInputs.jsx';
+import ClientWorkoutSetResultFields from './ClientWorkoutSetResultFields.jsx';
 import ClientWorkoutSessionResultSummary from './ClientWorkoutSessionResultSummary.jsx';
 
-import {getSetInstruction} from './client-workout-set-result-utils.js';
 import useClientWorkoutSetResultDraft from './useClientWorkoutSetResultDraft.js';
 
 function ClientWorkoutLiveSetEditor({workoutId, clientWorkoutItemId = null, exerciseId, benchmarks, clientWorkoutItemExerciseId = null, config, set, result, completeLabel, colorScheme,
@@ -33,8 +31,6 @@ function ClientWorkoutLiveSetEditor({workoutId, clientWorkoutItemId = null, exer
 
     const [editing, setEditing] = useState(!completed);
     const [completing, setCompleting] = useState(false);
-
-    const instruction = getSetInstruction(config, set);
 
     const {
         values,
@@ -134,45 +130,20 @@ function ClientWorkoutLiveSetEditor({workoutId, clientWorkoutItemId = null, exer
 
     return (
         <Stack gap="md" onBlurCapture={flushAutosave}>
-            {instruction && (
-                <Text
-                    size="sm"
-                    c="dimmed"
-                    fs="italic"
-                    style={{whiteSpace: 'pre-wrap'}}
-                >
-                    {instruction}
-                </Text>
-            )}
-
-            <ClientWorkoutSessionResultInputs
+            <ClientWorkoutSetResultFields
                 exerciseId={exerciseId}
                 benchmarks={benchmarks}
                 config={config}
                 set={set}
                 values={values}
+                notes={notes}
                 stackItem={clientWorkoutItemExerciseId !== null}
                 separateSides={separateSides}
                 colorScheme={colorScheme}
                 onChange={updateValue}
                 onSplitSides={splitSides}
                 onMergeSides={mergeSides}
-            />
-
-            <Textarea
-                classNames={{input: "subtle-input"}}
-                variant="unstyled"
-                placeholder="Optional note..."
-                value={notes}
-                autosize
-                label={
-                    <Text size="sm" fw={600} pl="0.5rem">
-                        Trainer note
-                    </Text>
-                }
-                onChange={event =>
-                    updateNotes(event.currentTarget.value)
-                }
+                onNotesChange={updateNotes}
             />
 
             {saveError && (
