@@ -59,6 +59,12 @@ export function ClientWorkoutLiveDurationBadge({startedAt, subtle}) {
             color={"green"}
             variant={"light"}
             leftSection={<span className="client-session-live-dot" style={{marginRight: 2}}/>}
+            styles={{
+                label: {
+                    textBoxTrim: 'none',
+                    lineHeight: 1
+                }
+            }}
         >
             {duration}
         </Badge>

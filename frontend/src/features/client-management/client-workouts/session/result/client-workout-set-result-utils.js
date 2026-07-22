@@ -36,12 +36,19 @@ export function getSetResultInputDetails(field, target, {exerciseId = null, benc
     const width = type !== TRACKING_FIELD_TYPE.RANGE ? activeMode?.inputWidth ?? definition.inputWidth ?? '5rem' : '5rem';
 
     const targetDisplay = type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT
-        ? getBenchmarkPercentageTargetDisplay({value: target, exerciseId, benchmarks, benchmarkType: activeMode?.benchmarkType, targetUnit})
+        ? getBenchmarkPercentageTargetDisplay({
+            value: target,
+            exerciseId,
+            benchmarks,
+            benchmarkType: activeMode?.benchmarkType,
+            targetUnit,
+        })
         : {
             label: formatTarget(field, target, type, unit),
             detail: null,
             detailColor: null,
             placeholder: getTargetPlaceholder(target, type),
+            comparisonValue: getTargetComparisonValue(target, type),
         };
 
     return {
@@ -53,6 +60,7 @@ export function getSetResultInputDetails(field, target, {exerciseId = null, benc
         targetLabel: targetDisplay.label,
         targetDetailLabel: targetDisplay.detail,
         targetDetailColor: targetDisplay.detailColor,
+        targetComparisonValue: targetDisplay.comparisonValue,
         placeholder: targetDisplay.placeholder,
     };
 }
@@ -66,33 +74,34 @@ export function usesSeparateSideValues(values) {
     return Boolean(values && (Object.hasOwn(values, 'left') || Object.hasOwn(values, 'right')));
 }
 
-export function formatSetResultValues(trackingFields, values) {
-    if (!values) {
-        return '';
-    }
-
-    return trackingFields
-        .filter(field =>
-            field.key !== TRACKING_FIELD_KEY.NOTES
-            && field.key !== TRACKING_FIELD_KEY.REST
-            && values[field.key] !== ''
-            && values[field.key] !== null
-            && values[field.key] !== undefined
-        )
+export function getSetResultSummaryFields({config, set, values, exerciseId = null, benchmarks = []}) {
+    return (config.trackingFields ?? [])
+        .filter(field => field.key !== TRACKING_FIELD_KEY.NOTES && field.key !== TRACKING_FIELD_KEY.REST)
         .map(field => {
-            const definition = TRACKING_FIELD_DEFINITIONS[field.key];
-            const activeMode = definition?.modes?.find(mode => mode.value === field.mode) ?? definition?.modes?.[0];
-            const type = activeMode?.type ?? definition?.type;
+            const target = set?.targets?.[field.key];
 
-            const value = type === TRACKING_FIELD_TYPE.TIME
-                ? formatDurationSeconds(values[field.key]) ?? values[field.key]
-                : values[field.key];
+            const details = getSetResultInputDetails(
+                field,
+                target,
+                {
+                    exerciseId,
+                    benchmarks,
+                },
+            );
 
-            const unit = getExerciseUnitLabel(field.unit ?? activeMode?.unit ?? definition?.unit);
+            const resultValue = values?.[field.key];
 
-            return `${definition?.label ?? field.key}: ${value}${unit ? ` ${unit}` : ''}`;
-        })
-        .join(' · ');
+            return {
+                key: field.key,
+                label: details.label,
+                modeLabel: details.modeLabel,
+                resultLabel: formatSetResultValue(resultValue, details.type, details.unit),
+                targetLabel: details.targetLabel,
+                targetDetailLabel: details.targetDetailLabel,
+                targetDetailColor: details.targetDetailColor,
+                deltaLabel: formatSetResultDelta(resultValue, details.targetComparisonValue, details.type),
+            };
+        });
 }
 
 function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, benchmarkType, targetUnit}) {
@@ -102,6 +111,7 @@ function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, ben
             detail: null,
             detailColor: null,
             placeholder: '—',
+            comparisonValue: null,
         };
     }
 
@@ -132,6 +142,7 @@ function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, ben
             detail,
             detailColor: 'red',
             placeholder: '—',
+            comparisonValue: null,
         };
     }
 
@@ -140,7 +151,121 @@ function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, ben
         detail: `${percentageLabel}% of ${formatBenchmarkValue(resolution.resolvedBenchmarkValue, resolution.resolvedUnit)}`,
         detailColor: 'dimmed',
         placeholder: String(resolution.resolvedValue),
+        comparisonValue: resolution.resolvedValue,
     };
+}
+
+function getTargetPlaceholder(value, type) {
+    if (value === '' || value === null || value === undefined) {
+        return '—';
+    }
+
+    if (type === TRACKING_FIELD_TYPE.RANGE) {
+        return `${value.min ?? '—'}–${value.max ?? '—'}`;
+    }
+
+    return String(value);
+}
+
+function getTargetComparisonValue(value, type) {
+    if (value === '' || value === null || value === undefined) {
+        return null;
+    }
+
+    if (type === TRACKING_FIELD_TYPE.RANGE) {
+        return value;
+    }
+
+    return isNumericTrackingType(type) ? toFiniteNumber(value) : null;
+}
+
+function getModeLabel(field, definition, activeMode) {
+    if (!activeMode) {
+        return '';
+    }
+
+    if (field.key === TRACKING_FIELD_KEY.TIME) {
+        return activeMode.label;
+    }
+
+    const defaultMode = definition?.modes?.[0];
+
+    return activeMode.value !== defaultMode?.value ? activeMode.label : '';
+}
+
+function formatSetResultValue(value, type, unit) {
+    if (value === '' || value === null || value === undefined) {
+        return '—';
+    }
+
+    if (type === TRACKING_FIELD_TYPE.TIME) {
+        return formatDurationSeconds(value) ?? '—';
+    }
+
+    const formattedValue = isNumericTrackingType(type) ? formatNumber(value) : String(value);
+
+    return formatValueWithUnit(formattedValue, unit);
+}
+
+function formatSetResultDelta(resultValue, targetComparisonValue, type) {
+    const numericResult = toFiniteNumber(resultValue);
+
+    if (numericResult === null || targetComparisonValue === null || targetComparisonValue === undefined) {
+        return null;
+    }
+
+    let delta;
+
+    if (type === TRACKING_FIELD_TYPE.RANGE) {
+        const minimum = toFiniteNumber(targetComparisonValue?.min);
+        const maximum = toFiniteNumber(targetComparisonValue?.max);
+        if (minimum !== null && numericResult < minimum) {
+            delta = numericResult - minimum;
+        } else if (maximum !== null && numericResult > maximum) {
+            delta = numericResult - maximum;
+        } else {
+            return null;
+        }
+    } else if (isNumericTrackingType(type)) {
+        const numericTarget = toFiniteNumber(targetComparisonValue);
+        if (numericTarget === null) {
+            return null;
+        }
+        delta = numericResult - numericTarget;
+    } else {
+        return null;
+    }
+
+    if (Math.abs(delta) < 0.000001) {
+        return null;
+    }
+
+    const sign = delta > 0 ? '+' : '-';
+    const magnitude = type === TRACKING_FIELD_TYPE.TIME ? formatDurationSeconds(Math.abs(delta)) : formatNumber(Math.abs(delta));
+    return magnitude ? `${sign}${magnitude}` : null;
+}
+
+function formatValueWithUnit(value, unit) {
+    if (!unit) {
+        return value;
+    }
+    return unit === '%' ? `${value}${unit}` : `${value} ${unit}`;
+}
+
+function formatTarget(field, value, type, unit) {
+    if (value === '' || value === null || value === undefined) {
+        return '—';
+    }
+
+    if (type === TRACKING_FIELD_TYPE.RANGE) {
+        return `${value.min ?? '—'}–${value.max ?? '—'}`;
+    }
+
+    if (type === TRACKING_FIELD_TYPE.TIME) {
+        return formatDurationSeconds(value) ?? '—';
+    }
+
+    return unit ? `${value} ${unit}` : String(value);
 }
 
 function formatBenchmarkValue(value, unit) {
@@ -164,46 +289,18 @@ function formatNumber(value) {
     }).format(numericValue);
 }
 
-function formatTarget(field, value, type, unit) {
-    if (value === '' || value === null || value === undefined) {
-        return '—';
-    }
-
-    if (type === TRACKING_FIELD_TYPE.RANGE) {
-        return `${value.min ?? '—'}–${value.max ?? '—'}`;
-    }
-
-    if (type === TRACKING_FIELD_TYPE.TIME) {
-        return formatDurationSeconds(value) ?? '—';
-    }
-
-    return unit ? `${value} ${unit}` : String(value);
+function isNumericTrackingType(type) {
+    return type === TRACKING_FIELD_TYPE.INTEGER
+        || type === TRACKING_FIELD_TYPE.DECIMAL
+        || type === TRACKING_FIELD_TYPE.RANGE
+        || type === TRACKING_FIELD_TYPE.TIME
+        || type === TRACKING_FIELD_TYPE.BENCHMARK_PERCENT;
 }
 
-function getTargetPlaceholder(value, type) {
+function toFiniteNumber(value) {
     if (value === '' || value === null || value === undefined) {
-        return '—';
+        return null;
     }
-
-    if (type === TRACKING_FIELD_TYPE.RANGE) {
-        return `${value.min ?? '—'}–${value.max ?? '—'}`;
-    }
-
-    return String(value);
-}
-
-function getModeLabel(field, definition, activeMode) {
-    if (!activeMode) {
-        return '';
-    }
-
-    if (field.key === TRACKING_FIELD_KEY.TIME) {
-        return activeMode.label;
-    }
-
-    const defaultMode = definition?.modes?.[0];
-
-    return activeMode.value !== defaultMode?.value
-        ? activeMode.label
-        : '';
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
 }

@@ -77,6 +77,8 @@ function ClientWorkoutSessionPage() {
     const results = session?.results ?? [];
     const benchmarks = session?.benchmarks ?? [];
 
+    const recordMode = workout?.status === 'COMPLETED';
+
     const [completionSummary, setCompletionSummary] = useState(null);
     const [completingWorkout, setCompletingWorkout] = useState(false);
     const [completionError, setCompletionError] = useState('');
@@ -450,7 +452,7 @@ function ClientWorkoutSessionPage() {
                                         leftSection={<IconLogout2 size={16}/>}
                                         onClick={returnToSource}
                                     >
-                                        Exit Workout
+                                        Exit{recordMode ? ' Record' : ' Workout'}
                                     </Button>
 
                                     <Menu position="bottom-end" withinPortal>
@@ -465,7 +467,7 @@ function ClientWorkoutSessionPage() {
                                                 leftSection={<IconLogout2 size={16}/>}
                                                 onClick={returnToSource}
                                             >
-                                                Exit workout
+                                                Exit{recordMode ? ' record' : ' workout'}
                                             </Menu.Item>
 
                                             <Menu.Divider/>
@@ -541,6 +543,7 @@ function ClientWorkoutSessionPage() {
                                 results={results}
                                 benchmarks={benchmarks}
                                 itemId={itemId}
+                                recordMode={recordMode}
                                 isSmallScreen={isSmallScreen}
                                 onExitWorkout={returnToSource}
                                 onAbandonWorkout={openAbandonConfirmation}

@@ -94,23 +94,14 @@ function ClientWorkoutRecordSetEditor({workoutId, clientWorkoutItemId = null, cl
                 )}
 
                 <ClientWorkoutSessionResultSummary
+                    exerciseId={exerciseId}
+                    benchmarks={benchmarks}
                     config={config}
+                    set={set}
                     values={values}
+                    notes={notes}
+                    colorScheme={colorScheme}
                 />
-
-                {notes.trim() && (
-                    <Text
-                        size="sm"
-                        c="dimmed"
-                        style={{whiteSpace: 'pre-wrap'}}
-                    >
-                        <Text component="span" fw={600}>
-                            Trainer note:{' '}
-                        </Text>
-
-                        {notes}
-                    </Text>
-                )}
 
                 <Button
                     variant="light"

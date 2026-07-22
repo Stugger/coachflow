@@ -6,7 +6,6 @@ import {
     Group,
     Loader,
     Stack,
-    Text,
     Tooltip,
 } from '@mantine/core';
 import {
@@ -98,19 +97,14 @@ function ClientWorkoutLiveSetEditor({workoutId, clientWorkoutItemId = null, exer
         return (
             <Stack gap="sm">
                 <ClientWorkoutSessionResultSummary
+                    exerciseId={exerciseId}
+                    benchmarks={benchmarks}
                     config={config}
+                    set={set}
                     values={values}
+                    notes={notes}
+                    colorScheme={colorScheme}
                 />
-
-                {notes.trim() && (
-                    <Text
-                        size="sm"
-                        c="dimmed"
-                        style={{whiteSpace: 'pre-wrap'}}
-                    >
-                        {notes}
-                    </Text>
-                )}
 
                 <Button
                     variant="light"

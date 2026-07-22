@@ -38,7 +38,7 @@ import {
 } from '../client-workout-session-utils.js';
 import {ClientWorkoutLiveDurationBadge} from "../shared/ClientWorkoutSessionTiming.jsx";
 
-function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
+function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, recordMode, isSmallScreen, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -56,8 +56,6 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
     // ------------------------------------------------------------------------------------------------------------------------
     // State
     // ------------------------------------------------------------------------------------------------------------------------
-
-    const recordMode = workout.status === 'COMPLETED';
 
     const resultIndex = useMemo(() => createClientWorkoutResultIndex(results), [results]);
 
@@ -145,7 +143,7 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isS
                             leftSection={<IconLogout2 size={16}/>}
                             onClick={onExitWorkout}
                         >
-                            Exit workout
+                            Exit{recordMode ? ' record' : ' workout'}
                         </Menu.Item>
 
                         <Menu.Divider/>
