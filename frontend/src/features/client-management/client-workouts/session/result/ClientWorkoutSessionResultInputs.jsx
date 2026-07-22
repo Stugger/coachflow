@@ -427,18 +427,13 @@ function TargetDisplay({fieldLabel, targetLabel, targetDetailLabel, targetDetail
                 maxWidth: '7rem',
                 borderRadius: 'var(--mantine-radius-sm)',
             }}
-            onClick={availableFillOptions.length === 1 ? () => onFillTarget(availableFillOptions[0].value) : undefined}
         >
             {content}
         </UnstyledButton>
     );
 
-    if (availableFillOptions.length === 1) {
-        return targetButton;
-    }
-
     return (
-        <Menu position="bottom-end" withinPortal>
+        <Menu shadow="md" position="bottom-end" withinPortal>
             <Menu.Target>
                 {targetButton}
             </Menu.Target>
@@ -451,9 +446,7 @@ function TargetDisplay({fieldLabel, targetLabel, targetDetailLabel, targetDetail
                 {availableFillOptions.map(option => (
                     <Menu.Item
                         key={`${option.label}-${option.value}`}
-                        onClick={() =>
-                            onFillTarget(option.value)
-                        }
+                        onClick={() => onFillTarget(option.value)}
                     >
                         {option.label}
                     </Menu.Item>
