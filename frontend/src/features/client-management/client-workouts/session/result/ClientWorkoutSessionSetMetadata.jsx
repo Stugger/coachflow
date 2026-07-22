@@ -3,7 +3,7 @@ import {
     Group,
 } from '@mantine/core';
 
-import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from '../../../workout-builder/workout-builder-constants.js';
+import {WORKOUT_SET_TYPE, WORKOUT_SET_TYPE_OPTIONS} from '../../../../workout-builder/workout-builder-constants.js';
 
 function ClientWorkoutSessionSetMetadata({setType, eachSide}) {
 

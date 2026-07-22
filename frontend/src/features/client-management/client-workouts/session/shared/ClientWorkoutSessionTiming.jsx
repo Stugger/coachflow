@@ -9,7 +9,7 @@ import {
     IconClock
 } from '@tabler/icons-react';
 
-import {formatDisplayTime} from "../../../../utils/time-utils.js";
+import {formatDisplayTime} from "../../../../../utils/time-utils.js";
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Live duration display

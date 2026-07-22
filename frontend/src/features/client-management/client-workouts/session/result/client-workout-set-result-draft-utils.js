@@ -1,6 +1,6 @@
 import {
     TRACKING_FIELD_KEY,
-} from '../../../exercises/exercise-tracking-fields.js';
+} from '../../../../exercises/exercise-tracking-fields.js';
 
 import {
     usesSeparateSideValues,

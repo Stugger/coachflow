@@ -5,7 +5,7 @@ import {
     IconMinus
 } from '@tabler/icons-react';
 
-import {CLIENT_WORKOUT_PROGRESS_STATUS} from './client-workout-session-utils.js';
+import {CLIENT_WORKOUT_PROGRESS_STATUS} from '../client-workout-session-utils.js';
 
 function ClientWorkoutProgressIcon({status, size = 24}) {
 

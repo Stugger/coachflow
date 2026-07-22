@@ -1,6 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
 
-import {apiSaveClientWorkoutSetResult} from '../client-workout-api.js';
+import {apiSaveClientWorkoutSetResult} from '../../client-workout-api.js';
 
 import {
     usesSeparateSideValues,

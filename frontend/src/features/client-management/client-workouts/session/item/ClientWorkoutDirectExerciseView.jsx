@@ -8,25 +8,25 @@ import {
 } from '@mantine/core';
 
 import ClientWorkoutExerciseInformation from './ClientWorkoutExerciseInformation.jsx';
-import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
-import ClientWorkoutSessionSetMetadata from './ClientWorkoutSessionSetMetadata.jsx';
-import ClientWorkoutSessionSetEditor from './ClientWorkoutSessionSetEditor.jsx';
+import ClientWorkoutProgressIcon from '../shared/ClientWorkoutProgressIcon.jsx';
+import ClientWorkoutSessionSetMetadata from '../result/ClientWorkoutSessionSetMetadata.jsx';
+import ClientWorkoutSessionSetEditor from '../result/ClientWorkoutSessionSetEditor.jsx';
 import ClientWorkoutSessionRestTimer from './ClientWorkoutSessionRestTimer.jsx';
 
 import {
     CLIENT_WORKOUT_PROGRESS_STATUS,
     getDirectExerciseSessionSets,
-} from './client-workout-session-utils.js';
+} from '../client-workout-session-utils.js';
 
 import {
     getSetRestSeconds,
-} from './client-workout-set-result-utils.js';
+} from '../result/client-workout-set-result-utils.js';
 
 import {
     getSessionRestScrollId,
     getSessionSetScrollId,
     scheduleSessionScroll,
-} from './client-workout-session-scroll.js';
+} from '../client-workout-session-scroll.js';
 
 function ClientWorkoutDirectExerciseView({workoutId, item, resultIndex, benchmarks, recordMode, colorScheme, onResultSaved}) {
 

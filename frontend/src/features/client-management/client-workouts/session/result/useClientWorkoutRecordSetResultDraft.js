@@ -2,7 +2,7 @@ import {useState} from 'react';
 
 import {
     apiSaveClientWorkoutRecordSetResult,
-} from '../client-workout-api.js';
+} from '../../client-workout-api.js';
 
 import {
     usesSeparateSideValues,

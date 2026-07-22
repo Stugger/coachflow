@@ -2,20 +2,20 @@ import {
     TRACKING_FIELD_DEFINITIONS,
     TRACKING_FIELD_KEY,
     TRACKING_FIELD_TYPE,
-} from '../../../exercises/exercise-tracking-fields.js';
+} from '../../../../exercises/exercise-tracking-fields.js';
 
-import {getExerciseUnitLabel} from '../../../exercises/exercise-units.js';
-import {formatDurationSeconds} from '../../../../utils/time-utils.js';
+import {getExerciseUnitLabel} from '../../../../exercises/exercise-units.js';
+import {formatDurationSeconds} from '../../../../../utils/time-utils.js';
 
 import {
     BENCHMARK_TARGET_RESOLUTION_REASON,
     getBenchmarkTargetResolutionMessage,
     resolveExerciseBenchmarkPercentageTarget,
-} from '../../benchmarks/exercise-benchmark-resolution.js';
+} from '../../../benchmarks/exercise-benchmark-resolution.js';
 
 import {
     getExerciseBenchmarkDefinition,
-} from '../../benchmarks/exercise-benchmark-definitions.js';
+} from '../../../benchmarks/exercise-benchmark-definitions.js';
 
 export function getSetInstruction(config, set) {
     const notesField = config.trackingFields.find(field => field.key === TRACKING_FIELD_KEY.NOTES);

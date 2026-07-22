@@ -6,7 +6,7 @@ import {
 } from '@mantine/core';
 import {IconPhoto} from '@tabler/icons-react';
 
-import {resolveMediaUrl} from '../../../../utils/media-url-utils.js';
+import {resolveMediaUrl} from '../../../../../utils/media-url-utils.js';
 
 import {
     ClientWorkoutExerciseInformationContent,

@@ -21,20 +21,20 @@ import {
     CLIENT_WORKOUT_PROGRESS_STATUS,
     buildClientWorkoutSessionProgress,
     createClientWorkoutResultIndex,
-} from './client-workout-session-utils.js';
+} from '../client-workout-session-utils.js';
 
 import {
     getSessionItemScrollId,
     scheduleSessionScroll,
-} from './client-workout-session-scroll.js';
+} from '../client-workout-session-scroll.js';
 
 import {
     WORKOUT_ITEM_TYPE,
-} from '../../../workout-builder/workout-builder-constants.js';
+} from '../../../../workout-builder/workout-builder-constants.js';
 
-import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
-import {ClientWorkoutRecordTiming} from "./ClientWorkoutSessionTiming.jsx";
-import {getSectionTypeLabel} from "../../../workout-builder/workout-builder-utils.js";
+import ClientWorkoutProgressIcon from '../shared/ClientWorkoutProgressIcon.jsx';
+import {ClientWorkoutRecordTiming} from "../shared/ClientWorkoutSessionTiming.jsx";
+import {getSectionTypeLabel} from "../../../../workout-builder/workout-builder-utils.js";
 
 const OPEN_SECTIONS_PARAM = 'openSections';
 

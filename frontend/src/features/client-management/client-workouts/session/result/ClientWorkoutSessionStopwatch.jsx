@@ -9,7 +9,7 @@ import {
     IconPlayerPlay,
 } from '@tabler/icons-react';
 
-import DurationInput from '../../../../components/input/DurationInput.jsx';
+import DurationInput from '../../../../../components/input/DurationInput.jsx';
 
 function ClientWorkoutSessionStopwatch({value, width, height, buttonWidth, onChange}) {
 

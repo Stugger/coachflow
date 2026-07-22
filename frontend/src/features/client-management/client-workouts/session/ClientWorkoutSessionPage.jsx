@@ -37,9 +37,9 @@ import {
 import {getClientWorkoutOriginLabel} from '../client-workout-constants.js';
 import {getClientWorkoutSourceNavigation} from '../client-workout-navigation.js';
 
-import ClientWorkoutSessionOverview from './ClientWorkoutSessionOverview.jsx';
-import ClientWorkoutSessionItemView from './ClientWorkoutSessionItemView.jsx';
-import {ClientWorkoutLiveDurationBadge} from "./ClientWorkoutSessionTiming.jsx";
+import ClientWorkoutSessionOverview from './overview/ClientWorkoutSessionOverview.jsx';
+import ClientWorkoutSessionItemView from './item/ClientWorkoutSessionItemView.jsx';
+import {ClientWorkoutLiveDurationBadge} from "./shared/ClientWorkoutSessionTiming.jsx";
 
 function isSameSetResult(result, identity) {
     return result.setKey === identity.setKey

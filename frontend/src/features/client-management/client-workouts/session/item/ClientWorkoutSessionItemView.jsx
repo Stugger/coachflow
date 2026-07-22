@@ -22,10 +22,10 @@ import {
     IconTrash,
 } from '@tabler/icons-react';
 
-import {ROUTES} from '../../../../constants/routes.js';
-import {WORKOUT_ITEM_TYPE} from '../../../workout-builder/workout-builder-constants.js';
+import {ROUTES} from '../../../../../constants/routes.js';
+import {WORKOUT_ITEM_TYPE} from '../../../../workout-builder/workout-builder-constants.js';
 
-import ClientWorkoutProgressIcon from './ClientWorkoutProgressIcon.jsx';
+import ClientWorkoutProgressIcon from '../shared/ClientWorkoutProgressIcon.jsx';
 import ClientWorkoutDirectExerciseView from './ClientWorkoutDirectExerciseView.jsx';
 import ClientWorkoutStackView from './ClientWorkoutStackView.jsx';
 
@@ -35,8 +35,8 @@ import {
     findClientWorkoutSessionItem,
     findNextIncompleteClientWorkoutSessionItem,
     findNextClientWorkoutSessionItem,
-} from './client-workout-session-utils.js';
-import {ClientWorkoutLiveDurationBadge} from "./ClientWorkoutSessionTiming.jsx";
+} from '../client-workout-session-utils.js';
+import {ClientWorkoutLiveDurationBadge} from "../shared/ClientWorkoutSessionTiming.jsx";
 
 function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, isSmallScreen, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
 

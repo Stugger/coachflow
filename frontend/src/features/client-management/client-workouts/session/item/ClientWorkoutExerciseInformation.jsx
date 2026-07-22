@@ -14,13 +14,13 @@ import {
     IconTarget,
 } from '@tabler/icons-react';
 
-import ExerciseVideoPreview from '../../../exercises/components/ExerciseVideoPreview.jsx';
-import * as ExerciseMetadataUtils from '../../../exercises/exercise-metadata-utils.js';
+import ExerciseVideoPreview from '../../../../exercises/components/ExerciseVideoPreview.jsx';
+import * as ExerciseMetadataUtils from '../../../../exercises/exercise-metadata-utils.js';
 import {
     EQUIPMENT_OPTIONS,
     MUSCLE_OPTIONS,
-} from '../../../exercises/exercise-metadata-options.js';
-import {resolveMediaUrl} from '../../../../utils/media-url-utils.js';
+} from '../../../../exercises/exercise-metadata-options.js';
+import {resolveMediaUrl} from '../../../../../utils/media-url-utils.js';
 
 function ClientWorkoutExerciseInformation({exercise}) {
 
