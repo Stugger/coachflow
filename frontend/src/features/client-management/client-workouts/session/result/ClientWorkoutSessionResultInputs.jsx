@@ -9,8 +9,10 @@ import {
     Stack,
     Text,
     TextInput,
+    UnstyledButton,
 } from '@mantine/core';
 import {
+    IconArrowLeft,
     IconChevronDown,
 } from '@tabler/icons-react';
 
@@ -203,6 +205,7 @@ function SessionResultInput({field, target, value, exerciseId, benchmarks, index
         targetLabel,
         targetDetailLabel,
         targetDetailColor,
+        targetFillOptions,
         placeholder,
     } = getSetResultInputDetails(
         field,
@@ -220,12 +223,15 @@ function SessionResultInput({field, target, value, exerciseId, benchmarks, index
             targetLabel={targetLabel}
             targetDetailLabel={targetDetailLabel}
             targetDetailColor={targetDetailColor}
+            targetFillOptions={targetFillOptions}
+            value={value}
             stackItem={stackItem}
             alternate={index % 2 === 0}
             withTopBorder={withTopBorder}
             isSmallScreen={isSmallScreen}
             hasDurationInFields={hasDurationInFields}
             colorScheme={colorScheme}
+            onFillTarget={onChange}
         >
             {field.key === TRACKING_FIELD_KEY.TIME && !recordMode ? (
                 <ClientWorkoutSessionStopwatch
@@ -303,7 +309,8 @@ function SessionResultInput({field, target, value, exerciseId, benchmarks, index
     );
 }
 
-function MetricRow({label, modeLabel, targetLabel, targetDetailLabel, targetDetailColor, stackItem, alternate, withTopBorder = false, isSmallScreen, hasDurationInFields, colorScheme, children}) {
+function MetricRow({label, modeLabel, targetLabel, targetDetailLabel, targetDetailColor, targetFillOptions, value, stackItem, alternate, withTopBorder = false,
+                       isSmallScreen, hasDurationInFields, colorScheme, onFillTarget, children}) {
     return (
         <Box
             px="sm"
@@ -335,43 +342,140 @@ function MetricRow({label, modeLabel, targetLabel, targetDetailLabel, targetDeta
                     {children}
                 </Box>
 
-                <Stack
-                    gap={0}
-                    align="flex-end"
-                    style={{minWidth: 0, maxWidth: '7rem'}}
-                >
-                    <Text size="xs" c="dimmed">
-                        Target
-                    </Text>
-
-                    <Text
-                        size="sm"
-                        fw={600}
-                        ta="right"
-                        style={{overflowWrap: 'break-word'}}
-                    >
-                        {targetLabel}
-                    </Text>
-
-                    {targetDetailLabel && (
-                        <Text
-                            size="xs"
-                            c={targetDetailColor ?? 'dimmed'}
-                            fw={500}
-                            ta="right"
-                            lh={1.2}
-                            style={{
-                                overflowWrap: 'break-word',
-                                whiteSpace: 'nowrap',
-                            }}
-                        >
-                            {targetDetailLabel}
-                        </Text>
-                    )}
-                </Stack>
+                <TargetDisplay
+                    fieldLabel={label}
+                    targetLabel={targetLabel}
+                    targetDetailLabel={targetDetailLabel}
+                    targetDetailColor={targetDetailColor}
+                    fillOptions={targetFillOptions}
+                    value={value}
+                    onFillTarget={onFillTarget}
+                />
             </Box>
         </Box>
     );
+}
+
+function TargetDisplay({fieldLabel, targetLabel, targetDetailLabel, targetDetailColor, fillOptions = [], value, onFillTarget}) {
+
+    const availableFillOptions = fillOptions.filter(option => !areResultValuesEqual(value, option.value));
+
+    const content = (
+        <Stack
+            gap={0}
+            align="flex-end"
+            style={{
+                minWidth: 0,
+                maxWidth: '7rem',
+            }}
+        >
+            <Group gap={3} justify="flex-end" wrap="nowrap">
+                {availableFillOptions.length > 0 && (
+                    <IconArrowLeft
+                        size={11}
+                        stroke={2.4}
+                        style={{
+                            flexShrink: 0,
+                            opacity: 0.65,
+                        }}
+                    />
+                )}
+                <Text size="xs" c="dimmed">
+                    Target
+                </Text>
+            </Group>
+
+            <Text
+                size="sm"
+                fw={600}
+                ta="right"
+                style={{overflowWrap: 'break-word'}}
+            >
+                {targetLabel}
+            </Text>
+
+            {targetDetailLabel && (
+                <Text
+                    size="xs"
+                    c={targetDetailColor ?? 'dimmed'}
+                    fw={500}
+                    ta="right"
+                    lh={1.2}
+                    style={{
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'nowrap',
+                    }}
+                >
+                    {targetDetailLabel}
+                </Text>
+            )}
+        </Stack>
+    );
+
+    if (!availableFillOptions.length) {
+        return content;
+    }
+
+    const targetButton = (
+        <UnstyledButton
+            type="button"
+            aria-label={availableFillOptions.length === 1 ? `Fill ${fieldLabel} with target` : `Choose ${fieldLabel} target value`}
+            title={availableFillOptions.length === 1 ? 'Fill with target' : 'Choose target value'}
+            style={{
+                display: 'block',
+                minWidth: 0,
+                maxWidth: '7rem',
+                borderRadius: 'var(--mantine-radius-sm)',
+            }}
+            onClick={availableFillOptions.length === 1 ? () => onFillTarget(availableFillOptions[0].value) : undefined}
+        >
+            {content}
+        </UnstyledButton>
+    );
+
+    if (availableFillOptions.length === 1) {
+        return targetButton;
+    }
+
+    return (
+        <Menu position="bottom-end" withinPortal>
+            <Menu.Target>
+                {targetButton}
+            </Menu.Target>
+
+            <Menu.Dropdown>
+                <Menu.Label>
+                    Fill {fieldLabel}
+                </Menu.Label>
+
+                {availableFillOptions.map(option => (
+                    <Menu.Item
+                        key={`${option.label}-${option.value}`}
+                        onClick={() =>
+                            onFillTarget(option.value)
+                        }
+                    >
+                        {option.label}
+                    </Menu.Item>
+                ))}
+            </Menu.Dropdown>
+        </Menu>
+    );
+}
+
+function areResultValuesEqual(resultValue, targetValue) {
+    if (resultValue === '' || resultValue === null || resultValue === undefined) {
+        return false;
+    }
+
+    const numericResult = Number(resultValue);
+    const numericTarget = Number(targetValue);
+
+    if (Number.isFinite(numericResult) && Number.isFinite(numericTarget)) {
+        return numericResult === numericTarget;
+    }
+
+    return String(resultValue) === String(targetValue);
 }
 
 export default ClientWorkoutSessionResultInputs;

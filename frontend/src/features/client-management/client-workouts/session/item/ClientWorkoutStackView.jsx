@@ -238,7 +238,10 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, recor
                         : undefined,
                 }}
             >
-                <Accordion.Control icon={<ClientWorkoutProgressIcon status={round.status}/>}>
+                <Accordion.Control
+                    icon={<ClientWorkoutProgressIcon status={round.status}/>}
+                    pl={isSmallScreen ? 14 : undefined}
+                >
                     <Group justify="space-between" pr="sm" wrap="nowrap">
                         <Stack gap={1}>
                             <Text fw={700}>Round {round.number}</Text>
@@ -259,6 +262,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, recor
                         value={expandedExercise}
                         onChange={setExpandedExercise}
                         variant="separated"
+                        mx={isSmallScreen ? -4 : 0}
                     >
                         {round.exercises.map(exercise => {
                             if (!exercise.set) {
@@ -318,6 +322,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, recor
                 }}
             >
                 <Accordion.Control
+                    px={isSmallScreen ? 13 : undefined}
                     icon={
                         <Avatar
                             src={resolveMediaUrl(exercise.itemExercise.exercise?.thumbnailUrl)}
@@ -351,7 +356,7 @@ function ClientWorkoutStackView({workoutId, item, resultIndex, benchmarks, recor
                     </Group>
                 </Accordion.Control>
 
-                <Accordion.Panel>
+                <Accordion.Panel mx={isSmallScreen ? -3 : 0}>
                     <ClientWorkoutSessionSetEditor
                         workoutId={workoutId}
                         clientWorkoutItemExerciseId={exercise.itemExercise.id}

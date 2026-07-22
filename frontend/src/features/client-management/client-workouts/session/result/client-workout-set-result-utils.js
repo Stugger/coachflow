@@ -49,6 +49,7 @@ export function getSetResultInputDetails(field, target, {exerciseId = null, benc
             detailColor: null,
             placeholder: getTargetPlaceholder(target, type),
             comparisonValue: getTargetComparisonValue(target, type),
+            fillOptions: getTargetFillOptions(target, type),
         };
 
     return {
@@ -61,6 +62,7 @@ export function getSetResultInputDetails(field, target, {exerciseId = null, benc
         targetDetailLabel: targetDisplay.detail,
         targetDetailColor: targetDisplay.detailColor,
         targetComparisonValue: targetDisplay.comparisonValue,
+        targetFillOptions: targetDisplay.fillOptions,
         placeholder: targetDisplay.placeholder,
     };
 }
@@ -112,6 +114,7 @@ function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, ben
             detailColor: null,
             placeholder: '—',
             comparisonValue: null,
+            fillOptions: [],
         };
     }
 
@@ -143,6 +146,7 @@ function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, ben
             detailColor: 'red',
             placeholder: '—',
             comparisonValue: null,
+            fillOptions: [],
         };
     }
 
@@ -152,7 +156,66 @@ function getBenchmarkPercentageTargetDisplay({value, exerciseId, benchmarks, ben
         detailColor: 'dimmed',
         placeholder: String(resolution.resolvedValue),
         comparisonValue: resolution.resolvedValue,
+        fillOptions: [
+            {
+                label: 'Use target',
+                value: resolution.resolvedValue,
+            },
+        ],
     };
+}
+
+function getTargetFillOptions(value, type) {
+    if (type === TRACKING_FIELD_TYPE.RANGE) {
+        const minimum = value?.min;
+        const maximum = value?.max;
+
+        const hasMinimum = hasTargetValue(minimum);
+        const hasMaximum = hasTargetValue(maximum);
+
+        if (!hasMinimum && !hasMaximum) {
+            return [];
+        }
+
+        if (hasMinimum && hasMaximum && Number(minimum) === Number(maximum)) {
+            return [
+                {
+                    label: 'Use target',
+                    value: minimum,
+                },
+            ];
+        }
+
+        return [
+            ...(hasMinimum
+                ? [{
+                    label: 'Use minimum',
+                    value: minimum,
+                }]
+                : []),
+            ...(hasMaximum
+                ? [{
+                    label: 'Use maximum',
+                    value: maximum,
+                }]
+                : []),
+        ];
+    }
+
+    if (!hasTargetValue(value)) {
+        return [];
+    }
+
+    return [
+        {
+            label: 'Use target',
+            value,
+        },
+    ];
+}
+
+function hasTargetValue(value) {
+    return value !== '' && value !== null && value !== undefined;
 }
 
 function getTargetPlaceholder(value, type) {

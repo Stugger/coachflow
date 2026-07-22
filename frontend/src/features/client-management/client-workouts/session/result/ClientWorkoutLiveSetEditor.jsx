@@ -150,6 +150,7 @@ function ClientWorkoutLiveSetEditor({workoutId, clientWorkoutItemId = null, exer
                 <SaveStatus
                     status={saveStatus}
                     error={saveError}
+                    colorScheme={colorScheme}
                 />
 
                 {completed
@@ -181,7 +182,7 @@ function ClientWorkoutLiveSetEditor({workoutId, clientWorkoutItemId = null, exer
 // Components
 // ------------------------------------------------------------------------------------------------------------------------
 
-function SaveStatus({status, error}) {
+function SaveStatus({status, error, colorScheme}) {
     const syncing = status === 'dirty' || status === 'saving';
 
     const label = syncing
@@ -211,7 +212,11 @@ function SaveStatus({status, error}) {
                 }}
             >
                 {syncing ? (
-                    <Loader size={15}/>
+                    <Loader
+                        size={15}
+                        type="dots"
+                        color={colorScheme === 'light' ? "gray" : "lightgray"}
+                    />
                 ) : status === 'saved' ? (
                     <IconCheck
                         size={19}
