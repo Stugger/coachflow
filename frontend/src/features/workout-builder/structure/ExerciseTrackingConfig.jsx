@@ -1,6 +1,7 @@
 import {useIsSmallScreen} from "../../../hooks/useIsSmallScreen.js";
 import {
     ActionIcon,
+    Alert,
     Badge,
     Button,
     Checkbox,
@@ -14,6 +15,7 @@ import {
     Tooltip,
 } from '@mantine/core';
 import {
+    IconAlertTriangle,
     IconArrowLeft,
     IconArrowRight,
     IconCheck,
@@ -36,7 +38,7 @@ import {
     getAvailableExerciseBenchmarkDefinitions,
 } from '../../client-management/benchmarks/exercise-benchmark-definitions.js';
 
-function ExerciseTrackingConfig({exercise, configDraft, colorScheme, onChange, onClose, onSave}) {
+function ExerciseTrackingConfig({exercise, configDraft, showRecordedResultsWarning = false, colorScheme, onChange, onClose, onSave}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -422,7 +424,20 @@ function ExerciseTrackingConfig({exercise, configDraft, colorScheme, onChange, o
                     </Button>
                 </Group>
 
-                <Divider opacity={0.75} color='var(--color-border)'/>
+                <Divider opacity={0.75} color="var(--color-border)"/>
+
+                {showRecordedResultsWarning && (
+                    <Alert
+                        color="yellow"
+                        variant="light"
+                        icon={<IconAlertTriangle size={16}/>}
+                        p="xs"
+                    >
+                        <Text size={isSmallScreen ? "xs" : "sm"}>
+                            This exercise has recorded results. Changes to fields may affect how those results are displayed in the live session.
+                        </Text>
+                    </Alert>
+                )}
 
                 {trackingFields.length === 0 ? (
                     <Text size="xs" c="dimmed" opacity={0.6} pt={isSmallScreen ? "xs" : "0.9rem"}>No tracking fields added yet.</Text>

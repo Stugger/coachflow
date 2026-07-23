@@ -42,7 +42,7 @@ import {
 } from '../workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';
 
-function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
+function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, liveResultIndex = null, isNew,
                               highlightedStackExerciseKey = null,
                               validationIssues = [],
                               onChange,
@@ -470,6 +470,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, isNew,
                                                 itemIndex={exerciseIndex}
                                                 itemCount={stack.itemExercises.length}
                                                 independent={false}
+                                                liveResultIndex={liveResultIndex}
                                                 isNew={highlightedStackExerciseKey === getWorkoutItemKey(itemExercise)}
                                                 onChange={updates => onChangeStackExercise(exerciseIndex, updates)}
                                                 onDelete={() => onDeleteStackExercise(exerciseIndex)}
@@ -553,6 +554,7 @@ function areWorkoutStackCardPropsEqual(previous, next) {
         previous.sectionIndex === next.sectionIndex &&
         previous.itemIndex === next.itemIndex &&
         previous.itemCount === next.itemCount &&
+        previous.liveResultIndex === next.liveResultIndex &&
         previous.isNew === next.isNew &&
         previous.highlightedStackExerciseKey === next.highlightedStackExerciseKey &&
         haveSameValidationIssues(previous.validationIssues, next.validationIssues);

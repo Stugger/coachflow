@@ -52,6 +52,7 @@ function WorkoutBuilder({
                         initialDraft,
                         exercises = [],
                         benchmarks = null,
+                        liveResults = [],
                         recoveryKey,
                         isDraft = false,
                         isNew = false,
@@ -489,6 +490,8 @@ function WorkoutBuilder({
                                 draft={draft}
                                 exercises={exercises}
                                 validationIssues={activeValidationIssues}
+                                isLiveWorkout={isLiveWorkout}
+                                liveResults={liveResults}
                                 onChange={setDraft}
                                 onViewExercise={openExerciseViewer}
                             />

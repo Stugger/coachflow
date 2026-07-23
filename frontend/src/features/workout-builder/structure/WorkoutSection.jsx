@@ -42,7 +42,7 @@ import {getSectionDisplayName, getSectionTypeLabel, getWorkoutItemKey} from '../
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';
 import {WORKOUT_VALIDATION_SCOPE} from '../draft/workout-draft-validation';
 
-function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
+function WorkoutSection({section, sectionIndex, sectionCount, liveResultIndex, expanded, isNew,
                             highlightedTopLevelItemKey = null, highlightedStackExerciseKey = null,
                             validationIssues = [],
                             sectionActions,
@@ -434,6 +434,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                                     itemIndex={itemIndex}
                                                     itemCount={section.items.length}
                                                     independent={true}
+                                                    liveResultIndex={liveResultIndex}
                                                     isNew={highlightedTopLevelItemKey === getWorkoutItemKey(item)}
                                                     onChange={updates => onChange(currentSection => ({
                                                         items: (currentSection.items ?? []).map((currentItem, index) => (
@@ -457,6 +458,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, expanded, isNew,
                                                 sectionIndex={sectionIndex}
                                                 itemIndex={itemIndex}
                                                 itemCount={section.items.length}
+                                                liveResultIndex={liveResultIndex}
                                                 isNew={highlightedTopLevelItemKey === getWorkoutItemKey(item)}
                                                 highlightedStackExerciseKey={highlightedStackExerciseKey}
                                                 validationIssues={getStackValidationIssues(item)}
@@ -521,6 +523,7 @@ function areWorkoutSectionPropsEqual(previous, next) {
     return previous.section === next.section &&
         previous.sectionIndex === next.sectionIndex &&
         previous.sectionCount === next.sectionCount &&
+        previous.liveResultIndex === next.liveResultIndex &&
         previous.expanded === next.expanded &&
         previous.isNew === next.isNew &&
         previous.highlightedTopLevelItemKey === next.highlightedTopLevelItemKey &&

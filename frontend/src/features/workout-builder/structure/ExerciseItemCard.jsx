@@ -39,6 +39,12 @@ import {
     pruneUnusedTargets,
 } from '../draft/workout-draft-factory';
 
+import {
+    getClientWorkoutResultStatus,
+    getDirectExerciseResultKey,
+    getStackExerciseResultKey,
+} from '../../client-management/client-workouts/session/client-workout-session-utils.js';
+
 import {resolveMediaUrl} from '../../../utils/media-url-utils';
 
 function ExerciseItemCard({
@@ -46,6 +52,7 @@ function ExerciseItemCard({
                               itemIndex,
                               itemCount,
                               independent,
+                              liveResultIndex = null,
                               isNew,
                               onChange,
                               onDelete,
@@ -92,6 +99,38 @@ function ExerciseItemCard({
     const activeConfig = customizingFields && configDraft
         ? configDraft
         : committedConfig;
+
+    const liveProgress = useMemo(() => {
+        if (!liveResultIndex) {
+            return null;
+        }
+
+        const statusBySetKey = new Map();
+
+        for (const set of committedConfig.sets ?? []) {
+            const resultKey = item.id == null
+                ? null
+                : independent
+                    ? getDirectExerciseResultKey(item.id, set.setKey)
+                    : getStackExerciseResultKey(item.id, set.setKey);
+
+            const result = resultKey ? liveResultIndex.get(resultKey) ?? null : null;
+
+            statusBySetKey.set(set.setKey, getClientWorkoutResultStatus(result));
+        }
+
+        const hasRecordedResults = item.id != null && [
+            ...liveResultIndex.values(),
+        ].some(result => independent
+            ? String(result.clientWorkoutItemId) === String(item.id)
+            : String(result.clientWorkoutItemExerciseId) === String(item.id)
+        );
+
+        return {
+            statusBySetKey,
+            hasRecordedResults,
+        };
+    }, [committedConfig.sets, independent, item.id, liveResultIndex]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -353,6 +392,7 @@ function ExerciseItemCard({
                         <ExerciseTrackingConfig
                             exercise={exercise}
                             configDraft={configDraft}
+                            showRecordedResultsWarning={liveProgress?.hasRecordedResults ?? false}
                             colorScheme={computedColorScheme}
                             onChange={setConfigDraft}
                             onClose={closeTrackingConfig}
@@ -365,6 +405,7 @@ function ExerciseItemCard({
                         config={activeConfig}
                         locked={customizingFields}
                         stackControlled={!independent}
+                        liveSetStatusByKey={liveProgress?.statusBySetKey ?? null}
                         colorScheme={computedColorScheme}
                         onChange={nextConfig => {
                             if (customizingFields) {
@@ -461,6 +502,7 @@ function areExerciseItemCardPropsEqual(previous, next) {
         previous.itemIndex === next.itemIndex &&
         previous.itemCount === next.itemCount &&
         previous.independent === next.independent &&
+        previous.liveResultIndex === next.liveResultIndex &&
         previous.isNew === next.isNew;
 }
 

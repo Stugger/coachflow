@@ -158,7 +158,7 @@ export function getDirectExerciseSessionSets(item, resultIndex) {
                 ...set,
                 number: index + 1,
                 result,
-                status: getResultStatus(result),
+                status: getClientWorkoutResultStatus(result),
             };
         }),
     };
@@ -191,7 +191,7 @@ export function getStackSessionRounds(item, resultIndex) {
                 set,
                 result,
                 status: set
-                    ? getResultStatus(result)
+                    ? getClientWorkoutResultStatus(result)
                     : CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED,
             };
         });
@@ -212,6 +212,16 @@ export function getDirectExerciseResultKey(itemId, setKey) {
 
 export function getStackExerciseResultKey(itemExerciseId, setKey) {
     return `item-exercise:${itemExerciseId}:set:${setKey}`;
+}
+
+export function getClientWorkoutResultStatus(result) {
+    if (!result) {
+        return CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED;
+    }
+
+    return result.completedAt
+        ? CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
+        : CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS;
 }
 
 function getClientWorkoutItemProgress(item, resultIndex) {
@@ -300,16 +310,6 @@ function getAggregateStatus(statuses) {
     }
 
     return CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED;
-}
-
-function getResultStatus(result) {
-    if (!result) {
-        return CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED;
-    }
-
-    return result.completedAt
-        ? CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED
-        : CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS;
 }
 
 function getClientWorkoutItemDisplayName(item) {

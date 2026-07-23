@@ -1,5 +1,6 @@
 import {
     ActionIcon,
+    Box,
     Menu,
     ScrollArea,
     Table,
@@ -18,6 +19,11 @@ import {
 import ExerciseSetTargetInput from './ExerciseSetTargetInput';
 import ExerciseSetTypeInput from './ExerciseSetTypeInput';
 
+import ClientWorkoutProgressIcon from '../../client-management/client-workouts/session/shared/ClientWorkoutProgressIcon.jsx';
+import {
+    CLIENT_WORKOUT_PROGRESS_STATUS,
+} from '../../client-management/client-workouts/session/client-workout-session-utils.js';
+
 import {reindexSets} from '../draft/workout-draft-mappers';
 import {createSetKey} from '../draft/workout-draft-factory';
 
@@ -26,6 +32,7 @@ import {
     TRACKING_FIELD_TYPE,
 } from '../../exercises/exercise-tracking-fields';
 import {getExerciseUnitLabel} from '../../exercises/exercise-units.js';
+
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Constants
@@ -36,14 +43,14 @@ const ACTIONS_COLUMN_WIDTH = '3rem';
 
 const rowCellStyle = {
     borderBottom: '2px solid var(--color-border)',
-    background: 'transparent',
+    backgroundColor: 'transparent',
 };
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorScheme, onChange}) {
+function ExerciseSetTable({exerciseId, config, locked, stackControlled, liveSetStatusByKey = null, colorScheme, onChange}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -54,6 +61,8 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorSch
 
     const sets = [...(config.sets ?? [])]
         .sort((a, b) => a.position - b.position);
+
+    const showLiveProgress = Boolean(liveSetStatusByKey);
 
     if (trackingFields.length === 0) {
         const sets = config.sets?.length ?? 0;
@@ -244,6 +253,30 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorSch
             ?? '7rem';
     }
 
+    function getLiveSetRowStyle(status) {
+        const tintStrength = colorScheme === 'light' ? '5%' : '4%';
+
+        switch (status) {
+            case CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED:
+                return {
+                    borderColor: 'var(--mantine-color-green-outline)',
+                    backgroundColor: `color-mix(in srgb, var(--mantine-color-green-6) ${tintStrength}, transparent)`,
+                };
+
+            case CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS:
+                return {
+                    borderColor: 'var(--mantine-color-yellow-outline)',
+                    backgroundColor: `color-mix(in srgb, var(--mantine-color-yellow-6) ${tintStrength}, transparent)`,
+                };
+
+            default:
+                return {
+                    borderColor: 'var(--color-border)',
+                    backgroundColor: 'transparent',
+                };
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Render helpers
     // ------------------------------------------------------------------------------------------------------------------------
@@ -327,129 +360,167 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, colorSch
                 opacity: locked ? 0.4 : 1,
             }}
         >
-            <Table
-                //withColumnBorders
-                verticalSpacing={'calc(var(--mantine-spacing-sm) * 0.5)'}
-                horizontalSpacing="sm"
-                mb="xs"
+            <Box
                 style={{
-                    minWidth: 'max-content',
-                    tableLayout: 'auto',
-                    borderCollapse: 'separate',
-                    borderSpacing: '0',
+                    paddingLeft: showLiveProgress ? '0.4rem' : 0,
                 }}
             >
-                <Table.Thead>
-                    <Table.Tr>
-                        <Table.Th style={{
-                            width: SET_COLUMN_WIDTH,
-                            minWidth: SET_COLUMN_WIDTH,
-                            textAlign: 'center',
-                        }}>
-                            <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
-                                {stackControlled ? 'Round' : 'Set'}
-                            </Text>
-                        </Table.Th>
-
-                        {trackingFields.map(field => (
-                            <Table.Th
-                                key={field.key}
-                                style={{
-                                    minWidth: getColumnMinWidth(field),
-                                    whiteSpace: 'nowrap',
-                                    textAlign: 'center',
-                                }}
-                            >
+                <Table
+                    verticalSpacing={'calc(var(--mantine-spacing-sm) * 0.5)'}
+                    horizontalSpacing="sm"
+                    mb="xs"
+                    style={{
+                        minWidth: 'max-content',
+                        tableLayout: 'auto',
+                        borderCollapse: 'separate',
+                        borderSpacing: '0',
+                    }}
+                >
+                    <Table.Thead>
+                        <Table.Tr>
+                            <Table.Th style={{
+                                width: SET_COLUMN_WIDTH,
+                                minWidth: SET_COLUMN_WIDTH,
+                                textAlign: 'center',
+                            }}>
                                 <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
-                                    {getTrackingFieldHeaderLabel(field)}
+                                    {stackControlled ? 'Round' : 'Set'}
                                 </Text>
                             </Table.Th>
-                        ))}
 
-                        <Table.Th
-                            style={{
-                                width: ACTIONS_COLUMN_WIDTH,
-                                minWidth: ACTIONS_COLUMN_WIDTH,
-                            }}
-                        />
-                    </Table.Tr>
-                </Table.Thead>
-
-                <Table.Tbody>
-                    {sets.map((set, setIndex) => {
-                        const isFirstRow = setIndex === 0;
-                        const isLastRow = setIndex === sets.length - 1;
-
-                        return (
-                            <Table.Tr key={set.setKey ?? set.position}>
-                                <Table.Td
+                            {trackingFields.map(field => (
+                                <Table.Th
+                                    key={field.key}
                                     style={{
-                                        ...rowCellStyle,
-                                        width: SET_COLUMN_WIDTH,
-                                        minWidth: SET_COLUMN_WIDTH,
+                                        minWidth: getColumnMinWidth(field),
+                                        whiteSpace: 'nowrap',
                                         textAlign: 'center',
-                                        borderLeft: '2px solid var(--color-border)',
-                                        ...(isFirstRow ? {
-                                            borderTop: '2px solid var(--color-border)',
-                                            borderTopLeftRadius: 'var(--mantine-radius-md)',
-                                        } : {}),
-                                        ...(isLastRow ? {
-                                            borderBottomLeftRadius: 'var(--mantine-radius-md)',
-                                        } : {}),
                                     }}
                                 >
-                                    <ExerciseSetTypeInput
-                                        set={set}
-                                        locked={locked}
-                                        onChange={setType => updateSetType(set.position, setType)}
-                                    />
-                                </Table.Td>
+                                    <Text size="sm" c={colorScheme === 'light' ? 'dimmed' : 'lightgray'} fw={600}>
+                                        {getTrackingFieldHeaderLabel(field)}
+                                    </Text>
+                                </Table.Th>
+                            ))}
 
-                                {trackingFields.map(field => (
+                            <Table.Th
+                                style={{
+                                    width: ACTIONS_COLUMN_WIDTH,
+                                    minWidth: ACTIONS_COLUMN_WIDTH,
+                                }}
+                            />
+                        </Table.Tr>
+                    </Table.Thead>
+
+                    <Table.Tbody>
+                        {sets.map((set, setIndex) => {
+                            const isFirstRow = setIndex === 0;
+                            const isLastRow = setIndex === sets.length - 1;
+
+                            const liveProgressStatus = liveSetStatusByKey?.get(set.setKey) ?? null;
+                            const liveRowStyle = getLiveSetRowStyle(liveProgressStatus);
+
+                            return (
+                                <Table.Tr key={set.setKey ?? set.position}>
                                     <Table.Td
-                                        key={field.key}
                                         style={{
                                             ...rowCellStyle,
-                                            minWidth: getColumnMinWidth(field),
+                                            width: SET_COLUMN_WIDTH,
+                                            minWidth: SET_COLUMN_WIDTH,
                                             textAlign: 'center',
+                                            position: 'relative',
+                                            overflow: 'visible',
+                                            borderLeft: `2px solid ${liveRowStyle.borderColor}`,
+                                            backgroundColor: liveRowStyle.backgroundColor,
                                             ...(isFirstRow ? {
                                                 borderTop: '2px solid var(--color-border)',
+                                                borderTopLeftRadius: 'var(--mantine-radius-md)',
+                                            } : {}),
+                                            ...(isLastRow ? {
+                                                borderBottomLeftRadius: 'var(--mantine-radius-md)',
                                             } : {}),
                                         }}
                                     >
-                                        <ExerciseSetTargetInput
-                                            exerciseId={exerciseId}
-                                            field={field}
-                                            value={set.targets?.[field.key]}
+                                        {liveProgressStatus && (
+                                            <Box
+                                                style={{
+                                                    position: 'absolute',
+                                                    left: 0,
+                                                    top: '50%',
+                                                    transform: 'translate(-50%, -50%)',
+                                                    zIndex: 2,
+                                                    width: '1rem',
+                                                    height: '1rem',
+                                                    borderRadius: '50%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    backgroundColor: 'var(--color-workout-exercise-bg)',
+                                                    pointerEvents: 'none',
+                                                }}
+                                            >
+                                                <ClientWorkoutProgressIcon
+                                                    status={liveProgressStatus}
+                                                    size={liveProgressStatus === CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED ? 19 : 17}
+                                                />
+                                            </Box>
+                                        )}
+
+                                        <ExerciseSetTypeInput
+                                            set={set}
                                             locked={locked}
-                                            onChange={value => updateSetTarget(set.position, field.key, value)}
+                                            onChange={setType => updateSetType(set.position, setType)}
                                         />
                                     </Table.Td>
-                                ))}
 
-                                <Table.Td
-                                    style={{
-                                        ...rowCellStyle,
-                                        width: ACTIONS_COLUMN_WIDTH,
-                                        minWidth: ACTIONS_COLUMN_WIDTH,
-                                        textAlign: 'center',
-                                        borderRight: '2px solid var(--color-border)',
-                                        ...(isFirstRow ? {
-                                            borderTop: '2px solid var(--color-border)',
-                                            borderTopRightRadius: 'var(--mantine-radius-md)',
-                                        } : {}),
-                                        ...(isLastRow ? {
-                                            borderBottomRightRadius: 'var(--mantine-radius-md)',
-                                        } : {}),
-                                    }}
-                                >
-                                    {renderSetMenu(set, setIndex)}
-                                </Table.Td>
-                            </Table.Tr>
-                        );
-                    })}
-                </Table.Tbody>
-            </Table>
+                                    {trackingFields.map(field => (
+                                        <Table.Td
+                                            key={field.key}
+                                            style={{
+                                                ...rowCellStyle,
+                                                minWidth: getColumnMinWidth(field),
+                                                textAlign: 'center',
+                                                backgroundColor: liveRowStyle.backgroundColor,
+                                                ...(isFirstRow ? {
+                                                    borderTop: '2px solid var(--color-border)',
+                                                } : {}),
+                                            }}
+                                        >
+                                            <ExerciseSetTargetInput
+                                                exerciseId={exerciseId}
+                                                field={field}
+                                                value={set.targets?.[field.key]}
+                                                locked={locked}
+                                                onChange={value => updateSetTarget(set.position, field.key, value)}
+                                            />
+                                        </Table.Td>
+                                    ))}
+
+                                    <Table.Td
+                                        style={{
+                                            ...rowCellStyle,
+                                            width: ACTIONS_COLUMN_WIDTH,
+                                            minWidth: ACTIONS_COLUMN_WIDTH,
+                                            textAlign: 'center',
+                                            borderRight: '2px solid var(--color-border)',
+                                            backgroundColor: liveRowStyle.backgroundColor,
+                                            ...(isFirstRow ? {
+                                                borderTop: '2px solid var(--color-border)',
+                                                borderTopRightRadius: 'var(--mantine-radius-md)',
+                                            } : {}),
+                                            ...(isLastRow ? {
+                                                borderBottomRightRadius: 'var(--mantine-radius-md)',
+                                            } : {}),
+                                        }}
+                                    >
+                                        {renderSetMenu(set, setIndex)}
+                                    </Table.Td>
+                                </Table.Tr>
+                            );
+                        })}
+                    </Table.Tbody>
+                </Table>
+            </Box>
         </ScrollArea>
     );
 }

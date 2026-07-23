@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {
     useComputedColorScheme,
     Alert,
@@ -18,10 +18,11 @@ import {createWorkoutSection, createStackExercise, createStackItem, createExerci
 import {reindexPositions} from '../draft/workout-draft-mappers';
 import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from '../workout-builder-utils';
 import {WORKOUT_VALIDATION_SCOPE} from '../draft/workout-draft-validation';
+import {createClientWorkoutResultIndex} from '../../client-management/client-workouts/session/client-workout-session-utils.js';
 
 const EMPTY_SECTIONS = Object.freeze([]);
 
-function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChange, onViewExercise}) {
+function WorkoutStructureEditor({draft, exercises, validationIssues = [], isLiveWorkout = false, liveResults = [], onChange, onViewExercise}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Responsive state
@@ -48,6 +49,13 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
     // ------------------------------------------------------------------------------------------------------------------------
 
     const sections = draft.sections ?? EMPTY_SECTIONS;
+
+    const liveResultIndex = useMemo(
+        () => isLiveWorkout
+            ? createClientWorkoutResultIndex(liveResults)
+            : null,
+        [isLiveWorkout, liveResults],
+    );
 
     const builderIssues = validationIssues.filter(issue =>
         issue.scope === WORKOUT_VALIDATION_SCOPE.WORKOUT &&
@@ -507,6 +515,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], onChan
                         section={section}
                         sectionIndex={sectionIndex}
                         sectionCount={sections.length}
+                        liveResultIndex={liveResultIndex}
                         expanded={expandedSectionIds.has(getSectionKey(section))}
                         isNew={
                             creationHighlight?.type === 'section' &&

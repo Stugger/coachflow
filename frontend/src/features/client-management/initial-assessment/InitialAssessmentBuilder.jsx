@@ -7,6 +7,7 @@ import {apiGetExercises} from '../../exercises/exercises-api'
 import {
     apiCreateInitialAssessmentWorkout,
     apiGetClientWorkout,
+    apiGetClientWorkoutSession,
     apiUpdateClientWorkout,
 } from '../client-workouts/client-workout-api';
 
@@ -42,6 +43,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
     const [persistedWorkoutId, setPersistedWorkoutId] = useState(null);
     const [createdDuringOpen, setCreatedDuringOpen] = useState(false);
     const [workoutStatus, setWorkoutStatus] = useState(null);
+    const [liveResults, setLiveResults] = useState([]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -80,14 +82,21 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         setPersistedWorkoutId(null);
         setCreatedDuringOpen(false);
         setWorkoutStatus(null);
+        setLiveResults([]);
     }, []);
 
     const loadInitialDraft = useCallback(async () => {
         if (isEditing) {
             const clientWorkout = await apiGetClientWorkout(clientWorkoutId);
+
+            const results = clientWorkout.status === 'IN_PROGRESS'
+                ? (await apiGetClientWorkoutSession(clientWorkoutId)).results ?? []
+                : [];
+
             return {
                 draft: normalizeWorkoutDefinitionForDraft(clientWorkout),
                 status: clientWorkout.status,
+                results,
             };
         }
         if (sourceWorkoutTemplateId) {
@@ -95,11 +104,13 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             return {
                 draft: createWorkoutDefinitionDraftFromTemplate(template),
                 status: null,
+                results: [],
             };
         }
         return {
             draft: createEmptyWorkoutDraft(),
             status: null,
+            results: [],
         };
     }, [clientWorkoutId, isEditing, sourceWorkoutTemplateId]);
 
@@ -123,6 +134,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         setExercises([]);
         setBenchmarks(null);
         setWorkoutStatus(null);
+        setLiveResults([]);
 
         return Promise.all([
             apiGetExercises(),
@@ -133,6 +145,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
                 setExercises(loadedExercises);
                 setInitialDraft(loadedWorkoutContext.draft);
                 setWorkoutStatus(loadedWorkoutContext.status);
+                setLiveResults(loadedWorkoutContext.results);
                 setBenchmarks(loadedBenchmarks);
             })
             .catch(error => {
@@ -218,6 +231,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             initialDraft={initialDraft}
             exercises={exercises}
             benchmarks={benchmarks}
+            liveResults={liveResults}
             recoveryKey={recoveryKey}
             isDraft={!isPersisted}
             isNew={!isPersisted && !sourceWorkoutTemplateId}
