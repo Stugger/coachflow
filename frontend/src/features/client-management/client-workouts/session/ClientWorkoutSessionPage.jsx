@@ -340,16 +340,19 @@ function ClientWorkoutSessionPage() {
     // ------------------------------------------------------------------------------------------------------------------------
 
     function renderCompleteWorkoutConfirmationModal() {
+        if (completionSummary === null) {
+            return null;
+        }
         return (
             <Modal
-                opened={completionSummary !== null}
+                opened
                 onClose={closeCompletionConfirmation}
                 title={completionSummary?.fullyCompleted ? 'Complete workout?' : 'Complete unfinished workout?'}
-                centered
+                centered={isSmallScreen}
+                yOffset={isSmallScreen ? undefined : "30vh"}
                 closeOnClickOutside={!completingWorkout}
                 closeOnEscape={!completingWorkout}
                 withCloseButton={!completingWorkout}
-                transitionProps={{exitDuration: 0}} //prevent seeing the modal state change when fading on close due to completionSummary being null
             >
                 <Stack gap="lg">
                     {completionError && (
@@ -364,7 +367,7 @@ function ClientWorkoutSessionPage() {
                         </Text>
                     ) : (
                         <Text size="sm" c="dimmed">
-                            {completionSummary ? completionSummary.remainingSetCount : '--'}{' '}
+                            {completionSummary?.remainingSetCount}{' '}
                             {completionSummary?.remainingSetCount === 1
                                 ? 'set has'
                                 : 'sets have'
@@ -409,7 +412,8 @@ function ClientWorkoutSessionPage() {
                     }
                 }}
                 title="Abandon workout?"
-                centered
+                centered={isSmallScreen}
+                yOffset={isSmallScreen ? undefined : "30vh"}
                 closeOnClickOutside={!abandoningWorkout}
                 closeOnEscape={!abandoningWorkout}
                 withCloseButton={!abandoningWorkout}
