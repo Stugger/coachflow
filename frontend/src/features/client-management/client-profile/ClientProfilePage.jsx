@@ -253,7 +253,10 @@ function ClientProfilePage() {
                 ? `?${nextParams.toString()}`
                 : '',
             hash: location.hash,
-        }, {replace});
+        }, {
+            replace,
+            state: location.state,
+        });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -337,7 +340,17 @@ function ClientProfilePage() {
             });
     }
 
-    function closeInitialAssessmentBuilder({hasSavedWorkout, createdDuringOpen,} = {}) {
+    function closeInitialAssessmentBuilder({hasSavedWorkout, createdDuringOpen} = {}) {
+        const sourceNavigation = location.state?.sourceNavigation;
+
+        if (sourceNavigation) {
+            navigate(sourceNavigation.to, {
+                replace: true,
+                state: sourceNavigation.state ?? null,
+            });
+            return;
+        }
+
         if (hasSavedWorkout && createdDuringOpen) {
             navigateToClientRecord('initial-assessment', {
                 scroll: true,
@@ -347,6 +360,17 @@ function ClientProfilePage() {
         }
 
         navigateInitialAssessmentBuilder({}, {replace: true});
+    }
+
+    function resumeInitialAssessmentWorkout(clientWorkoutId) {
+        navigate(ROUTES.clientWorkoutSession(clientWorkoutId), {
+            replace: true,
+            state: location.state?.sourceNavigation
+                ? {
+                    sourceNavigation: location.state.sourceNavigation,
+                }
+                : null,
+        });
     }
 
     function handleInitialAssessmentDeleted() {
@@ -653,6 +677,7 @@ function ClientProfilePage() {
                     clientWorkoutId={initialAssessmentBuilder?.clientWorkoutId ?? null}
                     sourceWorkoutTemplateId={initialAssessmentBuilder?.sourceWorkoutTemplateId ?? null}
                     onClose={closeInitialAssessmentBuilder}
+                    onResume={resumeInitialAssessmentWorkout}
                     onSaved={handleInitialAssessmentSaved}
                 />
             )}

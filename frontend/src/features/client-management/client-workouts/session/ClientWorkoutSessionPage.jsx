@@ -22,6 +22,7 @@ import {
 import {
     IconCheck,
     IconDotsVertical,
+    IconEdit,
     IconLogout2,
     IconMoon,
     IconSun,
@@ -29,6 +30,10 @@ import {
 } from '@tabler/icons-react';
 
 import {ROUTES} from '../../../../constants/routes.js';
+import {
+    INITIAL_ASSESSMENT_BUILDER_MODE,
+    INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM,
+} from '../../initial-assessment/initial-assessment-builder-route-state.js';
 import {
     apiAbandonClientWorkout,
     apiCompleteClientWorkout,
@@ -141,6 +146,28 @@ function ClientWorkoutSessionPage() {
             {
                 replace: true,
                 state: sourceNavigation?.state ?? null,
+            },
+        );
+    }
+
+    function editWorkout() {
+        if (!workout || workout.status !== 'IN_PROGRESS') {
+            return;
+        }
+
+        const params = new URLSearchParams({
+            [INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.MODE]: INITIAL_ASSESSMENT_BUILDER_MODE.EDIT,
+            [INITIAL_ASSESSMENT_BUILDER_QUERY_PARAM.CLIENT_WORKOUT_ID]: String(workout.id),
+        });
+
+        const sourceNavigation = location.state?.sourceNavigation ?? getClientWorkoutSourceNavigation(workout.clientId, workout);
+
+        navigate(
+            `${ROUTES.clientProfile(workout.clientId)}?${params.toString()}`,
+            {
+                state: {
+                    sourceNavigation,
+                },
             },
         );
     }
@@ -463,14 +490,18 @@ function ClientWorkoutSessionPage() {
                                         </Menu.Target>
 
                                         <Menu.Dropdown>
-                                            <Menu.Item
-                                                leftSection={<IconLogout2 size={16}/>}
-                                                onClick={returnToSource}
-                                            >
-                                                Exit{recordMode ? ' record' : ' workout'}
-                                            </Menu.Item>
+                                            {workout.status === 'IN_PROGRESS' && (
+                                                <>
+                                                    <Menu.Item
+                                                        leftSection={<IconEdit size={16}/>}
+                                                        onClick={editWorkout}
+                                                    >
+                                                        Edit workout
+                                                    </Menu.Item>
 
-                                            <Menu.Divider/>
+                                                    <Menu.Divider/>
+                                                </>
+                                            )}
 
                                             <Menu.Item
                                                 leftSection={colorScheme === 'dark'
@@ -482,10 +513,17 @@ function ClientWorkoutSessionPage() {
                                                 {colorScheme === 'light' ? "Dark mode" : "Light mode"}
                                             </Menu.Item>
 
+                                            <Menu.Divider/>
+
+                                            <Menu.Item
+                                                leftSection={<IconLogout2 size={16}/>}
+                                                onClick={returnToSource}
+                                            >
+                                                Exit{recordMode ? ' record' : ' workout'}
+                                            </Menu.Item>
+
                                             {workout.status === 'IN_PROGRESS' && (
                                                 <>
-                                                    <Menu.Divider/>
-
                                                     <Menu.Label>Danger zone</Menu.Label>
 
                                                     <Menu.Item
@@ -545,6 +583,7 @@ function ClientWorkoutSessionPage() {
                                 itemId={itemId}
                                 recordMode={recordMode}
                                 isSmallScreen={isSmallScreen}
+                                onEditWorkout={editWorkout}
                                 onExitWorkout={returnToSource}
                                 onAbandonWorkout={openAbandonConfirmation}
                                 onOpenItem={openItem}

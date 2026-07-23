@@ -23,6 +23,8 @@ export function ClientWorkoutLiveDurationBadge({startedAt, subtle}) {
 
     const [now, setNow] = useState(() => Date.now());
 
+    const duration = formatElapsedDuration(getElapsedSeconds(startedAt, now));
+
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
     // ------------------------------------------------------------------------------------------------------------------------
@@ -34,10 +36,6 @@ export function ClientWorkoutLiveDurationBadge({startedAt, subtle}) {
 
         return () => window.clearInterval(interval);
     }, []);
-
-    const duration = formatElapsedDuration(
-        getElapsedSeconds(startedAt, now),
-    );
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Main return
@@ -164,7 +162,7 @@ function getTime(value) {
 
 function formatElapsedDuration(totalSeconds) {
     if (!Number.isFinite(totalSeconds) || totalSeconds < 0) {
-        return '—';
+        return '00:00:00';
     }
 
     const hours = Math.floor(totalSeconds / 3600);

@@ -28,7 +28,7 @@ import {
 
 import {WORKOUT_BUILDER_SOURCE} from '../../workout-builder/workout-builder-constants';
 
-function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkoutTemplateId = null, onClose, onSaved}) {
+function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkoutTemplateId = null, onClose, onResume, onSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -41,6 +41,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
     const [loadError, setLoadError] = useState('');
     const [persistedWorkoutId, setPersistedWorkoutId] = useState(null);
     const [createdDuringOpen, setCreatedDuringOpen] = useState(false);
+    const [workoutStatus, setWorkoutStatus] = useState(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -50,6 +51,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
 
     const isEditing = Boolean(clientWorkoutId);
     const isPersisted = Boolean(clientWorkoutId || persistedWorkoutId);
+    const isLiveWorkout = workoutStatus === 'IN_PROGRESS';
 
     const recoveryKey = useMemo(() => {
         const trainerKey = trainerId ?? 'unknown';
@@ -77,20 +79,28 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         setLoadError('');
         setPersistedWorkoutId(null);
         setCreatedDuringOpen(false);
+        setWorkoutStatus(null);
     }, []);
 
     const loadInitialDraft = useCallback(async () => {
         if (isEditing) {
             const clientWorkout = await apiGetClientWorkout(clientWorkoutId);
-            return normalizeWorkoutDefinitionForDraft(clientWorkout);
+            return {
+                draft: normalizeWorkoutDefinitionForDraft(clientWorkout),
+                status: clientWorkout.status,
+            };
         }
-
         if (sourceWorkoutTemplateId) {
             const template = await apiGetWorkoutTemplate(sourceWorkoutTemplateId);
-            return createWorkoutDefinitionDraftFromTemplate(template);
+            return {
+                draft: createWorkoutDefinitionDraftFromTemplate(template),
+                status: null,
+            };
         }
-
-        return createEmptyWorkoutDraft();
+        return {
+            draft: createEmptyWorkoutDraft(),
+            status: null,
+        };
     }, [clientWorkoutId, isEditing, sourceWorkoutTemplateId]);
 
     const loadCurrentBenchmarks = useCallback(async () => {
@@ -112,23 +122,22 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         setInitialDraft(null);
         setExercises([]);
         setBenchmarks(null);
+        setWorkoutStatus(null);
 
         return Promise.all([
             apiGetExercises(),
             loadInitialDraft(),
             loadCurrentBenchmarks(),
         ])
-            .then(([loadedExercises, loadedDraft, loadedBenchmarks]) => {
+            .then(([loadedExercises, loadedWorkoutContext, loadedBenchmarks]) => {
                 setExercises(loadedExercises);
-                setInitialDraft(loadedDraft);
+                setInitialDraft(loadedWorkoutContext.draft);
+                setWorkoutStatus(loadedWorkoutContext.status);
                 setBenchmarks(loadedBenchmarks);
             })
             .catch(error => {
                 console.error('Failed to load initial assessment builder:', error);
-                setLoadError(
-                    error.message
-                    || 'Failed to load the initial assessment workout.'
-                );
+                setLoadError(error.message || 'Failed to load the initial assessment workout.');
             })
             .finally(() => {
                 setLoaded(true);
@@ -178,6 +187,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
         }
 
         setPersistedWorkoutId(savedWorkout.id);
+        setWorkoutStatus(currentStatus => savedWorkout.status ?? currentStatus);
 
         return {
             savedEntity: savedWorkout,
@@ -190,6 +200,10 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             hasSavedWorkout: isPersisted,
             createdDuringOpen,
         });
+    }
+
+    function handleResume() {
+        onResume(persistedWorkoutId ?? clientWorkoutId);
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -207,6 +221,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             recoveryKey={recoveryKey}
             isDraft={!isPersisted}
             isNew={!isPersisted && !sourceWorkoutTemplateId}
+            isLiveWorkout={isLiveWorkout}
             allowSaveWithoutChanges={Boolean(sourceWorkoutTemplateId) && !isEditing}
             autoFocusName={!isPersisted}
             source={WORKOUT_BUILDER_SOURCE.INITIAL_ASSESSMENT}
@@ -218,6 +233,7 @@ function InitialAssessmentBuilder({opened, client, clientWorkoutId, sourceWorkou
             onSave={saveInitialAssessmentDraft}
             onSaved={onSaved}
             onClose={handleClose}
+            onResume={handleResume}
         />
     );
 }

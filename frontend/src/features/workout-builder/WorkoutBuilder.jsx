@@ -22,6 +22,7 @@ import {
     IconDeviceFloppy,
     IconDumbbell,
     IconHammer,
+    IconPlayerPlay,
     IconSketching,
     IconX,
 } from '@tabler/icons-react';
@@ -54,6 +55,7 @@ function WorkoutBuilder({
                         recoveryKey,
                         isDraft = false,
                         isNew = false,
+                        isLiveWorkout = false,
                         allowSaveWithoutChanges = false,
                         autoFocusName = false,
                         source,
@@ -63,6 +65,7 @@ function WorkoutBuilder({
                         onSave,
                         onSaved,
                         onClose,
+                        onResume,
                     }) {
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -86,6 +89,7 @@ function WorkoutBuilder({
     const [draftRecovered, setDraftRecovered] = useState(false);
     const [activeValidationIssueIds, setActiveValidationIssueIds] = useState([]);
     const [exitModalOpen, setExitModalOpen] = useState(false);
+    const [pendingExitAction, setPendingExitAction] = useState(null);
     const [exerciseOverlay, setExerciseOverlay] = useState(null);
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -172,6 +176,7 @@ function WorkoutBuilder({
         setDraftRecovered(false);
         setActiveValidationIssueIds([]);
         setExitModalOpen(false);
+        setPendingExitAction(null);
         setExerciseOverlay(null);
     }, []);
 
@@ -266,19 +271,39 @@ function WorkoutBuilder({
     // Event handlers
     // ------------------------------------------------------------------------------------------------------------------------
 
-    function discardAndClose() {
+    function completeExit(action) {
         setExitModalOpen(false);
+        setPendingExitAction(null);
         clearWorkoutDraftRecovery(recoveryKey);
-        onClose();
-    }
 
-    function handleClose() {
-        if (!hasUnsavedChanges) {
-            discardAndClose();
+        if (action === 'resume') {
+            onResume?.();
             return;
         }
 
+        onClose();
+    }
+
+    function requestExit(action) {
+        if (!hasUnsavedChanges) {
+            completeExit(action);
+            return;
+        }
+
+        setPendingExitAction(action);
         setExitModalOpen(true);
+    }
+
+    function handleClose() {
+        requestExit('close');
+    }
+
+    function handleResume() {
+        requestExit('resume');
+    }
+
+    function discardAndExit() {
+        completeExit(pendingExitAction ?? 'close');
     }
 
     async function saveWorkout() {
@@ -339,6 +364,16 @@ function WorkoutBuilder({
                         onClose={() => setDraftRecovered(false)}
                     >
                         Restored an unsaved workout draft from this browser.
+                    </Alert>
+                )}
+
+                {isLiveWorkout && (
+                    <Alert
+                        color="green"
+                        icon={<span className="client-session-live-dot" style={{marginLeft: 4}}/>}
+                    >
+                        <Text fw={600} size={isSmallScreen ? "sm" : "md"}>This workout is currently in progress.</Text>
+                        Edit with caution as saved changes will be reflected in the live session.
                     </Alert>
                 )}
 
@@ -516,14 +551,18 @@ function WorkoutBuilder({
                             </Group>
                         )}
 
-                        <Group wrap="nowrap" pr={isSmallScreen ? 2 : 0}>
+                        <Group
+                            gap={isSmallScreen ? 'sm' : undefined}
+                            wrap="nowrap"
+                            pr={isSmallScreen ? 2 : 0}
+                        >
                             <Button
-                                variant="default"
+                                variant={"default"}
                                 size={isSmallScreen ? 'xs' : 'sm'}
-                                leftSection={<IconX size={16}/>}
-                                onClick={handleClose}
+                                leftSection={isLiveWorkout ? <IconPlayerPlay size={16}/> : <IconX size={16}/>}
+                                onClick={isLiveWorkout ? handleResume : handleClose}
                             >
-                                Close
+                                {isLiveWorkout ? (isSmallScreen ? 'Resume' : 'Resume workout') : 'Close'}
                             </Button>
 
                             <Button
@@ -531,14 +570,9 @@ function WorkoutBuilder({
                                 leftSection={<IconDeviceFloppy size={16}/>}
                                 onClick={saveWorkout}
                                 loading={saving}
-                                disabled={
-                                    isLoading ||
-                                    saving ||
-                                    !hasSaveableChanges ||
-                                    activeValidationIssues.length > 0
-                                }
+                                disabled={isLoading || saving || !hasSaveableChanges || activeValidationIssues.length > 0}
                             >
-                                Save
+                                {isSmallScreen || isLoading || isNew || isDraft ? 'Save' : 'Save changes'}
                             </Button>
                         </Group>
                     </Group>
@@ -548,11 +582,17 @@ function WorkoutBuilder({
     }
 
     function renderExitModal() {
+        if (!exitModalOpen) {
+            return null;
+        }
         return (
             <Modal
-                opened={exitModalOpen}
-                onClose={() => setExitModalOpen(false)}
-                title={discardTitle}
+                opened
+                onClose={() => {
+                    setExitModalOpen(false);
+                    setPendingExitAction(null);
+                }}
+                title={pendingExitAction === 'resume' ? 'Discard changes and resume workout?' : discardTitle}
                 centered
                 zIndex="var(--mantine-z-index-popover)"
             >
@@ -564,16 +604,16 @@ function WorkoutBuilder({
                     <Group justify="flex-end">
                         <Button
                             variant="default"
-                            onClick={() => setExitModalOpen(false)}
+                            onClick={() => {
+                                setExitModalOpen(false);
+                                setPendingExitAction(null);
+                            }}
                         >
                             Keep editing
                         </Button>
 
-                        <Button
-                            color="red"
-                            onClick={discardAndClose}
-                        >
-                            Discard changes
+                        <Button color="red" onClick={discardAndExit}>
+                            {pendingExitAction === 'resume' ? 'Discard and resume' : 'Discard changes'}
                         </Button>
                     </Group>
                 </Stack>
@@ -638,16 +678,36 @@ function WorkoutBuilder({
             <Stack gap={4}>
                 {sourceLabel && (
                     <Group gap="0.2rem" wrap="nowrap" style={{minWidth: 0}}>
-                        <IconHammer size={16} color="gray" style={{flexShrink: 0, paddingBottom: 1}} />
-                            <Text
-                                size="xs"
-                                c="dimmed"
-                                fw={600}
-                                tt="uppercase"
-                                truncate="end"
-                            >
-                                {sourceLabel}
-                            </Text>
+                        <IconHammer
+                            size={16}
+                            color="gray"
+                            style={{
+                                flexShrink: 0,
+                                paddingBottom: 1,
+                            }}
+                        />
+
+                        {isLiveWorkout && (
+                            <span
+                                className="client-session-live-dot"
+                                style={{
+                                    flexShrink: 0,
+                                    marginInline: 1,
+                                    marginBottom: 1,
+                                    marginRight: 2,
+                                }}
+                            />
+                        )}
+
+                        <Text
+                            size="xs"
+                            c="dimmed"
+                            fw={600}
+                            tt="uppercase"
+                            truncate="end"
+                        >
+                            {sourceLabel}
+                        </Text>
                     </Group>
                 )}
                 <Text

@@ -16,6 +16,7 @@ import {
     IconArrowLeft,
     IconArrowRight,
     IconDotsVertical,
+    IconEdit,
     IconLogout2,
     IconSun,
     IconMoon,
@@ -38,7 +39,7 @@ import {
 } from '../client-workout-session-utils.js';
 import {ClientWorkoutLiveDurationBadge} from "../shared/ClientWorkoutSessionTiming.jsx";
 
-function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, recordMode, isSmallScreen, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
+function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, recordMode, isSmallScreen, onEditWorkout, onExitWorkout, onAbandonWorkout, onOpenItem, onResultSaved}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Layout state
@@ -139,14 +140,18 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, rec
                     </Menu.Target>
 
                     <Menu.Dropdown>
-                        <Menu.Item
-                            leftSection={<IconLogout2 size={16}/>}
-                            onClick={onExitWorkout}
-                        >
-                            Exit{recordMode ? ' record' : ' workout'}
-                        </Menu.Item>
+                        {workout.status === 'IN_PROGRESS' && (
+                            <>
+                                <Menu.Item
+                                    leftSection={<IconEdit size={16}/>}
+                                    onClick={onEditWorkout}
+                                >
+                                    Edit workout
+                                </Menu.Item>
 
-                        <Menu.Divider/>
+                                <Menu.Divider/>
+                            </>
+                        )}
 
                         <Menu.Item
                             leftSection={colorScheme === 'dark'
@@ -158,10 +163,17 @@ function ClientWorkoutSessionItemView({workout, results, benchmarks, itemId, rec
                             {colorScheme === 'light' ? 'Dark mode' : 'Light mode'}
                         </Menu.Item>
 
+                        <Menu.Divider/>
+
+                        <Menu.Item
+                            leftSection={<IconLogout2 size={16}/>}
+                            onClick={onExitWorkout}
+                        >
+                            Exit{recordMode ? ' record' : ' workout'}
+                        </Menu.Item>
+
                         {workout.status === 'IN_PROGRESS' && (
                             <>
-                                <Menu.Divider/>
-
                                 <Menu.Label>Danger zone</Menu.Label>
 
                                 <Menu.Item
