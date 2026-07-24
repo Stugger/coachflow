@@ -11,6 +11,7 @@ import {
     Paper,
     Stack,
     Switch,
+    Text,
     Textarea,
     TextInput,
     Tooltip,
@@ -55,6 +56,7 @@ function ExerciseItemCard({
                               liveResultIndex = null,
                               isNew,
                               onChange,
+                              onRequestConfirmation,
                               onDelete,
                               onMoveUp,
                               onMoveDown,
@@ -87,18 +89,14 @@ function ExerciseItemCard({
         item.name?.trim() || libraryExerciseName,
     );
 
-    const hasNameOverride =
-        Boolean(item.name?.trim()) &&
-        item.name.trim() !== exercise?.name?.trim();
+    const hasNameOverride = Boolean(item.name?.trim()) && item.name.trim() !== exercise?.name?.trim();
 
     const committedConfig = useMemo(
         () => parseWorkoutConfig(item.configJson),
         [item.configJson],
     );
 
-    const activeConfig = customizingFields && configDraft
-        ? configDraft
-        : committedConfig;
+    const activeConfig = customizingFields && configDraft ? configDraft : committedConfig;
 
     const liveProgress = useMemo(() => {
         if (!liveResultIndex) {
@@ -131,6 +129,8 @@ function ExerciseItemCard({
             hasRecordedResults,
         };
     }, [committedConfig.sets, independent, item.id, liveResultIndex]);
+
+    const hasRecordedResults = liveProgress?.hasRecordedResults ?? false;
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -210,6 +210,30 @@ function ExerciseItemCard({
 
         requestAnimationFrame(() => {
             exerciseOptionsButtonRef.current?.focus();
+        });
+    }
+
+    function handleDeleteExercise() {
+        if (!hasRecordedResults || !onRequestConfirmation) {
+            onDelete();
+            return;
+        }
+
+        const exerciseName = item.name?.trim() || exercise?.name?.trim() || 'this exercise';
+
+        const location = independent ? 'the workout' : 'this stack';
+
+        onRequestConfirmation({
+            title: `Delete "${exerciseName}"?`,
+            message:
+                <>
+                    <Text span fw={600}>This exercise has recorded workout results.</Text>
+                    <br/><br/>
+                    Removing it will remove the exercise from {location} when you save.
+                </>,
+            cancelLabel: 'Keep exercise',
+            confirmLabel: 'Delete exercise',
+            onConfirm: onDelete,
         });
     }
 
@@ -380,7 +404,7 @@ function ExerciseItemCard({
                                 <Menu.Item
                                     color="red"
                                     leftSection={<IconTrash size={14}/>}
-                                    onClick={onDelete}
+                                    onClick={handleDeleteExercise}
                                 >
                                     Delete exercise
                                 </Menu.Item>
@@ -415,6 +439,7 @@ function ExerciseItemCard({
 
                             updateExerciseConfig(nextConfig);
                         }}
+                        onRequestConfirmation={onRequestConfirmation}
                     />
 
                     <Group justify="space-between" align="center" wrap="nowrap" mt={-5}>
@@ -503,7 +528,8 @@ function areExerciseItemCardPropsEqual(previous, next) {
         previous.itemCount === next.itemCount &&
         previous.independent === next.independent &&
         previous.liveResultIndex === next.liveResultIndex &&
-        previous.isNew === next.isNew;
+        previous.isNew === next.isNew &&
+        previous.onRequestConfirmation === next.onRequestConfirmation;
 }
 
 export default memo(ExerciseItemCard, areExerciseItemCardPropsEqual);

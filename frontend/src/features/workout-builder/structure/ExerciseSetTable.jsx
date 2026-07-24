@@ -50,7 +50,7 @@ const rowCellStyle = {
 // Component
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExerciseSetTable({exerciseId, config, locked, stackControlled, liveSetStatusByKey = null, colorScheme, onChange}) {
+function ExerciseSetTable({exerciseId, config, locked, stackControlled, liveSetStatusByKey = null, colorScheme, onChange, onRequestConfirmation}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Derived state
@@ -172,7 +172,7 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, liveSetS
         });
     }
 
-    function deleteSet(setPosition) {
+    function applyDeleteSet(setPosition) {
         if (sets.length <= 1) {
             return;
         }
@@ -182,6 +182,36 @@ function ExerciseSetTable({exerciseId, config, locked, stackControlled, liveSetS
             sets: reindexSets(
                 sets.filter(set => set.position !== setPosition)
             ),
+        });
+    }
+
+    function deleteSet(setPosition) {
+        const set = sets.find(set => set.position === setPosition,);
+
+        if (!set || sets.length <= 1) {
+            return;
+        }
+
+        const status = liveSetStatusByKey?.get(set.setKey) ?? CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED;
+
+        const hasRecordedResult = status !== CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED;
+
+        if (!hasRecordedResult || !onRequestConfirmation) {
+            applyDeleteSet(setPosition);
+            return;
+        }
+
+        onRequestConfirmation({
+            title: `Delete set ${set.position}?`,
+            message:
+                <>
+                    <Text span fw={600}>This set has recorded workout results.</Text>
+                    <br/><br/>
+                    Removing it will remove the set from the workout when you save.
+                </>,
+            cancelLabel: 'Keep set',
+            confirmLabel: 'Delete set',
+            onConfirm: () => applyDeleteSet(setPosition),
         });
     }
 

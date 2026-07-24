@@ -37,7 +37,7 @@ import {
 import ExerciseItemCard from './ExerciseItemCard';
 import WorkoutStackCard from './WorkoutStackCard';
 import ExercisePickerModal from '../../exercises/picker/ExercisePickerModal';
-
+import {hasWorkoutSectionResults} from './workout-live-result-utils.js';
 import {getSectionDisplayName, getSectionTypeLabel, getWorkoutItemKey} from '../workout-builder-utils';
 import {WORKOUT_ITEM_TYPE, WORKOUT_SECTION_TYPE_OPTIONS, WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';
 import {WORKOUT_VALIDATION_SCOPE} from '../draft/workout-draft-validation';
@@ -45,6 +45,7 @@ import {WORKOUT_VALIDATION_SCOPE} from '../draft/workout-draft-validation';
 function WorkoutSection({section, sectionIndex, sectionCount, liveResultIndex, expanded, isNew,
                             highlightedTopLevelItemKey = null, highlightedStackExerciseKey = null,
                             validationIssues = [],
+                            onRequestConfirmation,
                             sectionActions,
                             exerciseItemActions,
                             stackActions,
@@ -106,11 +107,38 @@ function WorkoutSection({section, sectionIndex, sectionCount, liveResultIndex, e
     const sectionName = getSectionDisplayName(section);
     const sectionTypeLabel = getSectionTypeLabel(section.sectionType);
 
+    const sectionHasRecordedResults = hasWorkoutSectionResults(section, liveResultIndex);
+
     const sectionValidationIssues = validationIssues.filter(issue =>
         issue.scope === WORKOUT_VALIDATION_SCOPE.SECTION
     );
 
     const hasSectionValidationIssues = sectionValidationIssues.length > 0;
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Event handlers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    function handleDeleteSection() {
+        if (itemCount === 0) {
+            onDelete();
+            return;
+        }
+
+        onRequestConfirmation({
+            title: `Delete "${sectionName}"?`,
+            message: sectionHasRecordedResults
+                ? <>
+                    <Text span fw={600}>This section contains recorded workout results.</Text>
+                    <br/><br/>
+                    Removing it will also remove {itemCount === 1 ? 'the' : 'all'} {itemCount} item{itemCount === 1 ? '' : 's'} from the workout when you save.
+                </>
+                : `This will remove the section and its ${itemCount} item${itemCount === 1 ? '' : 's'} from this workout.`,
+            cancelLabel: 'Keep section',
+            confirmLabel: 'Delete section',
+            onConfirm: onDelete,
+        });
+    }
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Utility
@@ -338,7 +366,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, liveResultIndex, e
                                 <Menu.Item
                                     color="red"
                                     leftSection={<IconTrash size={14}/>}
-                                    onClick={onDelete}
+                                    onClick={handleDeleteSection}
                                 >
                                     Delete section
                                 </Menu.Item>
@@ -443,6 +471,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, liveResultIndex, e
                                                                 : currentItem
                                                         )),
                                                     }))}
+                                                    onRequestConfirmation={onRequestConfirmation}
                                                     onDelete={() => onDeleteExerciseItem(itemIndex)}
                                                     onMoveUp={() => onMoveExerciseItemUp(itemIndex)}
                                                     onMoveDown={() => onMoveExerciseItemDown(itemIndex)}
@@ -469,6 +498,7 @@ function WorkoutSection({section, sectionIndex, sectionCount, liveResultIndex, e
                                                             : currentItem
                                                     )),
                                                 }))}
+                                                onRequestConfirmation={onRequestConfirmation}
                                                 onAddExercise={() => onOpenExercisePickerForStack(itemIndex)}
                                                 onViewExercise={onViewExercise}
                                                 onDeleteStack={() => onDeleteStack(itemIndex)}
@@ -530,6 +560,7 @@ function areWorkoutSectionPropsEqual(previous, next) {
         previous.highlightedStackExerciseKey === next.highlightedStackExerciseKey &&
         previous.exercisePicker.exercises === next.exercisePicker.exercises &&
         previous.exercisePicker.opened === next.exercisePicker.opened &&
+        previous.onRequestConfirmation === next.onRequestConfirmation &&
         haveSameValidationIssues(previous.validationIssues, next.validationIssues);
 }
 

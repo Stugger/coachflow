@@ -16,7 +16,7 @@ import WorkoutSection from './WorkoutSection';
 
 import {createWorkoutSection, createStackExercise, createStackItem, createExerciseItem, createDraftId, resizeExerciseSetCount} from '../draft/workout-draft-factory';
 import {reindexPositions} from '../draft/workout-draft-mappers';
-import {getSectionKey, getSectionDisplayName, getWorkoutItemKey} from '../workout-builder-utils';
+import {getSectionKey, getWorkoutItemKey} from '../workout-builder-utils';
 import {WORKOUT_VALIDATION_SCOPE} from '../draft/workout-draft-validation';
 import {createClientWorkoutResultIndex} from '../../client-management/client-workouts/session/client-workout-session-utils.js';
 
@@ -37,7 +37,7 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], isLive
     const [expandedSectionIds, setExpandedSectionIds] = useState(() => new Set());
     const [exercisePickerTarget, setExercisePickerTarget] = useState(null);
 
-    const [sectionPendingDelete, setSectionPendingDelete] = useState(null);
+    const [pendingConfirmation, setPendingConfirmation] = useState(null);
 
     const sectionListEndRef = useRef(null);
     const pendingBuilderEndScrollRef = useRef(false);
@@ -94,6 +94,25 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], isLive
 
         return () => window.clearTimeout(timeoutId);
     }, [creationHighlight]);
+
+    // ------------------------------------------------------------------------------------------------------------------------
+    // Confirmation helpers
+    // ------------------------------------------------------------------------------------------------------------------------
+
+    const requestConfirmation = useCallback(confirmation => {
+        setPendingConfirmation(confirmation);
+    }, []);
+
+    const closeConfirmation = useCallback(() => {
+        setPendingConfirmation(null);
+    }, []);
+
+    const confirmPendingAction = useCallback(() => {
+        const onConfirm = pendingConfirmation?.onConfirm;
+
+        setPendingConfirmation(null);
+        onConfirm?.();
+    }, [pendingConfirmation]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Draft helpers
@@ -161,34 +180,6 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], isLive
             return next;
         });
     }, [updateSections]);
-
-    const requestDeleteSection = useCallback(sectionIndex => {
-        const section = sections[sectionIndex];
-
-        if (!section) {
-            return;
-        }
-
-        if (!section.items?.length) {
-            deleteSectionByKey(getSectionKey(section));
-            return;
-        }
-
-        setSectionPendingDelete({
-            key: getSectionKey(section),
-            name: getSectionDisplayName(section),
-            itemCount: section.items.length,
-        });
-    }, [sections, deleteSectionByKey]);
-
-    const confirmDeleteSection = useCallback(() => {
-        if (!sectionPendingDelete) {
-            return;
-        }
-
-        deleteSectionByKey(sectionPendingDelete.key);
-        setSectionPendingDelete(null);
-    }, [sectionPendingDelete, deleteSectionByKey]);
 
     const moveSection = useCallback((sectionIndex, direction) => {
         updateSections(currentSections => {
@@ -478,31 +469,30 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], isLive
             )}
 
             <Modal
-                opened={Boolean(sectionPendingDelete)}
-                onClose={() => setSectionPendingDelete(null)}
-                title={`Delete "${sectionPendingDelete?.name}"?`}
+                opened={Boolean(pendingConfirmation)}
+                onClose={closeConfirmation}
+                title={pendingConfirmation?.title}
                 centered
-                zIndex='var(--mantine-z-index-popover)'
+                zIndex="var(--mantine-z-index-popover)"
             >
                 <Stack gap="lg">
                     <Text c="dimmed" size="sm">
-                        This will remove the section and its {sectionPendingDelete?.itemCount} item
-                        {sectionPendingDelete?.itemCount === 1 ? '' : 's'} from this workout.
+                        {pendingConfirmation?.message}
                     </Text>
 
                     <Group justify="flex-end">
                         <Button
                             variant="default"
-                            onClick={() => setSectionPendingDelete(null)}
+                            onClick={closeConfirmation}
                         >
-                            Keep section
+                            {pendingConfirmation?.cancelLabel ?? 'Keep editing'}
                         </Button>
 
                         <Button
                             color="red"
-                            onClick={confirmDeleteSection}
+                            onClick={confirmPendingAction}
                         >
-                            Delete section
+                            {pendingConfirmation?.confirmLabel ?? 'Continue'}
                         </Button>
                     </Group>
                 </Stack>
@@ -532,11 +522,12 @@ function WorkoutStructureEditor({draft, exercises, validationIssues = [], isLive
                                 : null
                         }
                         validationIssues={getSectionValidationIssues(section)}
+                        onRequestConfirmation={requestConfirmation}
                         sectionActions={{
                             onToggle: () => toggleSection(section),
                             onMoveUp: () => moveSection(sectionIndex, -1),
                             onMoveDown: () => moveSection(sectionIndex, 1),
-                            onDelete: () => requestDeleteSection(sectionIndex),
+                            onDelete: () => deleteSectionByKey(getSectionKey(section)),
                             onChange: updatesOrUpdater => updateSection(sectionIndex, currentSection => {
                                 const updates = typeof updatesOrUpdater === 'function'
                                     ? updatesOrUpdater(currentSection)

@@ -41,11 +41,16 @@ import {
     getWorkoutItemKey,
 } from '../workout-builder-utils';
 import {WORKOUT_STACK_OPTIONS} from '../workout-builder-constants';
+import {
+    hasRemovedStackRoundResults,
+    hasWorkoutItemResults,
+} from './workout-live-result-utils.js';
 
 function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, liveResultIndex = null, isNew,
                               highlightedStackExerciseKey = null,
                               validationIssues = [],
                               onChange,
+                              onRequestConfirmation,
                               onAddExercise, onViewExercise,
                               onDeleteStack, onMoveStackUp, onMoveStackDown,
                               onChangeStackExercise, onDeleteStackExercise, onMoveStackExerciseUp, onMoveStackExerciseDown,
@@ -80,6 +85,8 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, liveResult
     const complete = isStackComplete(stack);
 
     const hasValidationIssues = validationIssues.length > 0;
+
+    const stackHasRecordedResults = hasWorkoutItemResults(stack, liveResultIndex);
 
     const headerGradient = getGradient({deg: 90, from: `${option?.color ?? 'gray'}.6`, to: 'var(--color-workout-section-bg)'}, useMantineTheme());
     const shadow = computedColorScheme === 'light' ? "var(--mantine-shadow-lg)" : "0 0.5rem 1.5rem rgba(0, 0, 0, 0.3)"
@@ -149,8 +156,54 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, liveResult
             return;
         }
 
-        onAdjustStackRounds(amount);
-        showRoundFeedback(amount);
+        const applyAdjustment = () => {
+            onAdjustStackRounds(amount);
+            showRoundFeedback(amount);
+        };
+
+        const removesRecordedResults = amount < 0 && hasRemovedStackRoundResults(stack, liveResultIndex);
+
+        if (removesRecordedResults && onRequestConfirmation) {
+            onRequestConfirmation({
+                title: `Remove round ${currentRounds}?`,
+                message:
+                    <>
+                        <Text span fw={600}>One or more exercises have recorded results for this round.</Text>
+                        <br/><br/>
+                        Removing it will remove the final set from every exercise in the stack when you save.
+                    </>,
+                cancelLabel: 'Keep round',
+                confirmLabel: 'Remove round',
+                onConfirm: applyAdjustment,
+            });
+
+            return;
+        }
+
+        applyAdjustment();
+    }
+
+    function handleDeleteStack() {
+        if (exerciseCount === 0 || !onRequestConfirmation) {
+            onDeleteStack();
+            return;
+        }
+
+        onRequestConfirmation({
+            title: stackHasRecordedResults
+                ? 'Delete stack with recorded results?'
+                : `Delete ${stack.itemType?.toLowerCase() ?? 'stack'}?`,
+            message: stackHasRecordedResults
+                ? <>
+                    <Text span fw={600}>One or more exercises in this stack have recorded workout results.</Text>
+                    <br/><br/>
+                    Removing it will remove the entire stack from the workout when you save.
+                </>
+                : `This will remove the stack and its ${exerciseCount} item${exerciseCount === 1 ? '' : 's'} from this workout.`,
+            cancelLabel: 'Keep stack',
+            confirmLabel: 'Delete stack',
+            onConfirm: onDeleteStack,
+        });
     }
 
     // ------------------------------------------------------------------------------------------------------------------------
@@ -341,7 +394,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, liveResult
                                             <Menu.Item
                                                 leftSection={<IconTrash size={14}/>}
                                                 color="red"
-                                                onClick={onDeleteStack}
+                                                onClick={handleDeleteStack}
                                             >
                                                 Delete stack
                                             </Menu.Item>
@@ -473,6 +526,7 @@ function WorkoutStackCard({stack, sectionIndex, itemIndex, itemCount, liveResult
                                                 liveResultIndex={liveResultIndex}
                                                 isNew={highlightedStackExerciseKey === getWorkoutItemKey(itemExercise)}
                                                 onChange={updates => onChangeStackExercise(exerciseIndex, updates)}
+                                                onRequestConfirmation={onRequestConfirmation}
                                                 onDelete={() => onDeleteStackExercise(exerciseIndex)}
                                                 onMoveUp={() => onMoveStackExerciseUp(exerciseIndex)}
                                                 onMoveDown={() => onMoveStackExerciseDown(exerciseIndex)}
@@ -557,6 +611,7 @@ function areWorkoutStackCardPropsEqual(previous, next) {
         previous.liveResultIndex === next.liveResultIndex &&
         previous.isNew === next.isNew &&
         previous.highlightedStackExerciseKey === next.highlightedStackExerciseKey &&
+        previous.onRequestConfirmation === next.onRequestConfirmation &&
         haveSameValidationIssues(previous.validationIssues, next.validationIssues);
 }
 
