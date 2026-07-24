@@ -88,6 +88,7 @@ function ClientRecordsTab({client, refreshKey,
     const [intakeError, setIntakeError] = useState('');
 
     const [initialAssessmentWorkout, setInitialAssessmentWorkout] = useState(null);
+    const [initialAssessmentResults, setInitialAssessmentResults] = useState(null);
     const [initialAssessmentBenchmarks, setInitialAssessmentBenchmarks] = useState(null);
     const [initialAssessmentLoaded, setInitialAssessmentLoaded] = useState(false);
     const [initialAssessmentError, setInitialAssessmentError] = useState('');
@@ -148,16 +149,19 @@ function ClientRecordsTab({client, refreshKey,
             .then(async workout => {
                 if (workout.status === 'READY') {
                     setInitialAssessmentWorkout(workout);
+                    setInitialAssessmentResults(null);
                     setInitialAssessmentBenchmarks(null);
                     return;
                 }
                 const session = await apiGetClientWorkoutSession(workout.id);
                 setInitialAssessmentWorkout(session.workout);
+                setInitialAssessmentResults(session.results ?? []);
                 setInitialAssessmentBenchmarks(session.benchmarks ?? []);
             })
             .catch(error => {
                 if (error.status === 404) {
                     setInitialAssessmentWorkout(null);
+                    setInitialAssessmentResults(null);
                     setInitialAssessmentBenchmarks(null);
                     return;
                 }
@@ -193,9 +197,7 @@ function ClientRecordsTab({client, refreshKey,
                 console.error('Failed to load exercise benchmarks:', error);
 
                 setBenchmarks([]);
-                setBenchmarksError(
-                    error.message || 'Failed to load exercise benchmarks.'
-                );
+                setBenchmarksError(error.message || 'Failed to load exercise benchmarks.');
             })
             .finally(() => {
                 setBenchmarksLoaded(true);
@@ -226,6 +228,7 @@ function ClientRecordsTab({client, refreshKey,
         if (client.reviewStatus?.initialAssessmentStatus === 'MISSING') {
             initialAssessmentLoadedRef.current = true;
             setInitialAssessmentWorkout(null);
+            setInitialAssessmentResults(null);
             setInitialAssessmentBenchmarks(null);
             setInitialAssessmentError('');
             setInitialAssessmentLoaded(true);
@@ -319,6 +322,7 @@ function ClientRecordsTab({client, refreshKey,
             await apiDeleteClientWorkout(initialAssessmentWorkout.id);
 
             setInitialAssessmentWorkout(null);
+            setInitialAssessmentResults(null);
             setInitialAssessmentBenchmarks(null);
             setDeleteConfirmationOpen(false);
             onInitialAssessmentDeleted?.();
@@ -595,6 +599,7 @@ function ClientRecordsTab({client, refreshKey,
                 <Accordion.Panel>
                     <InitialAssessmentRecordCard
                         workout={initialAssessmentWorkout}
+                        results={initialAssessmentResults}
                         benchmarks={initialAssessmentPreviewBenchmarks}
                         loaded={initialAssessmentLoaded}
                         error={initialAssessmentError}

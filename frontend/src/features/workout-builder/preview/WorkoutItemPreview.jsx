@@ -42,26 +42,50 @@ import {
     useWorkoutBenchmarks,
 } from '../workout-benchmark-context.js';
 
+import ClientWorkoutProgressIcon from '../../client-management/client-workouts/session/shared/ClientWorkoutProgressIcon.jsx';
+
+import {
+    CLIENT_WORKOUT_PROGRESS_STATUS,
+    getClientWorkoutResultStatus,
+    getDirectExerciseResultKey,
+    getStackExerciseResultKey,
+} from '../../client-management/client-workouts/session/client-workout-session-utils.js';
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Workout item
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutItemPreview({item, isSmallScreen, onViewExercise}) {
+function WorkoutItemPreview({item, isSmallScreen, liveResultIndex = null, onViewExercise}) {
 
     const computedColorScheme = useComputedColorScheme('light');
 
     const isExercise = item.itemType === WORKOUT_ITEM_TYPE.EXERCISE || item.exercise;
 
     return isExercise
-        ? <ExercisePreview item={item} isSmallScreen={isSmallScreen} colorScheme={computedColorScheme} onViewExercise={onViewExercise} />
-        : <WorkoutStackPreview stack={item} isSmallScreen={isSmallScreen} colorScheme={computedColorScheme} onViewExercise={onViewExercise}/>;
+        ? (
+            <ExercisePreview
+                item={item}
+                isSmallScreen={isSmallScreen}
+                colorScheme={computedColorScheme}
+                liveResultIndex={liveResultIndex}
+                onViewExercise={onViewExercise}
+            />
+        ) : (
+            <WorkoutStackPreview
+                stack={item}
+                isSmallScreen={isSmallScreen}
+                colorScheme={computedColorScheme}
+                liveResultIndex={liveResultIndex}
+                onViewExercise={onViewExercise}
+            />
+        );
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 // Exercise
 // ------------------------------------------------------------------------------------------------------------------------
 
-function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, onViewExercise}) {
+function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, liveResultIndex = null, onViewExercise}) {
 
     const exercise = item.exercise;
 
@@ -84,10 +108,12 @@ function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, onV
     );
 
     const thumbnailSize = (stacked ? 40 : 48) / (isSmallScreen ? 1.2 : 1);
-
     const summaryTextSize = isSmallScreen ? 'xs' : 'sm';
+    const showLiveProgress = Boolean(liveResultIndex);
+    const leadColumnWidth = showLiveProgress ? isSmallScreen ? '3rem' : '3.4rem' : isSmallScreen ? '2rem' : '2.4rem';
 
     const scrollAreaKey = [
+        showLiveProgress ? 'live' : 'ready',
         stacked ? 'stacked' : 'direct',
         isSmallScreen ? 'small' : 'large',
         ...setSummaries.map(setSummary => [
@@ -189,17 +215,26 @@ function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, onV
                                             const setTypeColor = setSummary.setType === WORKOUT_SET_TYPE.STANDARD ? null : setTypeOption?.color ?? 'gray';
                                             const setTypeTextColor = setTypeColor ? `var(--mantine-color-${setTypeColor}-${colorScheme === 'light' ? 7 : 4})` : 'var(--mantine-color-dimmed)';
 
+                                            const resultKey = showLiveProgress && item.id != null && setSummary.key != null
+                                                ? stacked ? getStackExerciseResultKey(item.id, setSummary.key) : getDirectExerciseResultKey(item.id, setSummary.key) : null;
+
+                                            const liveProgressStatus = showLiveProgress
+                                                ? resultKey ? getClientWorkoutResultStatus(liveResultIndex.get(resultKey) ?? null) : CLIENT_WORKOUT_PROGRESS_STATUS.NOT_STARTED
+                                                : null;
+
+                                            const liveRowBackground = getLiveRowBackground(liveProgressStatus, colorScheme);
+
                                             return (
                                                 <Table.Tr
                                                     key={setSummary.key}
                                                 >
                                                     <Table.Td
                                                         style={{
-                                                            width: isSmallScreen ? '2rem' : '2.4rem',
-                                                            minWidth: isSmallScreen ? '2rem' : '2.4rem',
-                                                            maxWidth: isSmallScreen ? '2rem' : '2.4rem',
+                                                            width: leadColumnWidth,
+                                                            minWidth: leadColumnWidth,
+                                                            maxWidth: leadColumnWidth,
                                                             textAlign: 'center',
-                                                            backgroundColor: colorScheme === 'light' ? 'var(--color-background)' : '#242424',
+                                                            backgroundColor: showLiveProgress ? liveRowBackground : colorScheme === 'light' ? 'var(--color-background)' : '#242424',
                                                             borderRight: colorScheme === 'light' ? '1px solid #e9e9e9' : '1px solid var(--color-border)',
                                                             borderBottom: rowBorder,
                                                         }}
@@ -210,15 +245,25 @@ function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, onV
                                                             arrowSize={8}
                                                             events={{hover: true, focus: false, touch: true}}
                                                         >
-                                                            <Text size={summaryTextSize} fw={700} c={setTypeTextColor}>
-                                                                {setSummary.lead}
-                                                            </Text>
+                                                            <Group gap={4} justify="flex-start" wrap="nowrap">
+                                                                {showLiveProgress && (
+                                                                    <ClientWorkoutProgressIcon
+                                                                        status={liveProgressStatus}
+                                                                        size={15}
+                                                                    />
+                                                                )}
+
+                                                                <Text size={summaryTextSize} fw={700} c={setTypeTextColor}>
+                                                                    {setSummary.lead}
+                                                                </Text>
+                                                            </Group>
                                                         </Tooltip>
                                                     </Table.Td>
 
                                                     <Table.Td
                                                         style={{
                                                             borderBottom: rowBorder,
+                                                            backgroundColor: showLiveProgress ? liveRowBackground : undefined,
                                                         }}
                                                     >
                                                         {setSummary.targetParts.length > 0 ? (
@@ -305,7 +350,7 @@ function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, onV
 
                 {item.notes?.trim() && (
                     <Box
-                        bg="rgba(255, 209, 0, 0.075)"
+                        bg={showLiveProgress ? colorScheme === 'light' ? "rgba(0, 0, 0, 0.035)" : "rgba(255, 255, 255, 0.045)" : "rgba(255, 209, 0, 0.075)"}
                         style={{borderRadius: 'var(--mantine-radius-md)'}}
                     >
                         <Text
@@ -324,11 +369,26 @@ function ExercisePreview({item, stacked = false, isSmallScreen, colorScheme, onV
     );
 }
 
+function getLiveRowBackground(status, colorScheme) {
+    const tintStrength = colorScheme === 'light' ? '5%' : '4%';
+
+    switch (status) {
+        case CLIENT_WORKOUT_PROGRESS_STATUS.COMPLETED:
+            return `color-mix(in srgb, var(--mantine-color-green-6) ${tintStrength}, transparent)`;
+
+        case CLIENT_WORKOUT_PROGRESS_STATUS.IN_PROGRESS:
+            return `color-mix(in srgb, var(--mantine-color-yellow-6) ${tintStrength}, transparent)`;
+
+        default:
+            return colorScheme === 'light' ? '#fdfeff' : '#262626';
+    }
+}
+
 // ------------------------------------------------------------------------------------------------------------------------
 // Stack
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutStackPreview({stack, isSmallScreen, colorScheme, onViewExercise}) {
+function WorkoutStackPreview({stack, isSmallScreen, colorScheme, liveResultIndex = null, onViewExercise}) {
 
     const option = getStackOption(stack.itemType);
     const StackIcon = option?.icon;
@@ -409,6 +469,7 @@ function WorkoutStackPreview({stack, isSmallScreen, colorScheme, onViewExercise}
                             stacked
                             isSmallScreen={isSmallScreen}
                             colorScheme={colorScheme}
+                            liveResultIndex={liveResultIndex}
                             onViewExercise={onViewExercise}
                         />
                     ))}

@@ -33,7 +33,7 @@ import ExerciseViewer from "../../exercises/components/ExerciseViewer.jsx";
 // Workout structure
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutStructurePreview({workout, benchmarks = null}) {
+function WorkoutStructurePreview({workout, benchmarks = null, liveResultIndex  = null}) {
 
     const isSmallScreen = useIsSmallScreen();
 
@@ -130,6 +130,7 @@ function WorkoutStructurePreview({workout, benchmarks = null}) {
                         )}
                         section={section}
                         isSmallScreen={isSmallScreen}
+                        liveResultIndex={liveResultIndex}
                         onViewExercise={exercise => {
                             setExerciseOverlay({
                                 mode: 'VIEW',
@@ -147,7 +148,7 @@ function WorkoutStructurePreview({workout, benchmarks = null}) {
 // Workout section
 // ------------------------------------------------------------------------------------------------------------------------
 
-function WorkoutSectionPreview({section, isSmallScreen, onViewExercise}) {
+function WorkoutSectionPreview({section, isSmallScreen, liveResultIndex, onViewExercise}) {
 
     const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f'}, useMantineTheme());
 
@@ -214,6 +215,7 @@ function WorkoutSectionPreview({section, isSmallScreen, onViewExercise}) {
                         key={getWorkoutPreviewKey(item, `item-${itemIndex}`)}
                         item={item}
                         isSmallScreen={isSmallScreen}
+                        liveResultIndex={liveResultIndex}
                         onViewExercise={onViewExercise}
                     />
                 ))}

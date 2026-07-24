@@ -1,6 +1,7 @@
 import {
     useEffect,
     useLayoutEffect,
+    useMemo,
     useRef,
     useState,
 } from 'react';
@@ -11,8 +12,11 @@ import {
     Button,
     Group,
     Loader,
+    Paper,
+    Progress,
     Stack,
     Text,
+    Tooltip,
 } from '@mantine/core';
 import {
     IconChevronDown,
@@ -33,7 +37,12 @@ import {
     getWorkoutStructureCounts,
 } from '../../../workout-builder/preview/workout-preview-utils';
 
-function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete, onStart, onOpenSession}) {
+import {
+    buildClientWorkoutSessionProgress,
+    createClientWorkoutResultIndex,
+} from '../../client-workouts/session/client-workout-session-utils.js';
+
+function InitialAssessmentRecordCard({workout, results, benchmarks, loaded, error, deleting, onNewWorkout, onFromTemplate, onEdit, onDelete, onStart, onOpenSession}) {
 
     // ------------------------------------------------------------------------------------------------------------------------
     // State
@@ -47,6 +56,22 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
     const [previewOverflows, setPreviewOverflows] = useState(false);
 
     const collapsedPreviewHeight = isSmallScreen ? 420 : 512;
+
+    const liveResultIndex = useMemo(() => {
+        if (workout?.status !== 'IN_PROGRESS') {
+            return null;
+        }
+
+        return createClientWorkoutResultIndex(results ?? []);
+    }, [results, workout?.status]);
+
+    const liveSessionProgress = useMemo(() => {
+        if (!workout || !liveResultIndex) {
+            return null;
+        }
+
+        return buildClientWorkoutSessionProgress(workout, liveResultIndex);
+    }, [workout, liveResultIndex]);
 
     // ------------------------------------------------------------------------------------------------------------------------
     // Effects
@@ -130,6 +155,10 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
     const isInProgress = workout.status === 'IN_PROGRESS';
     const isCompleted = workout.status === 'COMPLETED';
 
+    const liveProgress = isInProgress ? liveSessionProgress?.progress ?? null : null;
+    const liveProgressPercent = liveProgress?.totalSetCount > 0 ? (liveProgress.completedSetCount / liveProgress.totalSetCount) * 100 : 0;
+    const activeSetCount = liveProgress ? Math.max(0, liveProgress.startedSetCount - liveProgress.completedSetCount) : 0;
+
     const shouldClipPreview = previewOverflows && !previewExpanded;
 
     return (
@@ -159,23 +188,65 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
                         {workout.description}
                     </Text>
                 )}
+
+                {liveProgress && (
+                    <Paper
+                        withBorder
+                        radius="md"
+                        p="sm"
+                        mt="0.5rem"
+                        bg="var(--color-workout-exercise-bg)"
+                        style={{
+                            borderColor: 'var(--color-border)',
+                        }}
+                    >
+                        <Stack gap={7}>
+                            <Group justify="space-between" align="center" wrap="nowrap">
+                                <Text size="sm" fw={700}>
+                                    Workout progress
+                                </Text>
+
+                                <Text
+                                    size="sm"
+                                    fw={600}
+                                    c="dimmed"
+                                    style={{whiteSpace: 'nowrap'}}
+                                >
+                                    {liveProgress.completedSetCount}{' / '}{liveProgress.totalSetCount}{' sets'}
+                                </Text>
+                            </Group>
+
+                            <Progress
+                                value={liveProgressPercent}
+                                color={liveProgress.totalSetCount > 0 && liveProgress.completedSetCount === liveProgress.totalSetCount ? 'green' : 'yellow'}
+                                radius="xl"
+                            />
+
+                            <Text size="xs" c="dimmed">
+                                {liveProgress.completedItemCount}{' of '}{liveProgress.totalItemCount}{' workout items complete'}
+                                {activeSetCount > 0 && (
+                                    <>
+                                        {' · '}{activeSetCount}{' '}{activeSetCount === 1 ? 'set' : 'sets'}{' in progress'}
+                                    </>
+                                )}
+                            </Text>
+                        </Stack>
+                    </Paper>
+                )}
             </Stack>
 
             <Box pos="relative">
                 <Box
                     style={{
-                        maxHeight: shouldClipPreview
-                            ? `${collapsedPreviewHeight}px`
-                            : undefined,
-                        overflow: shouldClipPreview
-                            ? 'hidden'
-                            : undefined,
+                        maxHeight: shouldClipPreview ? `${collapsedPreviewHeight}px` : undefined,
+                        overflow: shouldClipPreview ? 'hidden' : undefined,
                     }}
                 >
                     <Box ref={previewContentRef}>
                         <WorkoutStructurePreview
                             workout={workout}
                             benchmarks={benchmarks}
+                            liveResultIndex={isInProgress ? liveResultIndex : null}
                         />
                     </Box>
                 </Box>
@@ -230,17 +301,27 @@ function InitialAssessmentRecordCard({workout, benchmarks, loaded, error, deleti
                 <Group gap="sm" justify="flex-end">
                     {(isReady || isInProgress) && (
                         <>
-                            <Button
-                                variant="light"
-                                color="red"
-                                leftSection={<IconTrash size={16}/>}
-                                disabled={isInProgress}
-                                loading={deleting}
-                                onClick={onDelete}
+                            <Tooltip
+                                label="You must abandon this workout before you can delete it."
+                                hidden={!isInProgress}
+                                multiline
+                                w={220}
+                                offset={4}
+                                withArrow
+                                arrowSize={8}
+                                events={{hover: true, focus: false, touch: true}}
                             >
-                                Delete
-                            </Button>
-
+                                <Button
+                                    variant="light"
+                                    color="red"
+                                    leftSection={<IconTrash size={16}/>}
+                                    disabled={isInProgress}
+                                    loading={deleting}
+                                    onClick={onDelete}
+                                >
+                                    Delete
+                                </Button>
+                            </Tooltip>
                             <Button
                                 variant="default"
                                 leftSection={<IconEdit size={16}/>}
