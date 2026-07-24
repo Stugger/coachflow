@@ -96,6 +96,7 @@ public class ClientWorkoutService {
         clientWorkoutRepository.saveAndFlush(clientWorkout);
 
         if (clientWorkout.getStatus() == ClientWorkoutStatus.IN_PROGRESS) {
+            reconcileSetResults(clientWorkout);
             ensureBenchmarkSnapshots(clientWorkout);
         }
 
@@ -573,6 +574,47 @@ public class ClientWorkoutService {
         itemExercise.setNotes(TextUtils.trimToNull(itemExerciseRequest.notes()));
         itemExercise.setConfigJson(itemExerciseRequest.configJson());
         itemExercise.setUpdatedAt(now);
+    }
+
+    private void reconcileSetResults(ClientWorkout clientWorkout) {
+        Map<Long, Set<String>> directSetKeysByItemId = new HashMap<>();
+        Map<Long, Set<String>> stackSetKeysByItemExerciseId = new HashMap<>();
+
+        for (ClientWorkoutSection section : clientWorkout.getSections()) {
+            for (ClientWorkoutItem item : section.getItems()) {
+                if (item.getId() != null && item.getItemType() == WorkoutItemType.EXERCISE) {
+                    directSetKeysByItemId.put(item.getId(), parseWorkoutConfig(item.getConfigJson()).setKeys());
+                }
+                for (ClientWorkoutItemExercise itemExercise : item.getItemExercises()) {
+                    if (itemExercise.getId() == null) {
+                        continue;
+                    }
+                    stackSetKeysByItemExerciseId.put(itemExercise.getId(), parseWorkoutConfig(itemExercise.getConfigJson()).setKeys());
+                }
+            }
+        }
+
+        List<ClientWorkoutSetResult> staleResults = clientWorkoutSetResultRepository.findAllByClientWorkout_Id(clientWorkout.getId())
+            .stream()
+            .filter(result -> !isRetainedSetResult(result, directSetKeysByItemId, stackSetKeysByItemExerciseId))
+            .toList();
+
+        if (!staleResults.isEmpty()) {
+            clientWorkoutSetResultRepository.deleteAll(staleResults);
+        }
+    }
+
+    private boolean isRetainedSetResult(ClientWorkoutSetResult result, Map<Long, Set<String>> directSetKeysByItemId, Map<Long, Set<String>> stackSetKeysByItemExerciseId) {
+        if (result.getClientWorkoutItem() != null) {
+            Set<String> validSetKeys = directSetKeysByItemId.get(result.getClientWorkoutItem().getId());
+            return validSetKeys != null && validSetKeys.contains(result.getSetKey());
+        }
+
+        if (result.getClientWorkoutItemExercise() != null) {
+            Set<String> validSetKeys = stackSetKeysByItemExerciseId.get(result.getClientWorkoutItemExercise().getId());
+            return validSetKeys != null && validSetKeys.contains(result.getSetKey());
+        }
+        return false;
     }
 
     /* Structure Create */
