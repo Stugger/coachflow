@@ -314,7 +314,7 @@ function ClientWorkoutSessionOverview({workout, results, scrollItemId, completin
                 </Paper>
             )}
             {workout.status === 'IN_PROGRESS' && (
-                <Stack gap={5} mt="xs">
+                <Stack gap={5} mt="xs" mb={isSmallScreen ? 'md' : undefined}>
                     <Button
                         fullWidth
                         size="md"

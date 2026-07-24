@@ -58,31 +58,29 @@ export function getWorkoutStructureCounts(workout) {
 }
 
 export function getExerciseDisplayName(item) {
-    return item.name?.trim()
-        || item.exercise?.name
-        || 'Unnamed exercise';
+    return item.name?.trim() || item.exercise?.name || 'Unnamed exercise';
 }
 
 export function getExercisePreviewSummary(configJson, {stackControlled = false, exerciseId = null, benchmarks = null} = {}) {
     const config = parseWorkoutConfig(configJson);
+
     const trackingFields = sortWorkoutPreviewItems(config.trackingFields ?? []);
-    const sets = config.sets ?? [];
+
+    const setSummaries = createSetSummaries(
+        config.sets ?? [],
+        trackingFields,
+        {
+            exerciseId,
+            benchmarks,
+        },
+    );
 
     return {
         eachSide: config.eachSide,
-        setGroups: createSetGroups(
-            sets,
-            trackingFields,
-            stackControlled,
-            {
-                exerciseId,
-                benchmarks,
-            },
-        ),
-        noTargetTrackingFields: getNoTargetTrackingFields(
-            sets,
-            trackingFields,
-        ),
+        setCount: setSummaries.length,
+        setUnit: stackControlled ? 'round' : 'set',
+        setSummaries,
+        noTargetTrackingFields: getNoTargetTrackingFields(config.sets ?? [], trackingFields),
     };
 }
 
@@ -102,10 +100,10 @@ export function getStackRoundCount(stack) {
     return parseWorkoutConfig(firstExercise.configJson).sets.length;
 }
 
-function createSetGroups(sets, trackingFields, stackControlled, benchmarkContext) {
-    const groups = [];
+function createSetSummaries(sets, trackingFields, benchmarkContext) {
+    return sortWorkoutPreviewItems(sets).map((set, index) => {
+        const position = set.position ?? index + 1;
 
-    for (const set of sets) {
         const setType = set.setType ?? WORKOUT_SET_TYPE.STANDARD;
 
         const targetParts = trackingFields
@@ -118,40 +116,15 @@ function createSetGroups(sets, trackingFields, stackControlled, benchmarkContext
             .map(field => formatNotesTarget(set.targets?.[field.key]))
             .filter(Boolean);
 
-        const signature = JSON.stringify({
+        return {
+            key: set.setKey ?? position,
             setType,
+            lead: formatSetSummaryLead(setType, position),
+            label: formatSetSummaryLabel(setType, position),
             targetParts,
             noteParts,
-        });
-
-        const previousGroup = groups.at(-1);
-
-        if (previousGroup?.signature === signature) {
-            previousGroup.count += 1;
-            continue;
-        }
-
-        groups.push({
-            signature,
-            count: 1,
-            setType,
-            targetParts,
-            noteParts,
-        });
-    }
-
-    return groups.map(group => ({
-        signature: group.signature,
-        count: group.count,
-        setType: group.setType,
-        targetParts: group.targetParts,
-        noteParts: group.noteParts,
-        lead: formatSetGroupLead(
-            group.setType,
-            group.count,
-            stackControlled,
-        ),
-    }));
+        };
+    });
 }
 
 function getNoTargetTrackingFields(sets, trackingFields) {
@@ -211,36 +184,24 @@ function getActiveTrackingFieldMode(definition, field) {
     ) ?? definition.modes?.[0] ?? null;
 }
 
-function formatSetGroupLead(setType, count, stackControlled) {
-    const unit = stackControlled ? 'round' : 'set';
-
+function formatSetSummaryLead(setType, position) {
     if (setType === WORKOUT_SET_TYPE.STANDARD) {
-        return `${count} ${unit}${count === 1 ? '' : 's'}`;
+        return String(position);
     }
 
-    if (setType === WORKOUT_SET_TYPE.WARMUP) {
-        return count === 1
-            ? 'Warm-up'
-            : `${count} warm-up sets`;
-    }
-
-    if (setType === WORKOUT_SET_TYPE.DROP) {
-        return count === 1
-            ? 'Drop set'
-            : `${count} drop sets`;
-    }
-
-    if (setType === WORKOUT_SET_TYPE.FAILURE) {
-        return count === 1
-            ? 'Failure set'
-            : `${count} failure sets`;
-    }
-
-    const label = WORKOUT_SET_TYPE_OPTIONS.find(
+    return WORKOUT_SET_TYPE_OPTIONS.find(
         option => option.value === setType,
-    )?.label?.toLowerCase() ?? 'set';
+    )?.shortLabel ?? String(position);
+}
 
-    return `${count} ${label}${count === 1 ? '' : 's'}`;
+function formatSetSummaryLabel(setType, position) {
+    if (setType === WORKOUT_SET_TYPE.STANDARD) {
+        return `Set ${position}`;
+    }
+
+    return WORKOUT_SET_TYPE_OPTIONS.find(
+        option => option.value === setType,
+    )?.label ?? `Set ${position}`;
 }
 
 function createTrackingTargetPart(text, warning = null) {
@@ -326,10 +287,10 @@ function formatTrackingTarget(field, value, {exerciseId = null, benchmarks = nul
         }
 
         const resolvedValue = formatNumber(resolution.resolvedValue);
-
         const resolvedUnit = getExerciseUnitLabel(resolution.resolvedUnit);
+        const resolvedTarget = resolvedUnit ? `${resolvedValue} ${resolvedUnit}` : resolvedValue;
 
-        return createTrackingTargetPart(resolvedUnit ? `${resolvedValue} ${resolvedUnit}` : resolvedValue);
+        return createTrackingTargetPart(`${resolvedTarget} (${percentageLabel})`);
     }
 
     if (field.key === TRACKING_FIELD_KEY.INCLINE) {

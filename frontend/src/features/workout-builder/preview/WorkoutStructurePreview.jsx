@@ -47,9 +47,9 @@ function WorkoutStructurePreview({workout, benchmarks = null}) {
                 withBorder
                 radius="md"
                 p="lg"
-                   style={{
-                       borderColor: 'var(--color-border)'
-                   }}
+               style={{
+                   borderColor: 'var(--color-border)'
+               }}
             >
                 <Stack gap={4} align="center">
                     <Text fw={700}>No sections added yet</Text>
@@ -149,9 +149,7 @@ function WorkoutStructurePreview({workout, benchmarks = null}) {
 
 function WorkoutSectionPreview({section, isSmallScreen, onViewExercise}) {
 
-    const theme = useMantineTheme();
-
-    const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f',}, theme);
+    const headerGradient = getGradient({deg: 90, from: '#2a307a', to: '#23233f'}, useMantineTheme());
 
     const items = sortWorkoutPreviewItems(section.items ?? []);
 
